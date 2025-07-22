@@ -51,17 +51,17 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
     // Primeiro, desenhar o fundo com os prêmios (isso fica por baixo)
     drawPrizes(ctx);
 
-    // Depois, desenhar a camada de raspagem por cima (mais transparente)
+    // Depois, desenhar a camada de raspagem por cima (opaca)
     const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-    gradient.addColorStop(0, '#D5D5D5');
-    gradient.addColorStop(0.3, '#C8C8C8');
-    gradient.addColorStop(0.7, '#BABABA');
-    gradient.addColorStop(1, '#ADADAD');
+    gradient.addColorStop(0, '#E0E0E0');
+    gradient.addColorStop(0.3, '#D0D0D0');
+    gradient.addColorStop(0.7, '#C0C0C0');
+    gradient.addColorStop(1, '#B0B0B0');
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Adicionar textura sutil à camada de raspagem
-    ctx.fillStyle = 'rgba(140, 140, 140, 0.4)';
+    // Adicionar textura à camada de raspagem
+    ctx.fillStyle = 'rgba(120, 120, 120, 0.6)';
     for (let i = 0; i < canvas.width; i += 6) {
       for (let j = 0; j < canvas.height; j += 6) {
         if (Math.random() > 0.6) {
@@ -72,19 +72,14 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
 
     // Adicionar texto "Raspe aqui!" mais visível
     const fontSize = Math.max(18, Math.min(32, canvas.width / 12));
-    ctx.fillStyle = '#555';
+    ctx.fillStyle = '#444';
     ctx.font = `bold ${fontSize}px Arial`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.strokeStyle = '#FFF';
-    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 4;
     ctx.strokeText('Raspe aqui!', canvas.width / 2, canvas.height / 2);
     ctx.fillText('Raspe aqui!', canvas.width / 2, canvas.height / 2);
-
-    // Adicionar dica visual sutil dos ícones por baixo
-    ctx.globalAlpha = 0.15;
-    drawPrizeHints(ctx);
-    ctx.globalAlpha = 1.0;
   };
 
   const drawPrizes = (ctx) => {
@@ -115,6 +110,28 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
     const cellWidth = (ctx.canvas.width - padding * 2) / 3;
     const cellHeight = (ctx.canvas.height - padding * 2) / 3;
     
+    // Desenhar linhas da grade para separar as células
+    ctx.strokeStyle = '#FFD700';
+    ctx.lineWidth = Math.max(1, borderWidth / 4);
+    
+    // Linhas verticais
+    for (let i = 1; i < 3; i++) {
+      const x = padding + i * cellWidth;
+      ctx.beginPath();
+      ctx.moveTo(x, padding);
+      ctx.lineTo(x, ctx.canvas.height - padding);
+      ctx.stroke();
+    }
+    
+    // Linhas horizontais
+    for (let i = 1; i < 3; i++) {
+      const y = padding + i * cellHeight;
+      ctx.beginPath();
+      ctx.moveTo(padding, y);
+      ctx.lineTo(ctx.canvas.width - padding, y);
+      ctx.stroke();
+    }
+    
     // Tamanho da fonte baseado no tamanho da célula
     const fontSize = Math.max(24, Math.min(cellWidth / 2, cellHeight / 2));
     ctx.font = `bold ${fontSize}px Arial`;
@@ -129,7 +146,7 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
       
       // Desenhar fundo da célula
       const cellPadding = 6;
-      ctx.fillStyle = 'rgba(255, 215, 0, 0.15)';
+      ctx.fillStyle = 'rgba(255, 215, 0, 0.2)';
       ctx.fillRect(
         padding + col * cellWidth + cellPadding, 
         padding + row * cellHeight + cellPadding, 
@@ -179,27 +196,6 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
     });
   };
 
-  const drawPrizeHints = (ctx) => {
-    // Desenhar dicas sutis dos prêmios por baixo da camada de raspagem
-    const padding = Math.max(4, ctx.canvas.width / 80) * 4;
-    const cellWidth = (ctx.canvas.width - padding * 2) / 3;
-    const cellHeight = (ctx.canvas.height - padding * 2) / 3;
-    const fontSize = Math.max(20, Math.min(cellWidth / 3, cellHeight / 3));
-    
-    ctx.font = `bold ${fontSize}px Arial`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#888';
-    
-    prizes.forEach((prize, index) => {
-      const row = Math.floor(index / 3);
-      const col = index % 3;
-      const x = padding + col * cellWidth + cellWidth / 2;
-      const y = padding + row * cellHeight + cellHeight / 2;
-      
-      ctx.fillText(prize, x, y);
-    });
-  };
 
   const scratch = (x, y) => {
     const canvas = canvasRef.current;

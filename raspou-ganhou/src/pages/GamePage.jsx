@@ -152,46 +152,57 @@ const GamePage = () => {
     setIsRevealed(true);
     setGameState('revealed');
     
-    // Distribuir prêmio imediatamente quando revela
+    // Aguardar um pouco antes de processar o prêmio
+    setTimeout(() => {
+      processWinnings();
+    }, 100);
+  };
+
+  const processWinnings = () => {
     if (wonAmount > 0) {
-      console.log('🎮 GamePage: Player won!', wonAmount);
-      console.log('🎮 GamePage: Current balances - Real:', user.saldo_real, 'Bonus:', user.saldo_bonus);
-      console.log('🎮 GamePage: Payment breakdown - Real used:', paymentBreakdown.realUsed, 'Bonus used:', paymentBreakdown.bonusUsed);
+      console.log('💰 GANHOU! Valor:', wonAmount);
+      console.log('💰 Saldo atual - Real:', user.saldo_real, 'Bonus:', user.saldo_bonus);
+      console.log('💰 Pagamento foi - Real usado:', paymentBreakdown.realUsed, 'Bonus usado:', paymentBreakdown.bonusUsed);
       
-      let newSaldoReal = user.saldo_real;
-      let newSaldoBonus = user.saldo_bonus;
+      // Pegar saldos atuais
+      const currentRealBalance = user.saldo_real || 0;
+      const currentBonusBalance = user.saldo_bonus || 0;
       
-      // Lógica de distribuição do prêmio:
-      // 1. Se usou apenas saldo real -> prêmio vai para saldo real
-      // 2. Se usou apenas saldo bônus -> prêmio vai para saldo bônus  
-      // 3. Se usou ambos -> prêmio vai para saldo real (regra especial)
+      let newRealBalance = currentRealBalance;
+      let newBonusBalance = currentBonusBalance;
       
+      // Aplicar regras de distribuição
       if (paymentBreakdown.realUsed > 0 && paymentBreakdown.bonusUsed === 0) {
-        // Usou apenas saldo real
-        newSaldoReal += wonAmount;
-        console.log('🎮 GamePage: Prize added to real balance (paid with real):', wonAmount);
+        // Usou apenas saldo real → prêmio vai para real
+        newRealBalance += wonAmount;
+        console.log('💰 Prêmio adicionado ao SALDO REAL (pagou só com real)');
       } else if (paymentBreakdown.realUsed === 0 && paymentBreakdown.bonusUsed > 0) {
-        // Usou apenas saldo bônus
-        newSaldoBonus += wonAmount;
-        console.log('🎮 GamePage: Prize added to bonus balance (paid with bonus):', wonAmount);
+        // Usou apenas saldo bônus → prêmio vai para bônus
+        newBonusBalance += wonAmount;
+        console.log('💰 Prêmio adicionado ao SALDO BÔNUS (pagou só com bônus)');
       } else {
-        // Usou ambos os saldos -> prêmio vai para saldo real
-        newSaldoReal += wonAmount;
-        console.log('🎮 GamePage: Prize added to real balance (paid with both):', wonAmount);
+        // Usou ambos → prêmio vai para real
+        newRealBalance += wonAmount;
+        console.log('💰 Prêmio adicionado ao SALDO REAL (pagou com ambos)');
       }
       
-      console.log('🎮 GamePage: New balances after prize - Real:', newSaldoReal, 'Bonus:', newSaldoBonus);
+      console.log('💰 Novos saldos - Real:', newRealBalance, 'Bonus:', newBonusBalance);
       
-      updateBalance({
-        saldo_real: newSaldoReal,
-        saldo_bonus: newSaldoBonus,
+      // Atualizar saldo
+      const success = updateBalance({
+        saldo_real: newRealBalance,
+        saldo_bonus: newBonusBalance,
         pontos_sorteio: (user.pontos_sorteio || 0) + 10
       });
       
-      console.log('🎮 GamePage: Balance update called successfully');
+      console.log('💰 Resultado da atualização:', success);
+      
+      // Verificar se realmente atualizou
+      setTimeout(() => {
+        console.log('💰 Verificação final - Saldo atual:', user.saldo_real, user.saldo_bonus);
+      }, 500);
     } else {
-      // Adicionar pontos mesmo se perdeu
-      console.log('🎮 GamePage: Adding points for playing');
+      console.log('😞 Não ganhou, mas adicionando pontos');
       updateBalance({
         saldo_real: user.saldo_real,
         saldo_bonus: user.saldo_bonus,
@@ -210,7 +221,7 @@ const GamePage = () => {
     // Mostrar modal de resultado
     setTimeout(() => {
       setShowResultModal(true);
-    }, 500);
+    }, 1000);
   };
 
   const handlePlayAgain = () => {

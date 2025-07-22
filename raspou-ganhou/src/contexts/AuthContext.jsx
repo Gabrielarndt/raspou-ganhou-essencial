@@ -171,6 +171,11 @@ export const AuthProvider = ({ children }) => {
     console.log('💰 AuthContext: Current balance - Real:', user?.saldo_real, 'Bonus:', user?.saldo_bonus);
     console.log('💰 AuthContext: New balance - Real:', newBalance.saldo_real, 'Bonus:', newBalance.saldo_bonus);
     
+    if (!user) {
+      console.error('❌ AuthContext: No user found for balance update');
+      return false;
+    }
+    
     const users = JSON.parse(localStorage.getItem('raspou_users') || '[]');
     const userIndex = users.findIndex(u => u.id === user.id);
     
@@ -194,8 +199,11 @@ export const AuthProvider = ({ children }) => {
       
       // Forçar re-renderização
       triggerUpdate();
+      
+      return true;
     } else {
       console.error('❌ AuthContext: User not found in users array for balance update');
+      return false;
     }
   };
 

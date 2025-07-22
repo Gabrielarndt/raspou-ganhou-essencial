@@ -246,7 +246,7 @@ export const AuthProvider = ({ children }) => {
         game_name: gameResult.game_name,
         cost: gameResult.cost,
         prize: gameResult.premio || 0,
-        won: gameResult.ganhou,
+        won: gameResult.ganhou || false,
         date: new Date().toISOString()
       };
       

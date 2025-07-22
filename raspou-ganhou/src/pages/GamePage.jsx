@@ -226,8 +226,8 @@ const GamePage = () => {
     addGameResult({
       game_name: currentGame.nome,
       cost: currentGame.preco,
-      prize: wonAmount,
-      won: wonAmount > 0
+      premio: wonAmount,
+      ganhou: wonAmount > 0
     });
 
     // Mostrar modal de resultado

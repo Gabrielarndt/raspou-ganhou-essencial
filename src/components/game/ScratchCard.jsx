@@ -1,0 +1,347 @@
+import React, { useRef, useEffect, useState } from 'react';
+
+const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
+  const canvasRef = useRef(null);
+  const containerRef = useRef(null);
+  const [isScratching, setIsScratching] = useState(false);
+  const [scratchedPercentage, setScratchedPercentage] = useState(0);
+  const [canvasSize, setCanvasSize] = useState({ width: 350, height: 250 });
+
+  useEffect(() => {
+    updateCanvasSize();
+    window.addEventListener('resize', updateCanvasSize);
+    return () => window.removeEventListener('resize', updateCanvasSize);
+  }, []);
+
+  useEffect(() => {
+    if (isRevealed) {
+      revealAll();
+    } else {
+      initializeCanvas();
+    }
+  }, [isRevealed, prizes, canvasSize]);
+
+  const updateCanvasSize = () => {
+    if (containerRef.current) {
+      const containerWidth = containerRef.current.offsetWidth;
+      const isMobile = window.innerWidth < 768;
+      
+      if (isMobile) {
+        // Mobile: usar quase toda a largura disponível
+        const width = Math.min(containerWidth - 40, 320);
+        const height = Math.round(width * 0.7); // Proporção 10:7
+        setCanvasSize({ width, height });
+      } else {
+        // Desktop: tamanho maior
+        const width = Math.min(containerWidth - 80, 500);
+        const height = Math.round(width * 0.65); // Proporção mais larga para desktop
+        setCanvasSize({ width, height });
+      }
+    }
+  };
+
+  const initializeCanvas = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    canvas.width = canvasSize.width;
+    canvas.height = canvasSize.height;
+
+    // Primeiro, desenhar o fundo com os prêmios (isso fica por baixo)
+    drawPrizes(ctx);
+
+    // Depois, desenhar a camada de raspagem por cima
+    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    gradient.addColorStop(0, '#E5E5E5');
+    gradient.addColorStop(0.3, '#D0D0D0');
+    gradient.addColorStop(0.7, '#C0C0C0');
+    gradient.addColorStop(1, '#B0B0B0');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Adicionar textura à camada de raspagem
+    ctx.fillStyle = 'rgba(160, 160, 160, 0.3)';
+    for (let i = 0; i < canvas.width; i += 4) {
+      for (let j = 0; j < canvas.height; j += 4) {
+        if (Math.random() > 0.7) {
+          ctx.fillRect(i, j, 2, 2);
+        }
+      }
+    }
+
+    // Adicionar texto "Raspe aqui!" mais visível
+    const fontSize = Math.max(16, Math.min(28, canvas.width / 15));
+    ctx.fillStyle = '#666';
+    ctx.font = `bold ${fontSize}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.strokeStyle = '#FFF';
+    ctx.lineWidth = 2;
+    ctx.strokeText('Raspe aqui!', canvas.width / 2, canvas.height / 2);
+    ctx.fillText('Raspe aqui!', canvas.width / 2, canvas.height / 2);
+  };
+
+  const drawPrizes = (ctx) => {
+    // Desenhar fundo escuro com gradiente
+    const bgGradient = ctx.createRadialGradient(
+      ctx.canvas.width / 2, ctx.canvas.height / 2, 0,
+      ctx.canvas.width / 2, ctx.canvas.height / 2, Math.max(ctx.canvas.width, ctx.canvas.height) / 2
+    );
+    bgGradient.addColorStop(0, '#1a1a1a');
+    bgGradient.addColorStop(1, '#000000');
+    ctx.fillStyle = bgGradient;
+    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    
+    // Desenhar borda dourada mais espessa
+    const borderWidth = Math.max(3, ctx.canvas.width / 100);
+    ctx.strokeStyle = '#FFD700';
+    ctx.lineWidth = borderWidth;
+    ctx.strokeRect(borderWidth/2, borderWidth/2, ctx.canvas.width - borderWidth, ctx.canvas.height - borderWidth);
+    
+    // Desenhar borda interna
+    ctx.strokeStyle = '#FFA500';
+    ctx.lineWidth = Math.max(1, borderWidth / 2);
+    const innerBorder = borderWidth * 1.5;
+    ctx.strokeRect(innerBorder, innerBorder, ctx.canvas.width - innerBorder * 2, ctx.canvas.height - innerBorder * 2);
+    
+    // Calcular tamanho das células da grade 3x3
+    const padding = borderWidth * 3;
+    const cellWidth = (ctx.canvas.width - padding * 2) / 3;
+    const cellHeight = (ctx.canvas.height - padding * 2) / 3;
+    
+    // Tamanho da fonte baseado no tamanho da célula
+    const fontSize = Math.max(20, Math.min(cellWidth / 2.5, cellHeight / 2.5));
+    ctx.font = `bold ${fontSize}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    prizes.forEach((prize, index) => {
+      const row = Math.floor(index / 3);
+      const col = index % 3;
+      const x = padding + col * cellWidth + cellWidth / 2;
+      const y = padding + row * cellHeight + cellHeight / 2;
+      
+      // Desenhar fundo da célula
+      const cellPadding = 4;
+      ctx.fillStyle = 'rgba(255, 215, 0, 0.1)';
+      ctx.fillRect(
+        padding + col * cellWidth + cellPadding, 
+        padding + row * cellHeight + cellPadding, 
+        cellWidth - cellPadding * 2, 
+        cellHeight - cellPadding * 2
+      );
+      
+      // Destacar prêmios vencedores com efeito brilhante
+      if (winningPrizes.includes(index)) {
+        // Fundo dourado brilhante
+        const winGradient = ctx.createRadialGradient(x, y, 0, x, y, cellWidth / 2);
+        winGradient.addColorStop(0, '#FFD700');
+        winGradient.addColorStop(0.7, '#FFA500');
+        winGradient.addColorStop(1, '#FF8C00');
+        ctx.fillStyle = winGradient;
+        ctx.fillRect(
+          padding + col * cellWidth + cellPadding, 
+          padding + row * cellHeight + cellPadding, 
+          cellWidth - cellPadding * 2, 
+          cellHeight - cellPadding * 2
+        );
+        
+        // Borda brilhante
+        ctx.strokeStyle = '#FFFF00';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(
+          padding + col * cellWidth + cellPadding, 
+          padding + row * cellHeight + cellPadding, 
+          cellWidth - cellPadding * 2, 
+          cellHeight - cellPadding * 2
+        );
+        
+        // Texto do prêmio vencedor
+        ctx.fillStyle = '#000';
+        ctx.strokeStyle = '#FFD700';
+        ctx.lineWidth = 1;
+        ctx.strokeText(prize, x, y);
+        ctx.fillText(prize, x, y);
+      } else {
+        // Prêmios normais
+        ctx.fillStyle = '#FFD700';
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 1;
+        ctx.strokeText(prize, x, y);
+        ctx.fillText(prize, x, y);
+      }
+    });
+  };
+
+  const scratch = (x, y) => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    
+    // Usar 'destination-out' para "apagar" a camada de raspagem
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    const scratchRadius = Math.max(15, canvas.width / 25); // Raio responsivo
+    ctx.arc(x, y, scratchRadius, 0, 2 * Math.PI);
+    ctx.fill();
+
+    // Calcular porcentagem raspada
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const pixels = imageData.data;
+    let transparentPixels = 0;
+
+    for (let i = 3; i < pixels.length; i += 4) {
+      if (pixels[i] === 0) {
+        transparentPixels++;
+      }
+    }
+
+    const percentage = (transparentPixels / (canvas.width * canvas.height)) * 100;
+    setScratchedPercentage(percentage);
+
+    // Se raspou mais de 90%, revelar automaticamente
+    if (percentage > 90) {
+      revealAll();
+      onReveal();
+    }
+  };
+
+  const revealAll = () => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    
+    // Limpar o canvas e desenhar apenas os prêmios
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.globalCompositeOperation = 'source-over';
+    drawPrizes(ctx);
+    
+    setIsScratching(false);
+    setScratchedPercentage(100);
+  };
+
+  const getMouseCoordinates = (event) => {
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    
+    let clientX, clientY;
+    if (event.touches && event.touches.length > 0) {
+      clientX = event.touches[0].clientX;
+      clientY = event.touches[0].clientY;
+    } else {
+      clientX = event.clientX;
+      clientY = event.clientY;
+    }
+
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    const x = (clientX - rect.left) * scaleX;
+    const y = (clientY - rect.top) * scaleY;
+    return { x, y };
+  };
+
+  const handleMouseDown = (event) => {
+    if (isRevealed) return;
+    event.preventDefault();
+    setIsScratching(true);
+    const { x, y } = getMouseCoordinates(event);
+    scratch(x, y);
+  };
+
+  const handleMouseMove = (event) => {
+    if (isRevealed || !isScratching) return;
+    event.preventDefault();
+    const { x, y } = getMouseCoordinates(event);
+    scratch(x, y);
+  };
+
+  const handleMouseUp = () => {
+    setIsScratching(false);
+  };
+
+  const handleMouseLeave = () => {
+    setIsScratching(false);
+  };
+
+  // Eventos touch para mobile
+  const handleTouchStart = (event) => {
+    if (isRevealed) return;
+    event.preventDefault();
+    setIsScratching(true);
+    const { x, y } = getMouseCoordinates(event);
+    scratch(x, y);
+  };
+
+  const handleTouchMove = (event) => {
+    if (isRevealed || !isScratching) return;
+    event.preventDefault();
+    const { x, y } = getMouseCoordinates(event);
+    scratch(x, y);
+  };
+
+  const handleTouchEnd = (event) => {
+    event.preventDefault();
+    setIsScratching(false);
+  };
+
+  return (
+    <div className="flex flex-col items-center space-y-4 w-full" ref={containerRef}>
+      <div className="relative bg-gray-900 p-2 md:p-4 rounded-xl shadow-2xl w-full max-w-2xl">
+        <canvas
+          ref={canvasRef}
+          className="border-2 border-yellow-400 rounded-lg cursor-pointer w-full h-auto shadow-lg"
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseLeave}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          style={{ 
+            touchAction: 'none',
+            maxWidth: '100%',
+            height: 'auto'
+          }}
+        />
+        
+        {scratchedPercentage > 0 && scratchedPercentage < 90 && !isRevealed && (
+          <div className="absolute top-2 right-2 md:top-4 md:right-4 bg-black/90 text-yellow-400 px-2 py-1 md:px-3 md:py-2 rounded-lg text-sm md:text-base font-bold border border-yellow-400/30">
+            {Math.round(scratchedPercentage)}%
+          </div>
+        )}
+        
+        {winningPrizes.length > 0 && isRevealed && (
+          <div className="absolute top-2 left-2 md:top-4 md:left-4 bg-green-600/90 text-white px-2 py-1 md:px-3 md:py-2 rounded-lg text-sm md:text-base font-bold animate-pulse">
+            🎉 GANHOU!
+          </div>
+        )}
+      </div>
+
+      <div className="text-center px-4">
+        {!isRevealed ? (
+          <div className="space-y-2">
+            <p className="text-gray-300 text-sm md:text-base">
+              {window.innerWidth < 768 ? 'Toque e arraste para raspar' : 'Use o mouse para raspar'}
+            </p>
+            <p className="text-yellow-400 text-xs md:text-sm">
+              Encontre 3 símbolos iguais para ganhar!
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <p className="text-green-400 text-sm md:text-base font-bold">
+              🎯 Resultado revelado!
+            </p>
+            {winningPrizes.length > 0 && (
+              <p className="text-yellow-400 text-xs md:text-sm animate-bounce">
+                Parabéns! Você encontrou uma combinação vencedora! 🏆
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default ScratchCard;

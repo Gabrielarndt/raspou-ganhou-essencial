@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 
 const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
   const canvasRef = useRef(null);
+  const backgroundCanvasRef = useRef(null);
   const containerRef = useRef(null);
   const [isScratching, setIsScratching] = useState(false);
   const [scratchedPercentage, setScratchedPercentage] = useState(0);
@@ -17,7 +18,7 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
     if (isRevealed) {
       revealAll();
     } else {
-      initializeCanvas();
+      initializeCanvases();
     }
   }, [isRevealed, prizes, canvasSize]);
 
@@ -38,19 +39,23 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
     }
   };
 
-  const initializeCanvas = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+  const initializeCanvases = () => {
+    const backgroundCanvas = backgroundCanvasRef.current;
+    const scratchCanvas = canvasRef.current;
+    
+    if (!backgroundCanvas || !scratchCanvas) return;
 
-    const ctx = canvas.getContext('2d');
-    canvas.width = canvasSize.width;
-    canvas.height = canvasSize.height;
+    // Configurar tamanhos
+    backgroundCanvas.width = canvasSize.width;
+    backgroundCanvas.height = canvasSize.height;
+    scratchCanvas.width = canvasSize.width;
+    scratchCanvas.height = canvasSize.height;
 
-    // ETAPA 1: Desenhar o fundo com a tabela de ícones (isso fica por baixo)
-    drawGameBoard(ctx);
-
-    // ETAPA 2: Desenhar a camada de raspagem por cima
-    drawScratchLayer(ctx);
+    // Desenhar o fundo com os ícones
+    drawGameBoard(backgroundCanvas.getContext('2d'));
+    
+    // Desenhar a camada de raspagem
+    drawScratchLayer(scratchCanvas.getContext('2d'));
   };
 
   const drawGameBoard = (ctx) => {
@@ -229,10 +234,8 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     
-    // Limpar tudo e desenhar apenas a tabela final
+    // Limpar completamente a camada de raspagem
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.globalCompositeOperation = 'source-over';
-    drawGameBoard(ctx);
     
     setIsScratching(false);
     setScratchedPercentage(100);
@@ -305,9 +308,21 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
   return (
     <div className="flex flex-col items-center space-y-4 w-full" ref={containerRef}>
       <div className="relative bg-gray-900 p-3 md:p-6 rounded-xl shadow-2xl w-full max-w-2xl">
+        {/* Canvas de fundo com os ícones */}
+        <canvas
+          ref={backgroundCanvasRef}
+          className="absolute top-3 left-3 md:top-6 md:left-6 border-2 border-yellow-400 rounded-lg w-[calc(100%-24px)] md:w-[calc(100%-48px)] h-auto shadow-lg"
+          style={{ 
+            maxWidth: '100%',
+            height: 'auto',
+            zIndex: 1
+          }}
+        />
+        
+        {/* Canvas de raspagem (por cima) */}
         <canvas
           ref={canvasRef}
-          className="border-2 border-yellow-400 rounded-lg cursor-pointer w-full h-auto shadow-lg"
+          className="relative border-2 border-yellow-400 rounded-lg cursor-pointer w-full h-auto shadow-lg"
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
@@ -318,7 +333,8 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
           style={{ 
             touchAction: 'none',
             maxWidth: '100%',
-            height: 'auto'
+            height: 'auto',
+            zIndex: 2
           }}
         />
         

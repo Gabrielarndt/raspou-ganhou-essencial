@@ -48,10 +48,11 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
     canvas.width = canvasSize.width;
     canvas.height = canvasSize.height;
 
-    // Primeiro, desenhar o fundo com os prêmios
+    // Primeiro, desenhar o fundo com os prêmios (isso fica sempre visível)
     drawPrizes(ctx);
 
-    // Depois, desenhar a camada de raspagem por cima
+    // Depois, desenhar a camada de raspagem por cima (isso será removido ao raspar)
+    ctx.globalCompositeOperation = 'source-over';
     drawScratchLayer(ctx);
   };
 
@@ -170,17 +171,17 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
   };
 
   const drawScratchLayer = (ctx) => {
-    // Desenhar camada de raspagem opaca
+    // Desenhar camada de raspagem mais opaca para esconder completamente o conteúdo
     const gradient = ctx.createLinearGradient(0, 0, ctx.canvas.width, ctx.canvas.height);
-    gradient.addColorStop(0, '#E0E0E0');
-    gradient.addColorStop(0.3, '#D0D0D0');
-    gradient.addColorStop(0.7, '#C0C0C0');
-    gradient.addColorStop(1, '#B0B0B0');
+    gradient.addColorStop(0, '#D5D5D5');
+    gradient.addColorStop(0.3, '#C8C8C8');
+    gradient.addColorStop(0.7, '#BABABA');
+    gradient.addColorStop(1, '#ADADAD');
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
-    // Adicionar textura à camada de raspagem
-    ctx.fillStyle = 'rgba(120, 120, 120, 0.6)';
+    // Adicionar textura sutil à camada de raspagem
+    ctx.fillStyle = 'rgba(140, 140, 140, 0.4)';
     for (let i = 0; i < ctx.canvas.width; i += 6) {
       for (let j = 0; j < ctx.canvas.height; j += 6) {
         if (Math.random() > 0.6) {
@@ -189,14 +190,14 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
       }
     }
 
-    // Adicionar texto "Raspe aqui!"
+    // Adicionar texto "Raspe aqui!" mais visível
     const fontSize = Math.max(18, Math.min(32, ctx.canvas.width / 12));
-    ctx.fillStyle = '#444';
+    ctx.fillStyle = '#555';
     ctx.font = `bold ${fontSize}px Arial`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.strokeStyle = '#FFFFFF';
-    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#FFF';
+    ctx.lineWidth = 3;
     ctx.strokeText('Raspe aqui!', ctx.canvas.width / 2, ctx.canvas.height / 2);
     ctx.fillText('Raspe aqui!', ctx.canvas.width / 2, ctx.canvas.height / 2);
   };
@@ -206,18 +207,12 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     
-    // Salvar o estado atual do contexto
-    ctx.save();
-    
-    // Usar 'destination-out' para "apagar" apenas a camada de raspagem
+    // Usar 'destination-out' para "apagar" a camada de raspagem e revelar os prêmios por baixo
     ctx.globalCompositeOperation = 'destination-out';
     ctx.beginPath();
     const scratchRadius = Math.max(20, canvas.width / 20); // Raio responsivo maior
     ctx.arc(x, y, scratchRadius, 0, 2 * Math.PI);
     ctx.fill();
-    
-    // Restaurar o estado do contexto
-    ctx.restore();
 
     // Calcular porcentagem raspada
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);

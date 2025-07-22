@@ -152,10 +152,14 @@ const GamePage = () => {
     setIsRevealed(true);
     setGameState('revealed');
     
-    // Distribuir prêmio baseado no tipo de saldo usado
+    // Distribuir prêmio imediatamente quando revela
     if (wonAmount > 0) {
-      let newSaldoReal = user.saldo_real || 0;
-      let newSaldoBonus = user.saldo_bonus || 0;
+      console.log('🎮 GamePage: Player won!', wonAmount);
+      console.log('🎮 GamePage: Current balances - Real:', user.saldo_real, 'Bonus:', user.saldo_bonus);
+      console.log('🎮 GamePage: Payment breakdown - Real used:', paymentBreakdown.realUsed, 'Bonus used:', paymentBreakdown.bonusUsed);
+      
+      let newSaldoReal = user.saldo_real;
+      let newSaldoBonus = user.saldo_bonus;
       
       // Lógica de distribuição do prêmio:
       // 1. Se usou apenas saldo real -> prêmio vai para saldo real
@@ -176,17 +180,21 @@ const GamePage = () => {
         console.log('🎮 GamePage: Prize added to real balance (paid with both):', wonAmount);
       }
       
+      console.log('🎮 GamePage: New balances after prize - Real:', newSaldoReal, 'Bonus:', newSaldoBonus);
+      
       updateBalance({
         saldo_real: newSaldoReal,
         saldo_bonus: newSaldoBonus,
         pontos_sorteio: (user.pontos_sorteio || 0) + 10
       });
+      
+      console.log('🎮 GamePage: Balance update called successfully');
     } else {
       // Adicionar pontos mesmo se perdeu
       console.log('🎮 GamePage: Adding points for playing');
       updateBalance({
-        saldo_real: user.saldo_real || 0,
-        saldo_bonus: user.saldo_bonus || 0,
+        saldo_real: user.saldo_real,
+        saldo_bonus: user.saldo_bonus,
         pontos_sorteio: (user.pontos_sorteio || 0) + 10
       });
     }

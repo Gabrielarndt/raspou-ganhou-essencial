@@ -168,6 +168,9 @@ export const AuthProvider = ({ children }) => {
 
   const updateBalance = (newBalance) => {
     console.log('💰 AuthContext: Updating balance for user:', user?.email);
+    console.log('💰 AuthContext: Current balance - Real:', user?.saldo_real, 'Bonus:', user?.saldo_bonus);
+    console.log('💰 AuthContext: New balance - Real:', newBalance.saldo_real, 'Bonus:', newBalance.saldo_bonus);
+    
     const users = JSON.parse(localStorage.getItem('raspou_users') || '[]');
     const userIndex = users.findIndex(u => u.id === user.id);
     
@@ -179,15 +182,20 @@ export const AuthProvider = ({ children }) => {
         pontos_sorteio: newBalance.pontos_sorteio || user.pontos_sorteio || 0
       };
       
+      console.log('💰 AuthContext: Updated user object:', updatedUser);
+      
       users[userIndex] = updatedUser;
       
       localStorage.setItem('raspou_users', JSON.stringify(users));
       setUser(updatedUser);
       localStorage.setItem('raspou_user', JSON.stringify(updatedUser));
-      console.log('✅ AuthContext: Balance updated');
+      console.log('✅ AuthContext: Balance updated successfully');
+      console.log('✅ AuthContext: Final balance - Real:', updatedUser.saldo_real, 'Bonus:', updatedUser.saldo_bonus);
       
       // Forçar re-renderização
       triggerUpdate();
+    } else {
+      console.error('❌ AuthContext: User not found in users array for balance update');
     }
   };
 

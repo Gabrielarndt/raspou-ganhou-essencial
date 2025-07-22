@@ -48,10 +48,14 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
     canvas.width = canvasSize.width;
     canvas.height = canvasSize.height;
 
-    // PASSO 1: Desenhar a tabela com os ícones (fica por baixo)
+    // Limpar canvas completamente
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // PASSO 1: Desenhar a tabela com os ícones (fica por baixo) - SEMPRE VISÍVEL
     drawPrizes(ctx);
 
-    // PASSO 2: Desenhar camada simples de raspagem por cima
+    // PASSO 2: Desenhar camada de raspagem por cima - DEVE SER REMOVÍVEL
+    ctx.globalCompositeOperation = 'source-over';
     drawScratchLayer(ctx);
   };
 
@@ -170,9 +174,24 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
   };
 
   const drawScratchLayer = (ctx) => {
-    // Camada simples e sólida para raspar
-    ctx.fillStyle = '#C0C0C0'; // Cinza sólido
+    // Camada com gradiente e textura para raspar
+    const gradient = ctx.createLinearGradient(0, 0, ctx.canvas.width, ctx.canvas.height);
+    gradient.addColorStop(0, '#D5D5D5');
+    gradient.addColorStop(0.3, '#C8C8C8');
+    gradient.addColorStop(0.7, '#BABABA');
+    gradient.addColorStop(1, '#ADADAD');
+    ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+    // Adicionar textura sutil à camada de raspagem
+    ctx.fillStyle = 'rgba(140, 140, 140, 0.4)';
+    for (let i = 0; i < ctx.canvas.width; i += 6) {
+      for (let j = 0; j < ctx.canvas.height; j += 6) {
+        if (Math.random() > 0.6) {
+          ctx.fillRect(i, j, 3, 3);
+        }
+      }
+    }
 
     // Adicionar texto "Raspe aqui!" mais visível
     const fontSize = Math.max(18, Math.min(32, ctx.canvas.width / 12));
@@ -191,15 +210,12 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     
-    // Apagar a camada de raspagem para revelar a tabela por baixo
+    // IMPORTANTE: Usar destination-out para "apagar" apenas a camada de raspagem
     ctx.globalCompositeOperation = 'destination-out';
     ctx.beginPath();
     const scratchRadius = Math.max(25, canvas.width / 18);
     ctx.arc(x, y, scratchRadius, 0, 2 * Math.PI);
     ctx.fill();
-    
-    // Voltar ao modo normal
-    ctx.globalCompositeOperation = 'source-over';
 
     // Calcular porcentagem raspada
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);

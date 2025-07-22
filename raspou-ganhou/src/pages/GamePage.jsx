@@ -14,7 +14,7 @@ const GamePage = () => {
   const [wonAmount, setWonAmount] = useState(0);
   const [isRevealed, setIsRevealed] = useState(false);
   const [showResultModal, setShowResultModal] = useState(false);
-  const [balanceUsedForGame, setBalanceUsedForGame] = useState(''); // 'real' or 'bonus'
+  const [paymentBreakdown, setPaymentBreakdown] = useState({ realUsed: 0, bonusUsed: 0 });
 
   const raspadinhas = {
     1: { nome: 'Sorte Dourada', preco: 1.00, premio_max: 100.00 },
@@ -104,34 +104,36 @@ const GamePage = () => {
       return;
     }
 
-    // Descontar do saldo - primeiro do real, depois do bônus
+    // Calcular quanto será usado de cada saldo
     let newSaldoReal = user.saldo_real || 0;
     let newSaldoBonus = user.saldo_bonus || 0;
     let remainingCost = currentGame.preco;
-    let usedBalanceType = ''; 
+    let realUsed = 0;
+    let bonusUsed = 0;
 
     if (newSaldoReal >= remainingCost) {
       // Usar apenas saldo real
+      realUsed = remainingCost;
       newSaldoReal -= remainingCost;
-      usedBalanceType = 'real';
       remainingCost = 0;
     } else if (newSaldoReal > 0) {
       // Usar saldo real parcialmente e depois bônus
+      realUsed = newSaldoReal;
       remainingCost -= newSaldoReal;
       newSaldoReal = 0;
+      bonusUsed = remainingCost;
       newSaldoBonus -= remainingCost;
-      usedBalanceType = 'real'; // Considera que usou saldo real, mesmo que parcialmente
     } else {
       // Usar apenas saldo bônus
+      bonusUsed = remainingCost;
       newSaldoBonus -= remainingCost;
-      usedBalanceType = 'bonus';
     }
 
-    console.log('🎮 GamePage: Balance used:', usedBalanceType);
+    console.log('🎮 GamePage: Payment breakdown - Real used:', realUsed, 'Bonus used:', bonusUsed);
     console.log('🎮 GamePage: New balances - Real:', newSaldoReal, 'Bonus:', newSaldoBonus);
 
-    // Salvar informação sobre qual saldo foi usado para o jogo atual
-    setBalanceUsedForGame(usedBalanceType);
+    // Salvar breakdown do pagamento para distribuir prêmio corretamente
+    setPaymentBreakdown({ realUsed, bonusUsed });
 
     updateBalance({
       saldo_real: newSaldoReal,
@@ -150,22 +152,28 @@ const GamePage = () => {
     setIsRevealed(true);
     setGameState('revealed');
     
-    // Adicionar prêmio ao saldo se ganhou
+    // Distribuir prêmio baseado no tipo de saldo usado
     if (wonAmount > 0) {
       let newSaldoReal = user.saldo_real || 0;
       let newSaldoBonus = user.saldo_bonus || 0;
       
-      // Adicionar prêmio ao mesmo tipo de saldo que foi usado para jogar
-      if (balanceUsedForGame === 'real') {
+      // Lógica de distribuição do prêmio:
+      // 1. Se usou apenas saldo real -> prêmio vai para saldo real
+      // 2. Se usou apenas saldo bônus -> prêmio vai para saldo bônus  
+      // 3. Se usou ambos -> prêmio vai para saldo real (regra especial)
+      
+      if (paymentBreakdown.realUsed > 0 && paymentBreakdown.bonusUsed === 0) {
+        // Usou apenas saldo real
         newSaldoReal += wonAmount;
-        console.log('🎮 GamePage: Adding prize to real balance:', wonAmount);
-      } else if (balanceUsedForGame === 'bonus') {
+        console.log('🎮 GamePage: Prize added to real balance (paid with real):', wonAmount);
+      } else if (paymentBreakdown.realUsed === 0 && paymentBreakdown.bonusUsed > 0) {
+        // Usou apenas saldo bônus
         newSaldoBonus += wonAmount;
-        console.log('🎮 GamePage: Adding prize to bonus balance:', wonAmount);
+        console.log('🎮 GamePage: Prize added to bonus balance (paid with bonus):', wonAmount);
       } else {
-        // Fallback: se não foi possível determinar, adiciona ao saldo real
+        // Usou ambos os saldos -> prêmio vai para saldo real
         newSaldoReal += wonAmount;
-        console.log('🎮 GamePage: Adding prize to real balance (default):', wonAmount);
+        console.log('🎮 GamePage: Prize added to real balance (paid with both):', wonAmount);
       }
       
       updateBalance({
@@ -204,7 +212,7 @@ const GamePage = () => {
     setPrizes([]);
     setWinningPrizes([]);
     setWonAmount(0);
-    setBalanceUsedForGame('');
+    setPaymentBreakdown({ realUsed: 0, bonusUsed: 0 });
     setShowResultModal(false);
   };
 

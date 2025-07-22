@@ -225,8 +225,41 @@ export const AuthProvider = ({ children }) => {
     const userIndex = users.findIndex(u => u.id === user.id);
     
     if (userIndex !== -1) {
+      // Calcular novo saldo se ganhou prêmio
+      let newSaldoReal = user.saldo_real || 0;
+      let newSaldoBonus = user.saldo_bonus || 0;
+      
+      if (gameResult.ganhou && gameResult.premio > 0) {
+        console.log('💰 AuthContext: Player won prize:', gameResult.premio);
+        console.log('💰 AuthContext: Payment breakdown:', gameResult.paymentBreakdown);
+        
+        if (gameResult.paymentBreakdown) {
+          const { realUsed, bonusUsed } = gameResult.paymentBreakdown;
+          
+          if (realUsed > 0 && bonusUsed === 0) {
+            // Usou apenas saldo real → prêmio vai para real
+            newSaldoReal += gameResult.premio;
+            console.log('💰 AuthContext: Prize added to REAL balance (paid with real only)');
+          } else if (realUsed === 0 && bonusUsed > 0) {
+            // Usou apenas saldo bônus → prêmio vai para bônus
+            newSaldoBonus += gameResult.premio;
+            console.log('💰 AuthContext: Prize added to BONUS balance (paid with bonus only)');
+          } else {
+            // Usou ambos → prêmio vai para real
+            newSaldoReal += gameResult.premio;
+            console.log('💰 AuthContext: Prize added to REAL balance (paid with both)');
+          }
+        } else {
+          // Fallback: adicionar ao saldo real
+          newSaldoReal += gameResult.premio;
+          console.log('💰 AuthContext: Prize added to REAL balance (fallback)');
+        }
+      }
+      
       const updatedUser = { 
         ...user, 
+        saldo_real: newSaldoReal,
+        saldo_bonus: newSaldoBonus,
         jogos_realizados: (user.jogos_realizados || 0) + 1,
         total_ganho: (user.total_ganho || 0) + (gameResult.premio || 0),
         pontos_sorteio: (user.pontos_sorteio || 0) + 10 
@@ -237,7 +270,8 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('raspou_users', JSON.stringify(users));
       setUser(updatedUser);
       localStorage.setItem('raspou_user', JSON.stringify(updatedUser));
-      console.log('✅ AuthContext: Game result added');
+      console.log('✅ AuthContext: Game result added and balance updated');
+      console.log('✅ AuthContext: New balances - Real:', newSaldoReal, 'Bonus:', newSaldoBonus);
 
       const gameHistory = JSON.parse(localStorage.getItem('raspou_game_history') || '[]');
       const newGameRecord = {
@@ -255,6 +289,9 @@ export const AuthProvider = ({ children }) => {
       
       // Forçar re-renderização
       triggerUpdate();
+      
+      // Disparar evento para atualizar header
+      window.dispatchEvent(new CustomEvent('userLogin', { detail: updatedUser }));
     }
   };
 

@@ -27,14 +27,12 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
       const isMobile = window.innerWidth < 768;
       
       if (isMobile) {
-        // Mobile: usar quase toda a largura disponível
         const width = Math.min(containerWidth - 20, 380);
-        const height = Math.round(width * 0.75); // Proporção 4:3
+        const height = Math.round(width * 0.75);
         setCanvasSize({ width, height });
       } else {
-        // Desktop: tamanho maior
         const width = Math.min(containerWidth - 40, 500);
-        const height = Math.round(width * 0.7); // Proporção mais larga para desktop
+        const height = Math.round(width * 0.7);
         setCanvasSize({ width, height });
       }
     }
@@ -48,55 +46,45 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
     canvas.width = canvasSize.width;
     canvas.height = canvasSize.height;
 
-    // Limpar canvas completamente
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // PASSO 1: Desenhar a tabela com os ícones (fica por baixo) - SEMPRE VISÍVEL
-    drawPrizes(ctx);
+    // ETAPA 1: Desenhar o fundo com a tabela de ícones (isso fica por baixo)
+    drawGameBoard(ctx);
 
-    // PASSO 2: Desenhar camada de raspagem por cima - DEVE SER REMOVÍVEL
-    ctx.globalCompositeOperation = 'source-over';
+    // ETAPA 2: Desenhar a camada de raspagem por cima
     drawScratchLayer(ctx);
   };
 
-  const drawPrizes = (ctx) => {
-    // Desenhar fundo escuro com gradiente
-    const bgGradient = ctx.createRadialGradient(
-      ctx.canvas.width / 2, ctx.canvas.height / 2, 0,
-      ctx.canvas.width / 2, ctx.canvas.height / 2, Math.max(ctx.canvas.width, ctx.canvas.height) / 2
-    );
-    bgGradient.addColorStop(0, '#1a1a1a');
-    bgGradient.addColorStop(1, '#000000');
-    ctx.fillStyle = bgGradient;
+  const drawGameBoard = (ctx) => {
+    // Fundo escuro
+    ctx.fillStyle = '#1a1a1a';
     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     
-    // Desenhar borda dourada mais espessa
+    // Borda dourada externa
     const borderWidth = Math.max(4, ctx.canvas.width / 80);
     ctx.strokeStyle = '#FFD700';
     ctx.lineWidth = borderWidth;
     ctx.strokeRect(borderWidth/2, borderWidth/2, ctx.canvas.width - borderWidth, ctx.canvas.height - borderWidth);
     
-    // Desenhar borda interna
-    ctx.strokeStyle = '#FFA500';
-    ctx.lineWidth = Math.max(2, borderWidth / 2);
-    const innerBorder = borderWidth * 2;
-    ctx.strokeRect(innerBorder, innerBorder, ctx.canvas.width - innerBorder * 2, ctx.canvas.height - innerBorder * 2);
+    // Área interna da grade
+    const padding = borderWidth * 3;
+    const gridWidth = ctx.canvas.width - padding * 2;
+    const gridHeight = ctx.canvas.height - padding * 2;
+    const cellWidth = gridWidth / 3;
+    const cellHeight = gridHeight / 3;
     
-    // Calcular tamanho das células da grade 3x3
-    const padding = borderWidth * 4;
-    const cellWidth = (ctx.canvas.width - padding * 2) / 3;
-    const cellHeight = (ctx.canvas.height - padding * 2) / 3;
+    // Desenhar fundo da grade
+    ctx.fillStyle = '#2a2a2a';
+    ctx.fillRect(padding, padding, gridWidth, gridHeight);
     
-    // Desenhar linhas da grade para separar as células
+    // Desenhar linhas da grade
     ctx.strokeStyle = '#FFD700';
-    ctx.lineWidth = Math.max(1, borderWidth / 4);
+    ctx.lineWidth = 2;
     
     // Linhas verticais
     for (let i = 1; i < 3; i++) {
       const x = padding + i * cellWidth;
       ctx.beginPath();
       ctx.moveTo(x, padding);
-      ctx.lineTo(x, ctx.canvas.height - padding);
+      ctx.lineTo(x, padding + gridHeight);
       ctx.stroke();
     }
     
@@ -105,12 +93,12 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
       const y = padding + i * cellHeight;
       ctx.beginPath();
       ctx.moveTo(padding, y);
-      ctx.lineTo(ctx.canvas.width - padding, y);
+      ctx.lineTo(padding + gridWidth, y);
       ctx.stroke();
     }
     
-    // Tamanho da fonte baseado no tamanho da célula
-    const fontSize = Math.max(24, Math.min(cellWidth / 2, cellHeight / 2));
+    // Desenhar os ícones em cada célula
+    const fontSize = Math.max(32, Math.min(cellWidth / 2.5, cellHeight / 2.5));
     ctx.font = `bold ${fontSize}px Arial`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -121,52 +109,51 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
       const x = padding + col * cellWidth + cellWidth / 2;
       const y = padding + row * cellHeight + cellHeight / 2;
       
-      // Desenhar fundo da célula
-      const cellPadding = 6;
-      ctx.fillStyle = 'rgba(255, 215, 0, 0.2)';
-      ctx.fillRect(
-        padding + col * cellWidth + cellPadding, 
-        padding + row * cellHeight + cellPadding, 
-        cellWidth - cellPadding * 2, 
-        cellHeight - cellPadding * 2
-      );
-      
-      // Destacar prêmios vencedores com efeito brilhante
+      // Fundo da célula
       if (winningPrizes.includes(index)) {
-        // Fundo dourado brilhante
-        const winGradient = ctx.createRadialGradient(x, y, 0, x, y, cellWidth / 2);
-        winGradient.addColorStop(0, '#FFD700');
-        winGradient.addColorStop(0.7, '#FFA500');
-        winGradient.addColorStop(1, '#FF8C00');
-        ctx.fillStyle = winGradient;
+        // Célula vencedora - fundo dourado
+        const gradient = ctx.createRadialGradient(x, y, 0, x, y, cellWidth / 3);
+        gradient.addColorStop(0, '#FFD700');
+        gradient.addColorStop(1, '#FFA500');
+        ctx.fillStyle = gradient;
         ctx.fillRect(
-          padding + col * cellWidth + cellPadding, 
-          padding + row * cellHeight + cellPadding, 
-          cellWidth - cellPadding * 2, 
-          cellHeight - cellPadding * 2
+          padding + col * cellWidth + 4, 
+          padding + row * cellHeight + 4, 
+          cellWidth - 8, 
+          cellHeight - 8
         );
         
         // Borda brilhante
         ctx.strokeStyle = '#FFFF00';
         ctx.lineWidth = 3;
         ctx.strokeRect(
-          padding + col * cellWidth + cellPadding, 
-          padding + row * cellHeight + cellPadding, 
-          cellWidth - cellPadding * 2, 
-          cellHeight - cellPadding * 2
+          padding + col * cellWidth + 4, 
+          padding + row * cellHeight + 4, 
+          cellWidth - 8, 
+          cellHeight - 8
         );
-        
-        // Texto do prêmio vencedor
+      } else {
+        // Célula normal - fundo escuro
+        ctx.fillStyle = 'rgba(255, 215, 0, 0.1)';
+        ctx.fillRect(
+          padding + col * cellWidth + 4, 
+          padding + row * cellHeight + 4, 
+          cellWidth - 8, 
+          cellHeight - 8
+        );
+      }
+      
+      // Desenhar o ícone
+      if (winningPrizes.includes(index)) {
         ctx.fillStyle = '#000';
         ctx.strokeStyle = '#FFD700';
         ctx.lineWidth = 2;
         ctx.strokeText(prize, x, y);
         ctx.fillText(prize, x, y);
       } else {
-        // Prêmios normais
         ctx.fillStyle = '#FFD700';
         ctx.strokeStyle = '#000';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 1;
         ctx.strokeText(prize, x, y);
         ctx.fillText(prize, x, y);
       }
@@ -174,16 +161,17 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
   };
 
   const drawScratchLayer = (ctx) => {
-    // Camada com gradiente e textura para raspar
+    // Criar gradiente para a camada de raspagem
     const gradient = ctx.createLinearGradient(0, 0, ctx.canvas.width, ctx.canvas.height);
     gradient.addColorStop(0, '#D5D5D5');
     gradient.addColorStop(0.3, '#C8C8C8');
     gradient.addColorStop(0.7, '#BABABA');
     gradient.addColorStop(1, '#ADADAD');
+    
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
-    // Adicionar textura sutil à camada de raspagem
+    // Adicionar textura
     ctx.fillStyle = 'rgba(140, 140, 140, 0.4)';
     for (let i = 0; i < ctx.canvas.width; i += 6) {
       for (let j = 0; j < ctx.canvas.height; j += 6) {
@@ -193,7 +181,7 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
       }
     }
 
-    // Adicionar texto "Raspe aqui!" mais visível
+    // Texto "Raspe aqui!"
     const fontSize = Math.max(18, Math.min(32, ctx.canvas.width / 12));
     ctx.fillStyle = '#666';
     ctx.font = `bold ${fontSize}px Arial`;
@@ -205,12 +193,11 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
     ctx.fillText('Raspe aqui!', ctx.canvas.width / 2, ctx.canvas.height / 2);
   };
 
-
   const scratch = (x, y) => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     
-    // IMPORTANTE: Usar destination-out para "apagar" apenas a camada de raspagem
+    // Usar destination-out para "apagar" a camada de raspagem
     ctx.globalCompositeOperation = 'destination-out';
     ctx.beginPath();
     const scratchRadius = Math.max(25, canvas.width / 18);
@@ -242,14 +229,10 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     
-    // Limpar completamente o canvas
+    // Limpar tudo e desenhar apenas a tabela final
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Resetar o modo de composição
     ctx.globalCompositeOperation = 'source-over';
-    
-    // Desenhar apenas os prêmios (sem a camada de raspagem)
-    drawPrizes(ctx);
+    drawGameBoard(ctx);
     
     setIsScratching(false);
     setScratchedPercentage(100);
@@ -299,7 +282,6 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
     setIsScratching(false);
   };
 
-  // Eventos touch para mobile
   const handleTouchStart = (event) => {
     if (isRevealed) return;
     event.preventDefault();
@@ -340,7 +322,7 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
           }}
         />
         
-        {scratchedPercentage > 0 && scratchedPercentage < 85 && !isRevealed && (
+        {scratchedPercentage > 0 && scratchedPercentage < 95 && !isRevealed && (
           <div className="absolute top-2 right-2 md:top-4 md:right-4 bg-black/90 text-yellow-400 px-2 py-1 md:px-3 md:py-2 rounded-lg text-sm md:text-base font-bold border border-yellow-400/30">
             {Math.round(scratchedPercentage)}%
           </div>

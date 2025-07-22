@@ -48,38 +48,11 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
     canvas.width = canvasSize.width;
     canvas.height = canvasSize.height;
 
-    // Primeiro, desenhar o fundo com os prêmios (isso fica por baixo)
+    // Primeiro, desenhar o fundo com os prêmios
     drawPrizes(ctx);
 
-    // Depois, desenhar a camada de raspagem por cima (opaca)
-    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-    gradient.addColorStop(0, '#E0E0E0');
-    gradient.addColorStop(0.3, '#D0D0D0');
-    gradient.addColorStop(0.7, '#C0C0C0');
-    gradient.addColorStop(1, '#B0B0B0');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Adicionar textura à camada de raspagem
-    ctx.fillStyle = 'rgba(120, 120, 120, 0.6)';
-    for (let i = 0; i < canvas.width; i += 6) {
-      for (let j = 0; j < canvas.height; j += 6) {
-        if (Math.random() > 0.6) {
-          ctx.fillRect(i, j, 3, 3);
-        }
-      }
-    }
-
-    // Adicionar texto "Raspe aqui!" mais visível
-    const fontSize = Math.max(18, Math.min(32, canvas.width / 12));
-    ctx.fillStyle = '#444';
-    ctx.font = `bold ${fontSize}px Arial`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.strokeStyle = '#FFFFFF';
-    ctx.lineWidth = 4;
-    ctx.strokeText('Raspe aqui!', canvas.width / 2, canvas.height / 2);
-    ctx.fillText('Raspe aqui!', canvas.width / 2, canvas.height / 2);
+    // Depois, desenhar a camada de raspagem por cima
+    drawScratchLayer(ctx);
   };
 
   const drawPrizes = (ctx) => {
@@ -196,17 +169,55 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
     });
   };
 
+  const drawScratchLayer = (ctx) => {
+    // Desenhar camada de raspagem opaca
+    const gradient = ctx.createLinearGradient(0, 0, ctx.canvas.width, ctx.canvas.height);
+    gradient.addColorStop(0, '#E0E0E0');
+    gradient.addColorStop(0.3, '#D0D0D0');
+    gradient.addColorStop(0.7, '#C0C0C0');
+    gradient.addColorStop(1, '#B0B0B0');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+    // Adicionar textura à camada de raspagem
+    ctx.fillStyle = 'rgba(120, 120, 120, 0.6)';
+    for (let i = 0; i < ctx.canvas.width; i += 6) {
+      for (let j = 0; j < ctx.canvas.height; j += 6) {
+        if (Math.random() > 0.6) {
+          ctx.fillRect(i, j, 3, 3);
+        }
+      }
+    }
+
+    // Adicionar texto "Raspe aqui!"
+    const fontSize = Math.max(18, Math.min(32, ctx.canvas.width / 12));
+    ctx.fillStyle = '#444';
+    ctx.font = `bold ${fontSize}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 4;
+    ctx.strokeText('Raspe aqui!', ctx.canvas.width / 2, ctx.canvas.height / 2);
+    ctx.fillText('Raspe aqui!', ctx.canvas.width / 2, ctx.canvas.height / 2);
+  };
+
 
   const scratch = (x, y) => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     
-    // Usar 'destination-out' para "apagar" a camada de raspagem
+    // Salvar o estado atual do contexto
+    ctx.save();
+    
+    // Usar 'destination-out' para "apagar" apenas a camada de raspagem
     ctx.globalCompositeOperation = 'destination-out';
     ctx.beginPath();
     const scratchRadius = Math.max(20, canvas.width / 20); // Raio responsivo maior
     ctx.arc(x, y, scratchRadius, 0, 2 * Math.PI);
     ctx.fill();
+    
+    // Restaurar o estado do contexto
+    ctx.restore();
 
     // Calcular porcentagem raspada
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -233,9 +244,13 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     
-    // Limpar o canvas e desenhar apenas os prêmios
+    // Limpar completamente o canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Resetar o modo de composição
     ctx.globalCompositeOperation = 'source-over';
+    
+    // Desenhar apenas os prêmios (sem a camada de raspagem)
     drawPrizes(ctx);
     
     setIsScratching(false);

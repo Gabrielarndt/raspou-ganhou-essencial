@@ -176,36 +176,48 @@ export const AuthProvider = ({ children }) => {
       return false;
     }
     
-    const users = JSON.parse(localStorage.getItem('raspou_users') || '[]');
-    const userIndex = users.findIndex(u => u.id === user.id);
-    
-    if (userIndex !== -1) {
-      const updatedUser = { 
-        ...user, 
-        saldo_real: newBalance.saldo_real,
-        saldo_bonus: newBalance.saldo_bonus,
-        pontos_sorteio: newBalance.pontos_sorteio || user.pontos_sorteio || 0
-      };
+    try {
+      const users = JSON.parse(localStorage.getItem('raspou_users') || '[]');
+      const userIndex = users.findIndex(u => u.id === user.id);
       
-      console.log('💰 AuthContext: Updated user object:', updatedUser);
+      console.log('💰 AuthContext: User index found:', userIndex);
       
-      users[userIndex] = updatedUser;
-      
-      localStorage.setItem('raspou_users', JSON.stringify(users));
-      setUser(updatedUser);
-      localStorage.setItem('raspou_user', JSON.stringify(updatedUser));
-      console.log('✅ AuthContext: Balance updated successfully');
-      console.log('✅ AuthContext: Final balance - Real:', updatedUser.saldo_real, 'Bonus:', updatedUser.saldo_bonus);
-      
-      // Forçar re-renderização
-      triggerUpdate();
-      
-      return true;
-    } else {
-      console.error('❌ AuthContext: User not found in users array for balance update');
+      if (userIndex !== -1) {
+        const updatedUser = { 
+          ...user, 
+          saldo_real: Number(newBalance.saldo_real) || 0,
+          saldo_bonus: Number(newBalance.saldo_bonus) || 0,
+          pontos_sorteio: Number(newBalance.pontos_sorteio) || user.pontos_sorteio || 0
+        };
+        
+        console.log('💰 AuthContext: Updated user object:', updatedUser);
+        
+        users[userIndex] = updatedUser;
+        
+        // Salvar no localStorage
+        localStorage.setItem('raspou_users', JSON.stringify(users));
+        localStorage.setItem('raspou_user', JSON.stringify(updatedUser));
+        
+        // Atualizar estado
+        setUser(updatedUser);
+        
+        console.log('✅ AuthContext: Balance updated successfully');
+        console.log('✅ AuthContext: Final balance - Real:', updatedUser.saldo_real, 'Bonus:', updatedUser.saldo_bonus);
+        
+        // Forçar re-renderização
+        triggerUpdate();
+        
+        return true;
+      } else {
+        console.error('❌ AuthContext: User not found in users array for balance update');
+        return false;
+      }
+    } catch (error) {
+      console.error('💥 AuthContext: Error updating balance:', error);
       return false;
     }
   };
+    
 
   const addGameResult = (gameResult) => {
     console.log('🎮 AuthContext: Adding game result for user:', user?.email);

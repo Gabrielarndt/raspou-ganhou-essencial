@@ -159,14 +159,21 @@ const GamePage = () => {
   };
 
   const processWinnings = () => {
+    console.log('💰 processWinnings: Iniciando processamento do prêmio');
+    console.log('💰 processWinnings: wonAmount =', wonAmount);
+    console.log('💰 processWinnings: user atual =', user);
+    
     if (wonAmount > 0) {
       console.log('💰 GANHOU! Valor:', wonAmount);
       console.log('💰 Saldo atual - Real:', user.saldo_real, 'Bonus:', user.saldo_bonus);
       console.log('💰 Pagamento foi - Real usado:', paymentBreakdown.realUsed, 'Bonus usado:', paymentBreakdown.bonusUsed);
       
-      // Pegar saldos atuais
-      const currentRealBalance = user.saldo_real || 0;
-      const currentBonusBalance = user.saldo_bonus || 0;
+      // Pegar saldos atuais do usuário mais recente
+      const savedUser = JSON.parse(localStorage.getItem('raspou_user') || '{}');
+      const currentRealBalance = savedUser.saldo_real || 0;
+      const currentBonusBalance = savedUser.saldo_bonus || 0;
+      
+      console.log('💰 Saldos do localStorage - Real:', currentRealBalance, 'Bonus:', currentBonusBalance);
       
       let newRealBalance = currentRealBalance;
       let newBonusBalance = currentBonusBalance;
@@ -188,24 +195,29 @@ const GamePage = () => {
       
       console.log('💰 Novos saldos - Real:', newRealBalance, 'Bonus:', newBonusBalance);
       
-      // Atualizar saldo
-      const success = updateBalance({
+      // Atualizar saldo com força
+      console.log('💰 Chamando updateBalance...');
+      const updateResult = updateBalance({
         saldo_real: newRealBalance,
         saldo_bonus: newBonusBalance,
         pontos_sorteio: (user.pontos_sorteio || 0) + 10
       });
       
-      console.log('💰 Resultado da atualização:', success);
+      console.log('💰 Resultado da atualização:', updateResult);
       
-      // Verificar se realmente atualizou
+      // Forçar atualização do estado local
       setTimeout(() => {
-        console.log('💰 Verificação final - Saldo atual:', user.saldo_real, user.saldo_bonus);
-      }, 500);
+        const updatedUser = JSON.parse(localStorage.getItem('raspou_user') || '{}');
+        console.log('💰 Verificação final - Saldo no localStorage:', updatedUser.saldo_real, updatedUser.saldo_bonus);
+        
+        // Forçar re-renderização
+        window.dispatchEvent(new CustomEvent('userLogin', { detail: updatedUser }));
+      }, 100);
     } else {
       console.log('😞 Não ganhou, mas adicionando pontos');
       updateBalance({
-        saldo_real: user.saldo_real,
-        saldo_bonus: user.saldo_bonus,
+        saldo_real: user.saldo_real || 0,
+        saldo_bonus: user.saldo_bonus || 0,
         pontos_sorteio: (user.pontos_sorteio || 0) + 10
       });
     }
@@ -214,14 +226,14 @@ const GamePage = () => {
     addGameResult({
       game_name: currentGame.nome,
       cost: currentGame.preco,
-      premio: wonAmount,
-      ganhou: wonAmount > 0
+      prize: wonAmount,
+      won: wonAmount > 0
     });
 
     // Mostrar modal de resultado
     setTimeout(() => {
       setShowResultModal(true);
-    }, 1000);
+    }, 500);
   };
 
   const handlePlayAgain = () => {

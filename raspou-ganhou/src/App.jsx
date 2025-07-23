@@ -23,6 +23,8 @@ import initSuperAdmin from './utils/initSuperAdmin';
 
 function App() {
   useEffect(() => {
+  }
+  )
   useEffect(() => {
     // Inicializar sistema administrativo
     try {

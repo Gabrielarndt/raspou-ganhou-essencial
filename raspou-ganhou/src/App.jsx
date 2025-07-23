@@ -18,7 +18,6 @@ import SuperAdmin from './pages/SuperAdmin';
 import SuperAdminLogin from './pages/SuperAdminLogin';
 import HistoricoFinanceiro from './pages/HistoricoFinanceiro';
 import initSuperAdmin from './utils/initSuperAdmin';
-
 function App() {
   useEffect(() => {
     // Inicializar sistema administrativo

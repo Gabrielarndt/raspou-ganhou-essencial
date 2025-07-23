@@ -17,14 +17,9 @@ import Admin from './pages/Admin';
 import SuperAdmin from './pages/SuperAdmin';
 import SuperAdminLogin from './pages/SuperAdminLogin';
 import HistoricoFinanceiro from './pages/HistoricoFinanceiro';
-import HistoricoJogos from './pages/HistoricoJogos';
-import initAdmin from './utils/initAdmin';
 import initSuperAdmin from './utils/initSuperAdmin';
 
 function App() {
-  useEffect(() => {
-  }
-  )
   useEffect(() => {
     // Inicializar sistema administrativo
     try {

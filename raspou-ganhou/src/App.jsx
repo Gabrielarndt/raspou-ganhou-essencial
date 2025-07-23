@@ -122,15 +122,15 @@ function App() {
 
   return (
     <Router>
-      <Routes>
-        {/* SISTEMA ADMINISTRATIVO - COMPLETAMENTE SEPARADO */}
-        <Route path="/admin" element={<Admin />} />
-        <Route path="/super-admin" element={<SuperAdmin />} />
-        <Route path="/super-admin-login" element={<SuperAdminLogin />} />
-        
-        {/* SITE DA RASPADINHA - COM LAYOUT COMPLETO */}
-        <Route path="/*" element={
-          <AuthProvider>
+      <AuthProvider>
+        <Routes>
+          {/* SISTEMA ADMINISTRATIVO - COMPLETAMENTE SEPARADO */}
+          <Route path="/admin" element={<Admin />} />
+          <Route path="/super-admin" element={<SuperAdmin />} />
+          <Route path="/super-admin-login" element={<SuperAdminLogin />} />
+          
+          {/* SITE DA RASPADINHA - COM LAYOUT COMPLETO */}
+          <Route path="/*" element={
             <div className="min-h-screen bg-black flex flex-col">
               <Header />
               <main className="flex-1">
@@ -152,9 +152,9 @@ function App() {
               <Footer />
               <BottomNav />
             </div>
-          </AuthProvider>
-        } />
-      </Routes>
+          } />
+        </Routes>
+      </AuthProvider>
     </Router>
   );
 }

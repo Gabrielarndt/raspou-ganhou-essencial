@@ -432,7 +432,7 @@ const SuperAdmin = () => {
                           <div className="text-sm text-gray-400">{user.telefone || 'N/A'}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-green-400 font-bold">
-                          {formatCurrency((user.saldo_real || 0) + (user.saldo_bonus || 0))}
+                          {formatCurrency(user.saldo_real || 0)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-400 font-bold">
                           {formatCurrency(user.total_deposited || 0)}

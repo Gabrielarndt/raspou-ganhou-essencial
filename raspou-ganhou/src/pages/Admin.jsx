@@ -284,7 +284,7 @@ const Admin = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{user.email}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-green-400 font-bold">
-                          {formatCurrency((user.saldo_real || 0) + (user.saldo_bonus || 0))}
+                          {formatCurrency(user.saldo_real || 0)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                           {user.data_cadastro ? formatDate(user.data_cadastro) : 'N/A'}

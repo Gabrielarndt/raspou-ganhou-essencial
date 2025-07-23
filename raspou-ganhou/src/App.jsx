@@ -80,7 +80,7 @@ function App() {
       const admins = JSON.parse(localStorage.getItem('raspou_admins') || '[]');
       if (!admins.find(a => a.email === 'admin@raspouganhou.com')) {
         const adminUser = {
-          id: 1,
+          id: 3,
           name: 'Administrador',
           email: 'admin@raspouganhou.com',
           password: 'admin123',

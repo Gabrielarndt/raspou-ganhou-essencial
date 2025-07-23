@@ -59,11 +59,18 @@ const SuperAdmin = () => {
     const savedTransactions = JSON.parse(localStorage.getItem('raspou_transactions') || '[]');
     const savedAffiliates = JSON.parse(localStorage.getItem('raspou_affiliates') || '[]');
     const savedAdmins = JSON.parse(localStorage.getItem('raspou_admins') || '[]');
+    const savedSuperAdmins = JSON.parse(localStorage.getItem('raspou_super_admins') || '[]');
+    
+    // Combinar administradores e super administradores, removendo duplicatas por ID
+    const allAdmins = [...savedAdmins, ...savedSuperAdmins];
+    const uniqueAdmins = allAdmins.filter((admin, index, self) => 
+      index === self.findIndex(a => a.id === admin.id)
+    );
 
     setUsers(savedUsers);
     setTransactions(savedTransactions);
     setAffiliates(savedAffiliates);
-    setAdmins(savedAdmins);
+    setAdmins(uniqueAdmins);
 
     calculateStats(savedUsers, savedTransactions, savedAffiliates);
   };
@@ -136,12 +143,12 @@ const SuperAdmin = () => {
       };
       
       const updatedAdmins = [...admins, newAdmin];
-      setAdmins(updatedAdmins);
+      const currentAdmins = JSON.parse(localStorage.getItem('raspou_admins') || '[]');
+      const updatedAdmins = [...currentAdmins, newAdmin];
       localStorage.setItem('raspou_admins', JSON.stringify(updatedAdmins));
       
       // Adicionar também à lista de usuários para login
       const updatedUsers = [...users, newAdmin];
-      setUsers(updatedUsers);
       localStorage.setItem('raspou_users', JSON.stringify(updatedUsers));
       
       alert('Administrador criado com sucesso!');

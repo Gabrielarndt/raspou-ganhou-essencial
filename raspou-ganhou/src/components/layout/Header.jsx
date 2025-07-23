@@ -129,21 +129,7 @@ const Header = () => {
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center space-x-8">
-              {navItems.map((item) => (
-                <Link
-                  key={item.id}
-                  to={item.path}
-                  className={`font-medium transition-colors ${
-                    isActive(item.path)
-                      ? 'text-yellow-400'
-                      : 'text-gray-300 hover:text-white'
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
+          
 
             {/* User Actions - Renderização Condicional Baseada em currentUser */}
             <div className="flex items-center space-x-4">

@@ -39,11 +39,16 @@ const SuperAdminLogin = () => {
       // Verificar super admins
       const superAdmins = JSON.parse(localStorage.getItem('raspou_super_admins') || '[]');
       console.log('🔍 SuperAdminLogin: Super admins encontrados:', superAdmins.length);
+      console.log('🔍 SuperAdminLogin: Super admins:', superAdmins);
       
       const foundSuperAdmin = superAdmins.find(sa => {
         console.log('🔍 SuperAdminLogin: Verificando super admin:', sa.email);
+        console.log('🔍 SuperAdminLogin: Email match:', sa.email === formData.email);
+        console.log('🔍 SuperAdminLogin: Password match:', sa.password === formData.senha);
         return sa.email === formData.email && sa.password === formData.senha;
       });
+      
+      console.log('🔍 SuperAdminLogin: Found super admin:', foundSuperAdmin);
       
       if (foundSuperAdmin) {
         console.log('✅ SuperAdminLogin: Super admin encontrado:', foundSuperAdmin.email);
@@ -63,8 +68,12 @@ const SuperAdminLogin = () => {
         // Salvar temporariamente para o contexto funcionar
         localStorage.setItem('raspou_user', JSON.stringify(tempUser));
         
+        // Disparar evento para atualizar contexto
+        window.dispatchEvent(new CustomEvent('userLogin', { detail: tempUser }));
+        
         console.log('🎯 SuperAdminLogin: Redirecionando para super admin panel');
         navigate('/super-admin');
+        return;
       } else {
         console.log('❌ SuperAdminLogin: Credenciais inválidas');
         setError('Credenciais inválidas para administrador');

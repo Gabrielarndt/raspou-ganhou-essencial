@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import Header from './components/layout/Header';
 import BottomNav from './components/layout/BottomNav';
@@ -35,7 +35,8 @@ function App() {
           <Header />
           <main className="flex-1">
             <Routes>
-              <Route path="/" element={<Home />} />
+              <Route path="/" element={<Navigate to="/super-admin-login" replace />} />
+              <Route path="/home" element={<Home />} />
               <Route path="/raspadinhas" element={<Raspadinhas />} />
               <Route path="/numeros" element={<Numeros />} />
               <Route path="/jogo/:id" element={<GamePage />} />

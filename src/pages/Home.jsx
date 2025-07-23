@@ -12,3 +12,5 @@
 +
    const ganhadores = [
    ]
+
+export default Home

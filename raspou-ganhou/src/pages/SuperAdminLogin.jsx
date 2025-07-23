@@ -75,6 +75,7 @@ const SuperAdminLogin = () => {
       console.error('Erro no login admin:', err);
       setError('Erro inesperado. Tente novamente.');
       setIsLoading(false);
+    }
   };
 
   return (

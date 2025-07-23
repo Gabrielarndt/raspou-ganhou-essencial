@@ -42,7 +42,7 @@ const SuperAdmin = () => {
   const [selectedAffiliate, setSelectedAffiliate] = useState(null);
 
   // Verificar se é super admin
-  const isSuperAdmin = user?.email === 'superadmin@raspouganhou.com' || user?.is_super_admin === true;
+  const isSuperAdmin = user?.is_super_admin === true;
 
   useEffect(() => {
     if (!isSuperAdmin) {

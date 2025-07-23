@@ -34,69 +34,40 @@ const SuperAdminLogin = () => {
     }
 
     try {
-      // Verificar super admins primeiro
-      const superAdmins = JSON.parse(localStorage.getItem('raspou_super_admins') || '[]');
-      const admins = JSON.parse(localStorage.getItem('raspou_admins') || '[]');
-      const users = JSON.parse(localStorage.getItem('raspou_users') || '[]');
+      console.log('🔐 SuperAdminLogin: Tentando login para:', formData.email);
       
-      // Procurar em super admins
-      const foundSuperAdmin = superAdmins.find(sa => 
-        sa.email === formData.email && 
-        (sa.senha === formData.senha || sa.password === formData.senha)
-      );
-
-      // Procurar em admins
-      const foundAdmin = admins.find(a => 
-        a.email === formData.email && 
-        (a.senha === formData.senha || a.password === formData.senha)
-      );
-
-      // Procurar em usuários (caso tenha sido adicionado lá também)
-      const foundUser = users.find(u => 
-        u.email === formData.email && 
-        (u.senha === formData.senha || u.password === formData.senha) &&
-        (u.is_super_admin === true || u.is_admin === true)
-      );
-
-      if (foundSuperAdmin || foundAdmin || foundUser) {
-        const adminUser = foundSuperAdmin || foundAdmin || foundUser;
+      // Verificar super admins
+      const superAdmins = JSON.parse(localStorage.getItem('raspou_super_admins') || '[]');
+      console.log('🔍 SuperAdminLogin: Super admins encontrados:', superAdmins.length);
+      
+      const foundSuperAdmin = superAdmins.find(sa => {
+        console.log('🔍 SuperAdminLogin: Verificando super admin:', sa.email);
+        return sa.email === formData.email && sa.password === formData.senha;
+      });
+      
+      if (foundSuperAdmin) {
+        console.log('✅ SuperAdminLogin: Super admin encontrado:', foundSuperAdmin.email);
         
-        console.log('Admin encontrado:', adminUser);
+        // Criar usuário temporário para o contexto de autenticação
+        const tempUser = {
+          id: foundSuperAdmin.id,
+          nome: foundSuperAdmin.name,
+          email: foundSuperAdmin.email,
+          senha: foundSuperAdmin.password,
+          is_super_admin: true,
+          saldo_real: 0,
+          saldo_bonus: 0,
+          pontos_sorteio: 0
+        };
         
-        // Adicionar temporariamente aos usuários para o login funcionar
-        if (!foundUser) {
-          const tempUser = {
-            ...adminUser,
-            id: adminUser.id || Date.now(),
-            nome: adminUser.name,
-            email: adminUser.email,
-            senha: adminUser.password || adminUser.senha,
-            is_super_admin: adminUser.is_super_admin || false,
-            is_admin: adminUser.is_admin || false
-          };
-          
-          users.push(tempUser);
-          localStorage.setItem('raspou_users', JSON.stringify(users));
-        }
+        // Salvar temporariamente para o contexto funcionar
+        localStorage.setItem('raspou_user', JSON.stringify(tempUser));
         
-        // Tentar fazer login
-        const result = login(formData.email, formData.senha);
-        console.log('Resultado do login:', result);
-        
-        if (result.success) {
-          console.log('Login bem-sucedido, redirecionando...');
-          // Redirecionar para o painel correto
-          if (adminUser.is_super_admin) {
-            navigate('/super-admin');
-          } else {
-            navigate('/admin');
-          }
-        } else {
-          setError(result.message || 'Credenciais inválidas para administrador');
-        }
+        console.log('🎯 SuperAdminLogin: Redirecionando para super admin panel');
+        navigate('/super-admin');
       } else {
-        console.log('Nenhum admin encontrado com essas credenciais');
-        setError('Acesso negado. Apenas administradores podem acessar.');
+        console.log('❌ SuperAdminLogin: Credenciais inválidas');
+        setError('Credenciais inválidas para administrador');
       }
     } catch (err) {
       console.error('Erro no login admin:', err);

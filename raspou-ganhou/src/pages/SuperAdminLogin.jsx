@@ -34,27 +34,57 @@ const SuperAdminLogin = () => {
     }
 
     try {
-      // Verificar se é super admin ou admin
-      const users = JSON.parse(localStorage.getItem('raspou_users') || '[]');
+      // Verificar super admins primeiro
+      const superAdmins = JSON.parse(localStorage.getItem('raspou_super_admins') || '[]');
       const admins = JSON.parse(localStorage.getItem('raspou_admins') || '[]');
+      const users = JSON.parse(localStorage.getItem('raspou_users') || '[]');
       
+      // Procurar em super admins
+      const foundSuperAdmin = superAdmins.find(sa => 
+        sa.email === formData.email && 
+        (sa.senha === formData.senha || sa.password === formData.senha)
+      );
+
+      // Procurar em admins
+      const foundAdmin = admins.find(a => 
+        a.email === formData.email && 
+        (a.senha === formData.senha || a.password === formData.senha)
+      );
+
+      // Procurar em usuários (caso tenha sido adicionado lá também)
       const foundUser = users.find(u => 
         u.email === formData.email && 
         (u.senha === formData.senha || u.password === formData.senha) &&
         (u.is_super_admin === true || u.is_admin === true)
       );
 
-      const foundAdmin = admins.find(a => 
-        a.email === formData.email && 
-        (a.senha === formData.senha || a.password === formData.senha)
-      );
-
-      if (foundUser || foundAdmin) {
-        const adminUser = foundUser || foundAdmin;
+      if (foundSuperAdmin || foundAdmin || foundUser) {
+        const adminUser = foundSuperAdmin || foundAdmin || foundUser;
         
-        // Fazer login
+        console.log('Admin encontrado:', adminUser);
+        
+        // Adicionar temporariamente aos usuários para o login funcionar
+        if (!foundUser) {
+          const tempUser = {
+            ...adminUser,
+            id: adminUser.id || Date.now(),
+            nome: adminUser.name,
+            email: adminUser.email,
+            senha: adminUser.password || adminUser.senha,
+            is_super_admin: adminUser.is_super_admin || false,
+            is_admin: adminUser.is_admin || false
+          };
+          
+          users.push(tempUser);
+          localStorage.setItem('raspou_users', JSON.stringify(users));
+        }
+        
+        // Tentar fazer login
         const result = login(formData.email, formData.senha);
+        console.log('Resultado do login:', result);
+        
         if (result.success) {
+          console.log('Login bem-sucedido, redirecionando...');
           // Redirecionar para o painel correto
           if (adminUser.is_super_admin) {
             navigate('/super-admin');
@@ -62,12 +92,14 @@ const SuperAdminLogin = () => {
             navigate('/admin');
           }
         } else {
-          setError('Credenciais inválidas para administrador');
+          setError(result.message || 'Credenciais inválidas para administrador');
         }
       } else {
+        console.log('Nenhum admin encontrado com essas credenciais');
         setError('Acesso negado. Apenas administradores podem acessar.');
       }
     } catch (err) {
+      console.error('Erro no login admin:', err);
       setError('Erro inesperado. Tente novamente.');
     } finally {
       setIsLoading(false);

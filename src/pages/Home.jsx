@@ -8,7 +8,9 @@
    const navigate = useNavigate();
    const { user } = useAuth();
    const [activeTab, setActiveTab] = useState('ganhadores');
+ }
 
 +  console.log('🏠 Home: Component rendered');
 +
    const ganhadores = [
+   ]

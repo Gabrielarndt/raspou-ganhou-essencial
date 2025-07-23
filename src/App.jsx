@@ -36,7 +36,6 @@ function App() {
           <main className="flex-1">
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/home" element={<Home />} />
               <Route path="/raspadinhas" element={<Raspadinhas />} />
               <Route path="/numeros" element={<Numeros />} />
               <Route path="/jogo/:id" element={<GamePage />} />
@@ -50,7 +49,6 @@ function App() {
               <Route path="/super-admin-login" element={<SuperAdminLogin />} />
               <Route path="/historico-financeiro" element={<HistoricoFinanceiro />} />
               <Route path="/historico-jogos" element={<HistoricoJogos />} />
-              <Route path="*" element={<Home />} />
             </Routes>
           </main>
           <Footer />

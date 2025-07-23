@@ -144,12 +144,13 @@ const SuperAdmin = () => {
       
       const updatedAdmins = [...admins, newAdmin];
       const currentAdmins = JSON.parse(localStorage.getItem('raspou_admins') || '[]');
-      const updatedAdmins = [...currentAdmins, newAdmin];
-      localStorage.setItem('raspou_admins', JSON.stringify(updatedAdmins));
+      const newAdminsList = [...currentAdmins, newAdmin];
+      localStorage.setItem('raspou_admins', JSON.stringify(newAdminsList));
       
       // Adicionar também à lista de usuários para login
-      const updatedUsers = [...users, newAdmin];
-      localStorage.setItem('raspou_users', JSON.stringify(updatedUsers));
+      const currentUsers = JSON.parse(localStorage.getItem('raspou_users') || '[]');
+      const newUsersList = [...currentUsers, newAdmin];
+      localStorage.setItem('raspou_users', JSON.stringify(newUsersList));
       
       alert('Administrador criado com sucesso!');
       loadData();

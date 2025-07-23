@@ -31,3 +31,5 @@
     // Calcular estatísticas
     calculateStats(realUsers, savedTransactions, savedGames);
   };
+
+export default loadData

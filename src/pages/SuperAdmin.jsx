@@ -30,3 +30,5 @@
 
     calculateStats(realUsers, savedTransactions, savedAffiliates);
   };
+
+export default loadData

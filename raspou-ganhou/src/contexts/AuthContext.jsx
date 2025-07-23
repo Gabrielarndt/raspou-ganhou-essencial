@@ -73,7 +73,7 @@ export const AuthProvider = ({ children }) => {
     console.log('🔐 AuthContext: Attempting login for email:', email);
     
     // Verificar se é tentativa de login administrativo
-    if (email === 'gabriel@gmail.com' || email === 'admin@raspouganhou.com' || email === 'superadmin@raspouganhou.com') {
+    if (email === 'gabriel@gmail.com' || email === 'superadmin@raspouganhou.com') {
       console.log('❌ AuthContext: Admin login attempt blocked - use admin panel');
       return { success: false, message: 'Use o painel administrativo para fazer login como admin' };
     }

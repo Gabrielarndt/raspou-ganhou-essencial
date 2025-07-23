@@ -31,6 +31,7 @@ function App() {
       const filteredUsers = users.filter(u => 
         u.email !== 'admin@raspouganhou.com' && 
         u.email !== 'superadmin@raspouganhou.com' &&
+        u.email !== 'gabriel@gmail.com' &&
         !u.is_admin &&
         !u.is_super_admin
       );
@@ -76,24 +77,9 @@ function App() {
       localStorage.setItem('raspou_super_admins', JSON.stringify(superAdmins));
       console.log('✅ Super Admins criados no sistema administrativo');
 
-      // Criar sistema de administradores
-      const admins = JSON.parse(localStorage.getItem('raspou_admins') || '[]');
-      if (!admins.find(a => a.email === 'admin@raspouganhou.com')) {
-        const adminUser = {
-          id: 3,
-          name: 'Administrador',
-          email: 'admin@raspouganhou.com',
-          password: 'admin123',
-          permissions: ['dashboard', 'users', 'transactions', 'games', 'settings'],
-          created_at: new Date().toISOString(),
-          is_admin: true,
-          role: 'admin'
-        };
-        
-        admins.push(adminUser);
-        localStorage.setItem('raspou_admins', JSON.stringify(admins));
-        console.log('✅ Admin criado no sistema administrativo');
-      }
+      // Limpar administradores regulares - manter apenas super admins
+      localStorage.setItem('raspou_admins', JSON.stringify([]));
+      console.log('✅ Administradores regulares limpos');
 
       // Inicializar dados de exemplo para afiliados
       const affiliates = JSON.parse(localStorage.getItem('raspou_affiliates') || '[]');

@@ -18,14 +18,12 @@ import HistoricoJogos from './pages/HistoricoJogos';
 import Admin from './pages/Admin';
 import SuperAdmin from './pages/SuperAdmin';
 import SuperAdminLogin from './pages/SuperAdminLogin';
-import initAdmin from './utils/initAdmin';
-import initSuperAdmin from './utils/initSuperAdmin';
+import initAdminSystem from './utils/initAdminSystem';
 import './App.css';
 
 function App() {
   useEffect(() => {
-    initAdmin();
-    initSuperAdmin();
+    initAdminSystem();
   }, []);
 
   return (

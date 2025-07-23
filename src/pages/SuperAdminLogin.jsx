@@ -1,6 +1,6 @@
 @@ .. @@
     try {
-      // Verificar se é super admin
+      // Verificar apenas no sistema administrativo separado
       const superAdmins = JSON.parse(localStorage.getItem('raspou_super_admins') || '[]');
       const admins = JSON.parse(localStorage.getItem('raspou_admins') || '[]');
       
@@ -17,7 +17,7 @@
       if (foundSuperAdmin || foundAdmin) {
         const adminUser = foundSuperAdmin || foundAdmin;
         
-        // Salvar admin logado
+        // Salvar admin logado no sistema administrativo
         localStorage.setItem('raspou_admin_logged', JSON.stringify(adminUser));
         
         // Redirecionar para o painel correto

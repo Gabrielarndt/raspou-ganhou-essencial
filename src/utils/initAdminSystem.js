@@ -1,7 +1,9 @@
-// Inicializar sistema de super administradores separado
-const initSuperAdmin = () => {
+// Inicializar sistema administrativo separado
+const initAdminSystem = () => {
   try {
-    // Remover super admins da lista de usuários se existirem
+    console.log('🔧 Inicializando sistema administrativo...');
+    
+    // Limpar admins da lista de usuários se existirem
     const users = JSON.parse(localStorage.getItem('raspou_users') || '[]');
     const filteredUsers = users.filter(u => 
       u.email !== 'admin@raspouganhou.com' && 
@@ -9,12 +11,14 @@ const initSuperAdmin = () => {
       !u.is_admin &&
       !u.is_super_admin
     );
-    localStorage.setItem('raspou_users', JSON.stringify(filteredUsers));
-
-    // Criar sistema separado de super administradores
-    const superAdmins = JSON.parse(localStorage.getItem('raspou_super_admins') || '[]');
     
-    // Verificar se super admin já existe
+    if (users.length !== filteredUsers.length) {
+      localStorage.setItem('raspou_users', JSON.stringify(filteredUsers));
+      console.log('🧹 Admins removidos da lista de usuários');
+    }
+
+    // Criar sistema de super administradores
+    const superAdmins = JSON.parse(localStorage.getItem('raspou_super_admins') || '[]');
     if (!superAdmins.find(sa => sa.email === 'superadmin@raspouganhou.com')) {
       const superAdminUser = {
         id: 1,
@@ -29,10 +33,29 @@ const initSuperAdmin = () => {
       
       superAdmins.push(superAdminUser);
       localStorage.setItem('raspou_super_admins', JSON.stringify(superAdmins));
-      console.log('Super Admin user created successfully in super admin system');
+      console.log('✅ Super Admin criado no sistema administrativo');
     }
 
-    // Inicializar dados de exemplo para afiliados se não existirem
+    // Criar sistema de administradores
+    const admins = JSON.parse(localStorage.getItem('raspou_admins') || '[]');
+    if (!admins.find(a => a.email === 'admin@raspouganhou.com')) {
+      const adminUser = {
+        id: 1,
+        name: 'Administrador',
+        email: 'admin@raspouganhou.com',
+        password: 'admin123',
+        permissions: ['dashboard', 'users', 'transactions', 'games', 'settings'],
+        created_at: new Date().toISOString(),
+        is_admin: true,
+        role: 'admin'
+      };
+      
+      admins.push(adminUser);
+      localStorage.setItem('raspou_admins', JSON.stringify(admins));
+      console.log('✅ Admin criado no sistema administrativo');
+    }
+
+    // Inicializar dados de exemplo para afiliados
     const affiliates = JSON.parse(localStorage.getItem('raspou_affiliates') || '[]');
     if (affiliates.length === 0) {
       const exampleAffiliates = [
@@ -41,8 +64,8 @@ const initSuperAdmin = () => {
           name: 'João Afiliado',
           email: 'joao@afiliado.com',
           password: 'afiliado123',
-          commission: 10, // 10%
-          cpa: 50, // R$ 50 por primeiro depósito
+          commission: 10,
+          cpa: 50,
           total_clients: 15,
           total_deposits: 5000,
           total_commission: 500,
@@ -54,8 +77,8 @@ const initSuperAdmin = () => {
           name: 'Maria Parceira',
           email: 'maria@parceira.com',
           password: 'parceira123',
-          commission: 15, // 15%
-          cpa: 75, // R$ 75 por primeiro depósito
+          commission: 15,
+          cpa: 75,
           total_clients: 8,
           total_deposits: 3200,
           total_commission: 480,
@@ -65,32 +88,13 @@ const initSuperAdmin = () => {
       ];
       
       localStorage.setItem('raspou_affiliates', JSON.stringify(exampleAffiliates));
-      console.log('Example affiliates created successfully');
+      console.log('✅ Afiliados de exemplo criados');
     }
 
-    // Inicializar dados de exemplo para administradores normais
-    const admins = JSON.parse(localStorage.getItem('raspou_admins') || '[]');
-    if (admins.length === 0) {
-      const exampleAdmins = [
-        {
-          id: 2,
-          name: 'Admin Geral',
-          email: 'admin.geral@raspouganhou.com',
-          password: 'admin123',
-          permissions: ['dashboard', 'users', 'transactions', 'affiliates'],
-          created_at: new Date().toISOString(),
-          is_admin: true,
-          role: 'admin'
-        }
-      ];
-      
-      localStorage.setItem('raspou_admins', JSON.stringify(exampleAdmins));
-      console.log('Example admins created successfully');
-    }
-
+    console.log('🎉 Sistema administrativo inicializado com sucesso!');
   } catch (error) {
-    console.error('Error creating super admin user:', error);
+    console.error('💥 Erro ao inicializar sistema administrativo:', error);
   }
 };
 
-export default initSuperAdmin;
+export default initAdminSystem;

@@ -35,7 +35,7 @@ function App() {
           <Header />
           <main className="flex-1">
             <Routes>
-              <Route path="/" element={<Navigate to="/super-admin-login" replace />} />
+              <Route path="/" element={<Home />} />
               <Route path="/home" element={<Home />} />
               <Route path="/raspadinhas" element={<Raspadinhas />} />
               <Route path="/numeros" element={<Numeros />} />

@@ -13,11 +13,11 @@ import Register from './pages/Register';
 import Profile from './pages/Profile';
 import Deposit from './pages/Deposit';
 import Withdraw from './pages/Withdraw';
-import HistoricoFinanceiro from './pages/HistoricoFinanceiro';
-import HistoricoJogos from './pages/HistoricoJogos';
 import Admin from './pages/Admin';
 import SuperAdmin from './pages/SuperAdmin';
 import SuperAdminLogin from './pages/SuperAdminLogin';
+import HistoricoFinanceiro from './pages/HistoricoFinanceiro';
+import HistoricoJogos from './pages/HistoricoJogos';
 import initAdminSystem from './utils/initAdminSystem';
 import './App.css';
 
@@ -27,21 +27,22 @@ function App() {
   }, []);
 
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          {/* SISTEMA ADMINISTRATIVO - SEM LAYOUT */}
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/super-admin" element={<SuperAdmin />} />
-          <Route path="/super-admin-login" element={<SuperAdminLogin />} />
-          
-          {/* SITE PRINCIPAL - COM LAYOUT */}
-          <Route path="/*" element={
+    <Router>
+      <Routes>
+        {/* SISTEMA ADMINISTRATIVO - COMPLETAMENTE SEPARADO */}
+        <Route path="/admin" element={<Admin />} />
+        <Route path="/super-admin" element={<SuperAdmin />} />
+        <Route path="/super-admin-login" element={<SuperAdminLogin />} />
+        
+        {/* SITE DA RASPADINHA - COM LAYOUT COMPLETO */}
+        <Route path="/*" element={
+          <AuthProvider>
             <div className="min-h-screen bg-black flex flex-col">
               <Header />
               <main className="flex-1">
                 <Routes>
                   <Route path="/" element={<Home />} />
+                  <Route path="/home" element={<Home />} />
                   <Route path="/raspadinhas" element={<Raspadinhas />} />
                   <Route path="/numeros" element={<Numeros />} />
                   <Route path="/jogo/:id" element={<GamePage />} />
@@ -57,10 +58,10 @@ function App() {
               <Footer />
               <BottomNav />
             </div>
-          } />
-        </Routes>
-      </Router>
-    </AuthProvider>
+          </AuthProvider>
+        } />
+      </Routes>
+    </Router>
   );
 }
 

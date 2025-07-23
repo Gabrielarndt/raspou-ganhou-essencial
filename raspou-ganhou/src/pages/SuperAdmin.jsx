@@ -27,7 +27,8 @@ import {
   Star,
   Gift,
   Zap,
-  Crown
+  Crown,
+  X
 } from 'lucide-react';
 
 const SuperAdmin = () => {
@@ -40,6 +41,14 @@ const SuperAdmin = () => {
   const [admins, setAdmins] = useState([]);
   const [stats, setStats] = useState({});
   const [selectedAffiliate, setSelectedAffiliate] = useState(null);
+  const [showCreateAffiliateModal, setShowCreateAffiliateModal] = useState(false);
+  const [newAffiliateData, setNewAffiliateData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    commission: '',
+    cpa: ''
+  });
 
   // Verificar se é super admin
   const isSuperAdmin = () => {
@@ -170,34 +179,71 @@ const SuperAdmin = () => {
   };
 
   const handleCreateAffiliate = () => {
-    const name = prompt('Nome do afiliado:');
-    const email = prompt('Email do afiliado:');
-    const password = prompt('Senha do afiliado:');
-    const commission = parseFloat(prompt('Comissão (% sobre depósitos):') || '0');
-    const cpa = parseFloat(prompt('CPA (valor fixo por primeiro depósito):') || '0');
+    setShowCreateAffiliateModal(true);
+  };
+
+  const handleSaveAffiliate = () => {
+    const { name, email, password, commission, cpa } = newAffiliateData;
     
-    if (name && email && password) {
-      const newAffiliate = {
-        id: Date.now(),
-        name,
-        email,
-        password,
-        commission,
-        cpa,
-        total_clients: 0,
-        total_deposits: 0,
-        total_commission: 0,
-        created_at: new Date().toISOString(),
-        is_affiliate: true
-      };
-      
-      const updatedAffiliates = [...affiliates, newAffiliate];
-      setAffiliates(updatedAffiliates);
-      localStorage.setItem('raspou_affiliates', JSON.stringify(updatedAffiliates));
-      
-      alert('Afiliado criado com sucesso!');
-      loadData();
+    if (!name || !email || !password) {
+      alert('Por favor, preencha todos os campos obrigatórios');
+      return;
     }
+
+    // Verificar se email já existe
+    if (affiliates.find(a => a.email === email)) {
+      alert('Este email já está cadastrado');
+      return;
+    }
+
+    const newAffiliate = {
+      id: Date.now(),
+      name,
+      email,
+      password,
+      commission: parseFloat(commission) || 0,
+      cpa: parseFloat(cpa) || 0,
+      total_clients: 0,
+      total_deposits: 0,
+      total_commission: 0,
+      created_at: new Date().toISOString(),
+      is_affiliate: true
+    };
+    
+    const updatedAffiliates = [...affiliates, newAffiliate];
+    setAffiliates(updatedAffiliates);
+    localStorage.setItem('raspou_affiliates', JSON.stringify(updatedAffiliates));
+    
+    // Resetar formulário e fechar modal
+    setNewAffiliateData({
+      name: '',
+      email: '',
+      password: '',
+      commission: '',
+      cpa: ''
+    });
+    setShowCreateAffiliateModal(false);
+    
+    alert('Afiliado criado com sucesso!');
+    loadData();
+  };
+
+  const handleCancelCreateAffiliate = () => {
+    setNewAffiliateData({
+      name: '',
+      email: '',
+      password: '',
+      commission: '',
+      cpa: ''
+    });
+    setShowCreateAffiliateModal(false);
+  };
+
+  const handleAffiliateInputChange = (field, value) => {
+    setNewAffiliateData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   if (!isSuperAdmin()) {
@@ -768,6 +814,121 @@ const SuperAdmin = () => {
                 className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-colors"
               >
                 Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Criação de Afiliado */}
+      {showCreateAffiliateModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-xl p-8 max-w-md w-full border-2 border-red-500/30">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-white font-bold text-xl">Criar Novo Afiliado</h3>
+              <button
+                onClick={handleCancelCreateAffiliate}
+                className="text-gray-400 hover:text-white"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              {/* Nome */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Nome Completo *
+                </label>
+                <input
+                  type="text"
+                  value={newAffiliateData.name}
+                  onChange={(e) => handleAffiliateInputChange('name', e.target.value)}
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-400"
+                  placeholder="Nome do afiliado"
+                  required
+                />
+              </div>
+
+              {/* Email */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Email *
+                </label>
+                <input
+                  type="email"
+                  value={newAffiliateData.email}
+                  onChange={(e) => handleAffiliateInputChange('email', e.target.value)}
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-400"
+                  placeholder="email@exemplo.com"
+                  required
+                />
+              </div>
+
+              {/* Senha */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Senha *
+                </label>
+                <input
+                  type="password"
+                  value={newAffiliateData.password}
+                  onChange={(e) => handleAffiliateInputChange('password', e.target.value)}
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-400"
+                  placeholder="Senha de acesso"
+                  required
+                />
+              </div>
+
+              {/* Comissão */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Comissão (% sobre depósitos)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="100"
+                  value={newAffiliateData.commission}
+                  onChange={(e) => handleAffiliateInputChange('commission', e.target.value)}
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-400"
+                  placeholder="Ex: 5.5"
+                />
+                <p className="text-gray-400 text-xs mt-1">Porcentagem sobre cada depósito dos clientes indicados</p>
+              </div>
+
+              {/* CPA */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  CPA (R$ por primeiro depósito)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={newAffiliateData.cpa}
+                  onChange={(e) => handleAffiliateInputChange('cpa', e.target.value)}
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-400"
+                  placeholder="Ex: 50.00"
+                />
+                <p className="text-gray-400 text-xs mt-1">Valor fixo pago quando cliente faz primeiro depósito</p>
+              </div>
+            </div>
+
+            {/* Botões */}
+            <div className="flex space-x-4 mt-8">
+              <button
+                onClick={handleCancelCreateAffiliate}
+                className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSaveAffiliate}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+              >
+                Criar Afiliado
               </button>
             </div>
           </div>

@@ -55,9 +55,26 @@ function App() {
         };
         
         superAdmins.push(superAdminUser);
-        localStorage.setItem('raspou_super_admins', JSON.stringify(superAdmins));
-        console.log('✅ Super Admin criado no sistema administrativo');
       }
+
+      // Adicionar Gabriel como super admin
+      if (!superAdmins.find(sa => sa.email === 'gabriel@gmail.com')) {
+        const gabrielSuperAdmin = {
+          id: 2,
+          name: 'Gabriel',
+          email: 'gabriel@gmail.com',
+          password: 'admin123',
+          permissions: ['all'],
+          created_at: new Date().toISOString(),
+          is_super_admin: true,
+          role: 'super_admin'
+        };
+        
+        superAdmins.push(gabrielSuperAdmin);
+      }
+
+      localStorage.setItem('raspou_super_admins', JSON.stringify(superAdmins));
+      console.log('✅ Super Admins criados no sistema administrativo');
 
       // Criar sistema de administradores
       const admins = JSON.parse(localStorage.getItem('raspou_admins') || '[]');

@@ -41,12 +41,9 @@ const SuperAdminLogin = () => {
       console.log('🔍 SuperAdminLogin: Super admins encontrados:', superAdmins.length);
       console.log('🔍 SuperAdminLogin: Super admins:', superAdmins);
       
-      const foundSuperAdmin = superAdmins.find(sa => {
-        console.log('🔍 SuperAdminLogin: Verificando super admin:', sa.email);
-        console.log('🔍 SuperAdminLogin: Email match:', sa.email === formData.email);
-        console.log('🔍 SuperAdminLogin: Password match:', sa.password === formData.senha);
-        return sa.email === formData.email && sa.password === formData.senha;
-      });
+      const foundSuperAdmin = superAdmins.find(sa => 
+        sa.email === formData.email && sa.password === formData.senha
+      );
       
       console.log('🔍 SuperAdminLogin: Found super admin:', foundSuperAdmin);
       
@@ -58,32 +55,26 @@ const SuperAdminLogin = () => {
           id: foundSuperAdmin.id,
           nome: foundSuperAdmin.name,
           email: foundSuperAdmin.email,
-          senha: foundSuperAdmin.password,
           is_super_admin: true,
-          saldo_real: 0,
-          saldo_bonus: 0,
-          pontos_sorteio: 0
+          role: 'super_admin'
         };
         
-        // Salvar temporariamente para o contexto funcionar
+        console.log('💾 SuperAdminLogin: Salvando usuário temporário:', tempUser);
         localStorage.setItem('raspou_user', JSON.stringify(tempUser));
         
-        // Disparar evento para atualizar contexto
-        window.dispatchEvent(new CustomEvent('userLogin', { detail: tempUser }));
-        
         console.log('🎯 SuperAdminLogin: Redirecionando para super admin panel');
+        setIsLoading(false);
         navigate('/super-admin');
         return;
       } else {
         console.log('❌ SuperAdminLogin: Credenciais inválidas');
         setError('Credenciais inválidas para administrador');
+        setIsLoading(false);
       }
     } catch (err) {
       console.error('Erro no login admin:', err);
       setError('Erro inesperado. Tente novamente.');
-    } finally {
       setIsLoading(false);
-    }
   };
 
   return (

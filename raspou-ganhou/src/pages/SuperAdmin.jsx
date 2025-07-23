@@ -42,16 +42,28 @@ const SuperAdmin = () => {
   const [selectedAffiliate, setSelectedAffiliate] = useState(null);
 
   // Verificar se é super admin
-  const isSuperAdmin = user?.is_super_admin === true;
+  const isSuperAdmin = () => {
+    // Verificar se há usuário logado como super admin
+    const savedUser = localStorage.getItem('raspou_user');
+    if (savedUser) {
+      try {
+        const parsedUser = JSON.parse(savedUser);
+        return parsedUser.is_super_admin === true;
+      } catch (error) {
+        return false;
+      }
+    }
+    return false;
+  };
 
   useEffect(() => {
-    if (!isSuperAdmin) {
+    if (!isSuperAdmin()) {
       navigate('/super-admin-login');
       return;
     }
 
     loadData();
-  }, [isSuperAdmin, navigate]);
+  }, [navigate]);
 
   const loadData = () => {
     // Carregar dados do localStorage
@@ -188,7 +200,7 @@ const SuperAdmin = () => {
     }
   };
 
-  if (!isSuperAdmin) {
+  if (!isSuperAdmin()) {
     return null;
   }
 

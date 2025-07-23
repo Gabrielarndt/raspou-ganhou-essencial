@@ -97,39 +97,9 @@ function App() {
 
       // Inicializar dados de exemplo para afiliados
       const affiliates = JSON.parse(localStorage.getItem('raspou_affiliates') || '[]');
-      if (affiliates.length === 0) {
-        const exampleAffiliates = [
-          {
-            id: 1,
-            name: 'João Afiliado',
-            email: 'joao@afiliado.com',
-            password: 'afiliado123',
-            commission: 10,
-            cpa: 50,
-            total_clients: 15,
-            total_deposits: 5000,
-            total_commission: 500,
-            created_at: new Date().toISOString(),
-            is_affiliate: true
-          },
-          {
-            id: 2,
-            name: 'Maria Parceira',
-            email: 'maria@parceira.com',
-            password: 'parceira123',
-            commission: 15,
-            cpa: 75,
-            total_clients: 8,
-            total_deposits: 3200,
-            total_commission: 480,
-            created_at: new Date().toISOString(),
-            is_affiliate: true
-          }
-        ];
-        
-        localStorage.setItem('raspou_affiliates', JSON.stringify(exampleAffiliates));
-        console.log('✅ Afiliados de exemplo criados');
-      }
+      // Limpar afiliados fictícios - plataforma real
+      localStorage.setItem('raspou_affiliates', JSON.stringify([]));
+      console.log('✅ Afiliados limpos para plataforma real');
 
       console.log('🎉 Sistema administrativo inicializado com sucesso!');
     } catch (error) {

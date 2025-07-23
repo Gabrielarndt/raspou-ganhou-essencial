@@ -71,8 +71,15 @@ export const AuthProvider = ({ children }) => {
 
   const login = (email, senha) => {
     console.log('🔐 AuthContext: Attempting login for email:', email);
+    
+    // Verificar se é tentativa de login administrativo
+    if (email === 'gabriel@gmail.com' || email === 'admin@raspouganhou.com' || email === 'superadmin@raspouganhou.com') {
+      console.log('❌ AuthContext: Admin login attempt blocked - use admin panel');
+      return { success: false, message: 'Use o painel administrativo para fazer login como admin' };
+    }
+    
     const users = JSON.parse(localStorage.getItem('raspou_users') || '[]');
-    const foundUser = users.find(u => 
+    const foundUser = users.filter(u => !u.is_admin && !u.is_super_admin).find(u => 
       u.email === email && (u.senha === senha || u.password === senha)
     );
     

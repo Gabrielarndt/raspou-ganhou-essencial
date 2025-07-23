@@ -632,21 +632,9 @@ const SuperAdmin = () => {
 
               <div className="bg-gray-800 rounded-xl p-6">
                 <h3 className="text-white font-bold text-lg mb-4">Histórico de Sorteios</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
-                    <div>
-                      <p className="text-white font-medium">Sorteio de Ontem</p>
-                      <p className="text-gray-400 text-sm">João S. - R$ 5.000</p>
-                    </div>
-                    <span className="text-green-400 text-sm">Concluído</span>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
-                    <div>
-                      <p className="text-white font-medium">Sorteio Semanal</p>
-                      <p className="text-gray-400 text-sm">Maria L. - R$ 10.000</p>
-                    </div>
-                    <span className="text-green-400 text-sm">Concluído</span>
-                  </div>
+                <div className="text-center py-8">
+                  <p className="text-gray-400">Nenhum sorteio realizado ainda</p>
+                  <p className="text-gray-500 text-sm mt-2">O histórico aparecerá após os primeiros sorteios</p>
                 </div>
               </div>
             </div>

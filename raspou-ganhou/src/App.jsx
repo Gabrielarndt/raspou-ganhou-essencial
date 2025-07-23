@@ -14,14 +14,18 @@ import Profile from './pages/Profile';
 import Deposit from './pages/Deposit';
 import Withdraw from './pages/Withdraw';
 import Admin from './pages/Admin';
+import SuperAdmin from './pages/SuperAdmin';
+import SuperAdminLogin from './pages/SuperAdminLogin';
 import HistoricoFinanceiro from './pages/HistoricoFinanceiro';
 import HistoricoJogos from './pages/HistoricoJogos';
 import initAdmin from './utils/initAdmin';
+import initSuperAdmin from './utils/initSuperAdmin';
 import './App.css';
 
 function App() {
   useEffect(() => {
     initAdmin();
+    initSuperAdmin();
   }, []);
 
   return (
@@ -41,6 +45,8 @@ function App() {
               <Route path="/deposito" element={<Deposit />} />
               <Route path="/saque" element={<Withdraw />} />
               <Route path="/admin" element={<Admin />} />
+              <Route path="/super-admin" element={<SuperAdmin />} />
+              <Route path="/super-admin-login" element={<SuperAdminLogin />} />
               <Route path="/historico-financeiro" element={<HistoricoFinanceiro />} />
               <Route path="/historico-jogos" element={<HistoricoJogos />} />
             </Routes>

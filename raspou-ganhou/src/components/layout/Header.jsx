@@ -209,6 +209,15 @@ const Header = () => {
                   >
                     Criar Conta
                   </Link>
+                  
+                  {/* Link Super Admin (apenas para desenvolvimento) */}
+                  <Link
+                    to="/super-admin-login"
+                    className="bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-xs transition-colors"
+                    title="Acesso Administrativo"
+                  >
+                    Admin
+                  </Link>
                 </>
               )}
 

@@ -16,6 +16,8 @@ import Withdraw from './pages/Withdraw';
 import Admin from './pages/Admin';
 import SuperAdmin from './pages/SuperAdmin';
 import SuperAdminLogin from './pages/SuperAdminLogin';
+import Affiliate from './pages/Affiliate';
+import AffiliateLogin from './pages/AffiliateLogin';
 import HistoricoFinanceiro from './pages/HistoricoFinanceiro';
 import HistoricoJogos from './pages/HistoricoJogos';
 import './App.css';
@@ -101,6 +103,8 @@ function App() {
           <Route path="/admin" element={<Admin />} />
           <Route path="/super-admin" element={<SuperAdmin />} />
           <Route path="/super-admin-login" element={<SuperAdminLogin />} />
+          <Route path="/affiliate" element={<Affiliate />} />
+          <Route path="/affiliate-login" element={<AffiliateLogin />} />
           
           {/* SITE DA RASPADINHA - COM LAYOUT COMPLETO */}
           <Route path="/*" element={

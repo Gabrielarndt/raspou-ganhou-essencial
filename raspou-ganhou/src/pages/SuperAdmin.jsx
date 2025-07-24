@@ -769,7 +769,6 @@ const handleEditLottery = (lottery) => {
                     {[
                         { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
                         { id: 'clients', label: 'Clientes', icon: Users },
-                              onClick={() => handleEditLottery(lottery)}
                         { id: 'admins', label: 'Administradores', icon: Shield },
                         { id: 'raffles', label: 'Sorteios', icon: Trophy },
                         { id: 'settings', label: 'Configurações', icon: Settings }
@@ -1208,7 +1207,7 @@ const handleEditLottery = (lottery) => {
                                         <p className="text-gray-400 text-sm">Hoje às 20:00</p>
                                         <p className="text-gray-400 text-sm">1.247 participantes</p>
                                     </div>
-                                    <button className="w-full bg-yellow-600 hover:bg-yellow-700 text-black font-bold py-2 px-4 rounded-lg transition-colors">
+                                    <button onClick={() => handleEditLottery(lottery)} className="w-full bg-yellow-600 hover:bg-yellow-700 text-black font-bold py-2 px-4 rounded-lg transition-colors">
                                         Editar Sorteio
                                     </button>
                                 </div>

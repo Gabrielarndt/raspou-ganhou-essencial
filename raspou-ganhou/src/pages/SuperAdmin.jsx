@@ -1017,7 +1017,10 @@ const SuperAdmin = () => {
                     <div className="space-y-6">
                         <div className="flex flex-col sm:flex-row gap-4 justify-between">
                             <h2 className="text-xl font-bold text-white">Gestão de Sorteios</h2>
-                            <button className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors flex items-center space-x-2">
+                            <button className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors flex items-center space-x-2"
+                                onClick={() => setShowCreateLotteryModal(true)}
+
+                              >
                                 <Plus className="w-4 h-4" />
                                 <span>Novo Sorteio</span>
                             </button>

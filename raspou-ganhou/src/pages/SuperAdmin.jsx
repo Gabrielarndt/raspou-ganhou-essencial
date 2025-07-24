@@ -1000,120 +1000,6 @@ const SuperAdmin = () => {
                 )}
 
                 {/* Sorteios */}
-                {activeTab === 'lotteries' && (
-                  <div className="space-y-6">
-                    <div className="flex flex-col sm:flex-row gap-4 justify-between">
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                        <input
-                          type="text"
-                          placeholder="Buscar sorteios..."
-                          className="pl-10 pr-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                        />
-                      </div>
-                      <button 
-                        onClick={() => setShowCreateLotteryModal(true)}
-                        className="bg-yellow-600 hover:bg-yellow-700 text-black font-bold py-2 px-4 rounded-lg transition-colors flex items-center space-x-2"
-                      >
-                        <Plus className="w-4 h-4" />
-                        <span>Novo Sorteio</span>
-                      </button>
-                    </div>
-
-                    <div className="bg-gray-800 rounded-xl overflow-hidden">
-                      <div className="overflow-x-auto">
-                        <table className="w-full">
-                          <thead className="bg-gray-700">
-                            <tr>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Sorteio</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Prêmio</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Data/Hora</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Participantes</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Ações</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-gray-600">
-                            {lotteries.map((lottery) => (
-                              <tr key={lottery.id} className="hover:bg-gray-700">
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <div>
-                                    <div className="text-sm font-medium text-white">{lottery.name}</div>
-                                    <div className="text-sm text-gray-400">{lottery.description}</div>
-                                  </div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-green-400 font-bold">
-                                  {formatCurrency(lottery.prize)}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                  <div>
-                                    <div>{formatDate(lottery.draw_date)}</div>
-                                    <div className="text-xs text-gray-400">{lottery.draw_time}</div>
-                                  </div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                  <div>
-                                    <div>{lottery.participants?.length || 0}</div>
-                                    {lottery.max_participants && (
-                                      <div className="text-xs text-gray-400">
-                                        / {lottery.max_participants} máx
-                                      </div>
-                                    )}
-                                  </div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(lottery.status)}`}>
-                                    {getStatusLabel(lottery.status)}
-                                  </span>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                  <div className="flex space-x-2">
-                                    <button 
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setEditingLottery(lottery);
-                                        setShowEditLotteryModal(true);
-                                      }}
-                                      className="text-yellow-400 hover:text-yellow-300"
-                                      title="Editar"
-                                    >
-                                      <Edit className="w-4 h-4" />
-                                    </button>
-                                    <button 
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDeleteLottery(lottery.id);
-                                      }}
-                                      className="text-red-400 hover:text-red-300"
-                                      title="Excluir"
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </button>
-                                  </div>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                      
-                      {lotteries.length === 0 && (
-                        <div className="text-center py-8">
-                          <Trophy className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                          <p className="text-gray-400">Nenhum sorteio encontrado</p>
-                          <button 
-                            onClick={() => setShowCreateLotteryModal(true)}
-                            className="mt-4 bg-yellow-600 hover:bg-yellow-700 text-black font-bold py-2 px-4 rounded-lg transition-colors"
-                          >
-                            Criar Primeiro Sorteio
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Sorteios */}
                 {activeTab === 'raffles' && (
                     <div className="space-y-6">
                         <div className="flex flex-col sm:flex-row gap-4 justify-between">
@@ -1226,6 +1112,330 @@ const SuperAdmin = () => {
                     </div>
                 )}
             </div>
+
+            {/* Modal Criar Sorteio */}
+            {showCreateLotteryModal && (
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[80] p-4">
+                    <div className="bg-gray-800 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-xl font-bold text-white">Criar Novo Sorteio</h3>
+                            <button
+                                onClick={() => {
+                                    setShowCreateLotteryModal(false);
+                                    setNewLotteryData({
+                                        name: '',
+                                        description: '',
+                                        prize: '',
+                                        draw_date: '',
+                                        draw_time: '',
+                                        max_participants: '',
+                                        entry_cost: '',
+                                        status: 'scheduled'
+                                    });
+                                }}
+                                className="text-gray-400 hover:text-white"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    Nome do Sorteio *
+                                </label>
+                                <input
+                                    type="text"
+                                    value={newLotteryData.name}
+                                    onChange={(e) => setNewLotteryData({...newLotteryData, name: e.target.value})}
+                                    className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                    placeholder="Ex: Sorteio Diário"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    Valor do Prêmio (R$) *
+                                </label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    value={newLotteryData.prize}
+                                    onChange={(e) => setNewLotteryData({...newLotteryData, prize: e.target.value})}
+                                    className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                    placeholder="5000.00"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    Data do Sorteio *
+                                </label>
+                                <input
+                                    type="date"
+                                    value={newLotteryData.draw_date}
+                                    onChange={(e) => setNewLotteryData({...newLotteryData, draw_date: e.target.value})}
+                                    className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    Horário do Sorteio *
+                                </label>
+                                <input
+                                    type="time"
+                                    value={newLotteryData.draw_time}
+                                    onChange={(e) => setNewLotteryData({...newLotteryData, draw_time: e.target.value})}
+                                    className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    Máximo de Participantes
+                                </label>
+                                <input
+                                    type="number"
+                                    value={newLotteryData.max_participants}
+                                    onChange={(e) => setNewLotteryData({...newLotteryData, max_participants: e.target.value})}
+                                    className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                    placeholder="Deixe vazio para ilimitado"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    Custo de Participação (R$)
+                                </label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    value={newLotteryData.entry_cost}
+                                    onChange={(e) => setNewLotteryData({...newLotteryData, entry_cost: e.target.value})}
+                                    className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                    placeholder="0.00 para gratuito"
+                                />
+                            </div>
+
+                            <div className="md:col-span-2">
+                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    Descrição
+                                </label>
+                                <textarea
+                                    value={newLotteryData.description}
+                                    onChange={(e) => setNewLotteryData({...newLotteryData, description: e.target.value})}
+                                    className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                    rows="3"
+                                    placeholder="Descrição do sorteio..."
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    Status
+                                </label>
+                                <select
+                                    value={newLotteryData.status}
+                                    onChange={(e) => setNewLotteryData({...newLotteryData, status: e.target.value})}
+                                    className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                >
+                                    <option value="scheduled">Agendado</option>
+                                    <option value="active">Ativo</option>
+                                    <option value="completed">Finalizado</option>
+                                    <option value="cancelled">Cancelado</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end space-x-4 mt-6">
+                            <button
+                                onClick={() => {
+                                    setShowCreateLotteryModal(false);
+                                    setNewLotteryData({
+                                        name: '',
+                                        description: '',
+                                        prize: '',
+                                        draw_date: '',
+                                        draw_time: '',
+                                        max_participants: '',
+                                        entry_cost: '',
+                                        status: 'scheduled'
+                                    });
+                                }}
+                                className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleCreateLottery}
+                                className="bg-yellow-600 hover:bg-yellow-700 text-black font-bold py-2 px-4 rounded-lg transition-colors"
+                            >
+                                Criar Sorteio
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Editar Sorteio */}
+            {showEditLotteryModal && editingLottery && (
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[80] p-4">
+                    <div className="bg-gray-800 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-xl font-bold text-white">Editar Sorteio</h3>
+                            <button
+                                onClick={() => {
+                                    setShowEditLotteryModal(false);
+                                    setEditingLottery(null);
+                                }}
+                                className="text-gray-400 hover:text-white"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    Nome do Sorteio *
+                                </label>
+                                <input
+                                    type="text"
+                                    value={editingLottery.name}
+                                    onChange={(e) => setEditingLottery({...editingLottery, name: e.target.value})}
+                                    className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    Valor do Prêmio (R$) *
+                                </label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    value={editingLottery.prize}
+                                    onChange={(e) => setEditingLottery({...editingLottery, prize: e.target.value})}
+                                    className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    Data do Sorteio *
+                                </label>
+                                <input
+                                    type="date"
+                                    value={editingLottery.draw_date}
+                                    onChange={(e) => setEditingLottery({...editingLottery, draw_date: e.target.value})}
+                                    className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    Horário do Sorteio *
+                                </label>
+                                <input
+                                    type="time"
+                                    value={editingLottery.draw_time}
+                                    onChange={(e) => setEditingLottery({...editingLottery, draw_time: e.target.value})}
+                                    className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    Máximo de Participantes
+                                </label>
+                                <input
+                                    type="number"
+                                    value={editingLottery.max_participants || ''}
+                                    onChange={(e) => setEditingLottery({...editingLottery, max_participants: e.target.value})}
+                                    className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                    placeholder="Deixe vazio para ilimitado"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    Custo de Participação (R$)
+                                </label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    value={editingLottery.entry_cost || ''}
+                                    onChange={(e) => setEditingLottery({...editingLottery, entry_cost: e.target.value})}
+                                    className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                    placeholder="0.00 para gratuito"
+                                />
+                            </div>
+
+                            <div className="md:col-span-2">
+                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    Descrição
+                                </label>
+                                <textarea
+                                    value={editingLottery.description}
+                                    onChange={(e) => setEditingLottery({...editingLottery, description: e.target.value})}
+                                    className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                    rows="3"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    Status
+                                </label>
+                                <select
+                                    value={editingLottery.status}
+                                    onChange={(e) => setEditingLottery({...editingLottery, status: e.target.value})}
+                                    className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                >
+                                    <option value="scheduled">Agendado</option>
+                                    <option value="active">Ativo</option>
+                                    <option value="completed">Finalizado</option>
+                                    <option value="cancelled">Cancelado</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* Informações dos Participantes */}
+                        {editingLottery.participants && editingLottery.participants.length > 0 && (
+                            <div className="mt-6 bg-gray-700 rounded-lg p-4">
+                                <h4 className="text-white font-bold mb-3">Participantes ({editingLottery.participants.length})</h4>
+                                <div className="max-h-32 overflow-y-auto">
+                                    {editingLottery.participants.map((participant, index) => (
+                                        <div key={index} className="flex justify-between items-center py-1 text-sm">
+                                            <span className="text-gray-300">{participant.name}</span>
+                                            <span className="text-gray-400">{participant.email}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="flex justify-end space-x-4 mt-6">
+                            <button
+                                onClick={() => {
+                                    setShowEditLotteryModal(false);
+                                    setEditingLottery(null);
+                                }}
+                                className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleEditLottery}
+                                className="bg-yellow-600 hover:bg-yellow-700 text-black font-bold py-2 px-4 rounded-lg transition-colors"
+                            >
+                                Salvar Alterações
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Painel de Gerenciamento de Afiliado */}
             {showAffiliatePanel && selectedAffiliate && (

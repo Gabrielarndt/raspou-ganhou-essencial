@@ -256,12 +256,7 @@ const SuperAdmin = () => {
         
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <button
-            onClick={() => navigate('/super-admin')}
-            className="p-2 rounded-lg bg-gray-800 text-gray-400 hover:text-white transition-colors"
-          >
-            <ArrowLeft className="w-6 h-6" />
-          </button>
+          
           <h1 className="text-2xl lg:text-3xl font-bold text-red-400">Super Administrador</h1>
           <div className="flex items-center space-x-2">
             <Crown className="w-6 h-6 text-yellow-400" />

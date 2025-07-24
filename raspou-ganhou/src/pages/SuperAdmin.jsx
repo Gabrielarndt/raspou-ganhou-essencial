@@ -49,9 +49,28 @@ const SuperAdmin = () => {
     commission: '',
     cpa: ''
   });
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [showAffiliateModal, setShowAffiliateModal] = useState(false);
   const [showUserModal, setShowUserModal] = useState(false);
   const [showEditUserModal, setShowEditUserModal] = useState(false);
+  const [showAffiliatePanel, setShowAffiliatePanel] = useState(false);
+  const [showCouponModal, setShowCouponModal] = useState(false);
+  const [showEditCouponModal, setShowEditCouponModal] = useState(false);
+  const [selectedCoupon, setSelectedCoupon] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [newAffiliate, setNewAffiliate] = useState({
+    name: '',
+    email: '',
+    password: '',
+    commission: 5,
+    cpa: 0
+  });
+  const [newCoupon, setNewCoupon] = useState({
+    name: '',
+    bonus_amount: 0,
+    description: ''
+  });
+  const [editCoupon, setEditCoupon] = useState({});
+  const [editUser, setEditUser] = useState({});
   const [editUserData, setEditUserData] = useState({});
 
   // Verificar se é super admin
@@ -241,6 +260,123 @@ const SuperAdmin = () => {
       cpa: ''
     });
     setShowCreateAffiliateModal(false);
+  };
+
+  const handleDeleteAffiliate = (affiliateId) => {
+    if (window.confirm('Tem certeza que deseja excluir este afiliado?')) {
+      const updatedAffiliates = affiliates.filter(a => a.id !== affiliateId);
+      setAffiliates(updatedAffiliates);
+      localStorage.setItem('raspou_affiliates', JSON.stringify(updatedAffiliates));
+      alert('Afiliado excluído com sucesso!');
+      loadData();
+    }
+  };
+
+  const handleSaveNewAffiliate = () => {
+    if (!newAffiliate.name || !newAffiliate.email || !newAffiliate.password) {
+      alert('Por favor, preencha todos os campos obrigatórios');
+      return;
+    }
+
+    const affiliate = {
+      id: Date.now(),
+      ...newAffiliate,
+      total_clients: 0,
+      total_deposits: 0,
+      total_commission: 0,
+      created_at: new Date().toISOString(),
+      is_affiliate: true
+    };
+
+    const updatedAffiliates = [...affiliates, affiliate];
+    setAffiliates(updatedAffiliates);
+    localStorage.setItem('raspou_affiliates', JSON.stringify(updatedAffiliates));
+    
+    setShowAffiliateModal(false);
+    setNewAffiliate({ name: '', email: '', password: '', commission: 5, cpa: 0 });
+  };
+
+  const handleEditAffiliate = (affiliate) => {
+    setSelectedAffiliate(affiliate);
+    setShowAffiliatePanel(true);
+  };
+
+  const handleUpdateAffiliate = () => {
+    const affiliates = JSON.parse(localStorage.getItem('raspou_affiliates') || '[]');
+    const updatedAffiliates = affiliates.map(a => 
+      a.id === selectedAffiliate.id ? selectedAffiliate : a
+    );
+    
+    localStorage.setItem('raspou_affiliates', JSON.stringify(updatedAffiliates));
+    setAffiliates(updatedAffiliates);
+    alert('Afiliado atualizado com sucesso!');
+  };
+
+  const handleCreateCoupon = () => {
+    if (!newCoupon.name || !newCoupon.bonus_amount) {
+      alert('Por favor, preencha todos os campos obrigatórios');
+      return;
+    }
+
+    // Verificar se já existe cupom com esse nome
+    const coupons = JSON.parse(localStorage.getItem('raspou_coupons') || '[]');
+    if (coupons.find(c => c.name.toLowerCase() === newCoupon.name.toLowerCase())) {
+      alert('Já existe um cupom com esse nome');
+      return;
+    }
+
+    const coupon = {
+      id: Date.now(),
+      affiliate_id: selectedAffiliate.id,
+      affiliate_name: selectedAffiliate.name,
+      name: newCoupon.name.toUpperCase(),
+      bonus_amount: parseFloat(newCoupon.bonus_amount),
+      description: newCoupon.description,
+      created_at: new Date().toISOString(),
+      status: 'active',
+      uses: 0
+    };
+
+    coupons.push(coupon);
+    localStorage.setItem('raspou_coupons', JSON.stringify(coupons));
+    
+    setNewCoupon({ name: '', bonus_amount: 0, description: '' });
+    setShowCouponModal(false);
+    alert('Cupom criado com sucesso!');
+    loadData(); // Recarregar dados
+  };
+
+  const handleEditCoupon = (coupon) => {
+    setSelectedCoupon(coupon);
+    setEditCoupon({ ...coupon });
+    setShowEditCouponModal(true);
+  };
+
+  const handleUpdateCoupon = () => {
+    const coupons = JSON.parse(localStorage.getItem('raspou_coupons') || '[]');
+    const updatedCoupons = coupons.map(c => 
+      c.id === selectedCoupon.id ? editCoupon : c
+    );
+    
+    localStorage.setItem('raspou_coupons', JSON.stringify(updatedCoupons));
+    setShowEditCouponModal(false);
+    alert('Cupom atualizado com sucesso!');
+    loadData();
+  };
+
+  const handleDeleteCoupon = (couponId) => {
+    if (window.confirm('Tem certeza que deseja excluir este cupom?')) {
+      const coupons = JSON.parse(localStorage.getItem('raspou_coupons') || '[]');
+      const updatedCoupons = coupons.filter(c => c.id !== couponId);
+      localStorage.setItem('raspou_coupons', JSON.stringify(updatedCoupons));
+      alert('Cupom excluído com sucesso!');
+      loadData();
+    }
+  };
+
+  const getAffiliateCoupons = (affiliateId) => {
+    const coupons = JSON.parse(localStorage.getItem('raspou_coupons') || '[]');
+    return coupons.filter(c => c.affiliate_id === affiliateId);
   };
 
   const handleViewUser = (user) => {
@@ -663,10 +799,18 @@ const SuperAdmin = () => {
                             >
                               <Eye className="w-4 h-4" />
                             </button>
-                            <button className="text-yellow-400 hover:text-yellow-300">
+                            <button 
+                              onClick={() => handleEditAffiliate(affiliate)}
+                              className="text-yellow-400 hover:text-yellow-300"
+                              title="Editar"
+                            >
                               <Edit className="w-4 h-4" />
                             </button>
-                            <button className="text-red-400 hover:text-red-300">
+                            <button 
+                              onClick={() => handleDeleteAffiliate(affiliate.id)}
+                              className="text-red-400 hover:text-red-300"
+                              title="Excluir"
+                            >
                               <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
@@ -865,6 +1009,330 @@ const SuperAdmin = () => {
           </div>
         )}
       </div>
+
+      {/* Painel de Gerenciamento de Afiliado */}
+      {showAffiliatePanel && selectedAffiliate && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 rounded-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-700">
+              <h2 className="text-2xl font-bold text-white">
+                Gerenciar Afiliado: {selectedAffiliate.name}
+              </h2>
+              <button
+                onClick={() => setShowAffiliatePanel(false)}
+                className="p-2 rounded-lg bg-gray-800 text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-6 grid lg:grid-cols-2 gap-8">
+              {/* Informações do Afiliado */}
+              <div className="space-y-6">
+                <div className="bg-gray-800 rounded-xl p-6">
+                  <h3 className="text-lg font-bold text-white mb-4">Informações do Afiliado</h3>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Nome</label>
+                      <input
+                        type="text"
+                        value={selectedAffiliate.name}
+                        onChange={(e) => setSelectedAffiliate({...selectedAffiliate, name: e.target.value})}
+                        className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                      <input
+                        type="email"
+                        value={selectedAffiliate.email}
+                        onChange={(e) => setSelectedAffiliate({...selectedAffiliate, email: e.target.value})}
+                        className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Status</label>
+                      <select
+                        value={selectedAffiliate.status}
+                        onChange={(e) => setSelectedAffiliate({...selectedAffiliate, status: e.target.value})}
+                        className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                      >
+                        <option value="active">Ativo</option>
+                        <option value="suspended">Suspenso</option>
+                        <option value="inactive">Inativo</option>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Comissão (%)</label>
+                      <input
+                        type="number"
+                        value={selectedAffiliate.commission}
+                        onChange={(e) => setSelectedAffiliate({...selectedAffiliate, commission: parseFloat(e.target.value)})}
+                        className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                        step="0.1"
+                        min="0"
+                        max="100"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">CPA (R$)</label>
+                      <input
+                        type="number"
+                        value={selectedAffiliate.cpa}
+                        onChange={(e) => setSelectedAffiliate({...selectedAffiliate, cpa: parseFloat(e.target.value)})}
+                        className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                        step="0.01"
+                        min="0"
+                      />
+                    </div>
+                  </div>
+                  
+                  <button
+                    onClick={handleUpdateAffiliate}
+                    className="w-full mt-6 bg-yellow-600 hover:bg-yellow-700 text-black font-bold py-3 rounded-lg transition-colors"
+                  >
+                    Salvar Alterações
+                  </button>
+                </div>
+              </div>
+
+              {/* Gerenciamento de Cupons */}
+              <div className="space-y-6">
+                <div className="bg-gray-800 rounded-xl p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-bold text-white">Cupons de Desconto</h3>
+                    <button
+                      onClick={() => setShowCouponModal(true)}
+                      className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors flex items-center space-x-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Novo Cupom</span>
+                    </button>
+                  </div>
+                  
+                  {/* Lista de Cupons */}
+                  <div className="space-y-3 max-h-96 overflow-y-auto">
+                    {getAffiliateCoupons(selectedAffiliate.id).map((coupon) => (
+                      <div key={coupon.id} className="bg-gray-700 rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center space-x-3">
+                            <span className="bg-yellow-600 text-black px-2 py-1 rounded text-sm font-bold">
+                              {coupon.name}
+                            </span>
+                            <span className={`px-2 py-1 rounded text-xs font-medium ${
+                              coupon.status === 'active' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
+                            }`}>
+                              {coupon.status === 'active' ? 'Ativo' : 'Inativo'}
+                            </span>
+                          </div>
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => handleEditCoupon(coupon)}
+                              className="text-yellow-400 hover:text-yellow-300"
+                              title="Editar cupom"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteCoupon(coupon.id)}
+                              className="text-red-400 hover:text-red-300"
+                              title="Excluir cupom"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                        
+                        <div className="text-sm text-gray-300">
+                          <p><strong>Bônus:</strong> {formatCurrency(coupon.bonus_amount)}</p>
+                          <p><strong>Usos:</strong> {coupon.uses || 0}</p>
+                          {coupon.description && (
+                            <p><strong>Descrição:</strong> {coupon.description}</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {getAffiliateCoupons(selectedAffiliate.id).length === 0 && (
+                      <div className="text-center py-8 text-gray-400">
+                        <p>Nenhum cupom criado ainda</p>
+                        <p className="text-sm">Clique em "Novo Cupom" para começar</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Criação de Cupom */}
+      {showCouponModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 rounded-xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white">Criar Novo Cupom</h2>
+              <button
+                onClick={() => setShowCouponModal(false)}
+                className="p-2 rounded-lg bg-gray-800 text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Nome do Cupom *
+                </label>
+                <input
+                  type="text"
+                  value={newCoupon.name}
+                  onChange={(e) => setNewCoupon({...newCoupon, name: e.target.value.toUpperCase()})}
+                  placeholder="Ex: BONUS10"
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Valor do Bônus (R$) *
+                </label>
+                <input
+                  type="number"
+                  value={newCoupon.bonus_amount}
+                  onChange={(e) => setNewCoupon({...newCoupon, bonus_amount: e.target.value})}
+                  placeholder="10.00"
+                  step="0.01"
+                  min="0"
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Descrição
+                </label>
+                <textarea
+                  value={newCoupon.description}
+                  onChange={(e) => setNewCoupon({...newCoupon, description: e.target.value})}
+                  placeholder="Descrição opcional do cupom..."
+                  rows="3"
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                />
+              </div>
+            </div>
+            
+            <div className="flex space-x-4 mt-6">
+              <button
+                onClick={() => setShowCouponModal(false)}
+                className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleCreateCoupon}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition-colors"
+              >
+                Criar Cupom
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Edição de Cupom */}
+      {showEditCouponModal && selectedCoupon && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 rounded-xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white">Editar Cupom</h2>
+              <button
+                onClick={() => setShowEditCouponModal(false)}
+                className="p-2 rounded-lg bg-gray-800 text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Nome do Cupom
+                </label>
+                <input
+                  type="text"
+                  value={editCoupon.name}
+                  onChange={(e) => setEditCoupon({...editCoupon, name: e.target.value.toUpperCase()})}
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Valor do Bônus (R$)
+                </label>
+                <input
+                  type="number"
+                  value={editCoupon.bonus_amount}
+                  onChange={(e) => setEditCoupon({...editCoupon, bonus_amount: parseFloat(e.target.value)})}
+                  step="0.01"
+                  min="0"
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Status
+                </label>
+                <select
+                  value={editCoupon.status}
+                  onChange={(e) => setEditCoupon({...editCoupon, status: e.target.value})}
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                >
+                  <option value="active">Ativo</option>
+                  <option value="inactive">Inativo</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Descrição
+                </label>
+                <textarea
+                  value={editCoupon.description}
+                  onChange={(e) => setEditCoupon({...editCoupon, description: e.target.value})}
+                  rows="3"
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                />
+              </div>
+            </div>
+            
+            <div className="flex space-x-4 mt-6">
+              <button
+                onClick={() => setShowEditCouponModal(false)}
+                className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleUpdateCoupon}
+                className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-black font-bold py-3 rounded-lg transition-colors"
+              >
+                Salvar Alterações
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal do Painel do Afiliado */}
       {selectedAffiliate && (
@@ -1258,6 +1726,113 @@ const SuperAdmin = () => {
               <button
                 onClick={handleSaveAffiliate}
                 className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+              >
+                Criar Afiliado
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Criação de Afiliado */}
+      {showAffiliateModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 rounded-xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white">Criar Novo Afiliado</h2>
+              <button
+                onClick={() => setShowAffiliateModal(false)}
+                className="p-2 rounded-lg bg-gray-800 text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Nome Completo *
+                </label>
+                <input
+                  type="text"
+                  value={newAffiliate.name}
+                  onChange={(e) => setNewAffiliate({...newAffiliate, name: e.target.value})}
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-400"
+                  placeholder="Nome do afiliado"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Email *
+                </label>
+                <input
+                  type="email"
+                  value={newAffiliate.email}
+                  onChange={(e) => setNewAffiliate({...newAffiliate, email: e.target.value})}
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-400"
+                  placeholder="email@exemplo.com"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Senha *
+                </label>
+                <input
+                  type="password"
+                  value={newAffiliate.password}
+                  onChange={(e) => setNewAffiliate({...newAffiliate, password: e.target.value})}
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-400"
+                  placeholder="Senha de acesso"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Comissão (% sobre depósitos)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="100"
+                  value={newAffiliate.commission}
+                  onChange={(e) => setNewAffiliate({...newAffiliate, commission: parseFloat(e.target.value)})}
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-400"
+                  placeholder="Ex: 5.5"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  CPA (R$ por primeiro depósito)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={newAffiliate.cpa}
+                  onChange={(e) => setNewAffiliate({...newAffiliate, cpa: parseFloat(e.target.value)})}
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-400"
+                  placeholder="Ex: 50.00"
+                />
+              </div>
+            </div>
+
+            <div className="flex space-x-4 mt-6">
+              <button
+                onClick={() => setShowAffiliateModal(false)}
+                className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSaveNewAffiliate}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg transition-colors"
               >
                 Criar Afiliado
               </button>

@@ -176,6 +176,13 @@ const SuperAdminLogin = () => {
           {/* Links */}
           <div className="mt-6 text-center space-y-4">
             <Link
+              to="/affiliate-login"
+              className="block text-blue-400 hover:text-blue-300 transition-colors"
+            >
+              Acesso para Afiliados →
+            </Link>
+            
+            <Link
               to="/login"
               className="block text-gray-400 hover:text-white transition-colors text-sm"
             >
@@ -212,7 +219,7 @@ const SuperAdminLogin = () => {
           <div className="space-y-1 text-sm text-gray-300">
             <p><strong>Super Admin:</strong> superadmin@raspouganhou.com / super123</p>
             <p><strong>Gabriel:</strong> gabriel@gmail.com / admin123</p>
-            <p><strong>Admin:</strong> admin@raspouganhou.com / admin123</p>
+            <p><strong>Afiliado:</strong> afiliado@teste.com / afiliado123</p>
           </div>
         </div>
       </div>

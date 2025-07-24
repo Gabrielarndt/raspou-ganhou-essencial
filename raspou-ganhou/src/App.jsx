@@ -85,9 +85,54 @@ function App() {
 
       // Inicializar dados de exemplo para afiliados
       const affiliates = JSON.parse(localStorage.getItem('raspou_affiliates') || '[]');
-      // Limpar afiliados fictícios - plataforma real
-      localStorage.setItem('raspou_affiliates', JSON.stringify([]));
-      console.log('✅ Afiliados limpos para plataforma real');
+      
+      // Criar afiliado de teste se não existir
+      if (!affiliates.find(a => a.email === 'afiliado@teste.com')) {
+        const testAffiliate = {
+          id: 1,
+          name: 'Afiliado Teste',
+          email: 'afiliado@teste.com',
+          password: 'afiliado123',
+          affiliate_code: 'TESTE001',
+          cpa: 50.00,
+          commission_rate: 10,
+          referrals: 15,
+          volume_generated: 2500.00,
+          total_commission: 250.00,
+          conversion_rate: 12.5,
+          created_at: new Date().toISOString(),
+          notifications: {
+            newConversions: true,
+            newDeposits: true,
+            commissionChanges: true,
+            frequency: 'realtime'
+          },
+          security: {
+            twoFactor: false,
+            lastAccess: new Date().toISOString()
+          },
+          coupons: [
+            {
+              id: 1,
+              name: 'BONUS10',
+              code: 'BONUS10',
+              bonus: 10.00,
+              description: 'R$ 10 de bônus para novos usuários'
+            },
+            {
+              id: 2,
+              name: 'WELCOME20',
+              code: 'WELCOME20',
+              bonus: 20.00,
+              description: 'R$ 20 de bônus de boas-vindas'
+            }
+          ]
+        };
+        
+        affiliates.push(testAffiliate);
+        localStorage.setItem('raspou_affiliates', JSON.stringify(affiliates));
+        console.log('✅ Afiliado de teste criado');
+      }
 
       console.log('🎉 Sistema administrativo inicializado com sucesso!');
     } catch (error) {

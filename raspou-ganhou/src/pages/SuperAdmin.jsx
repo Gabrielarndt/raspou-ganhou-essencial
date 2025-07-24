@@ -692,6 +692,64 @@ const SuperAdmin = () => {
             title: '',
             description: '',
             prize: '',
+  const handleEditLottery = (lottery) => {
+    console.log('✏️ SuperAdmin: Editing lottery:', lottery.id);
+    setEditingLottery(lottery);
+    setLotteryForm({
+      title: lottery.title,
+      prize: lottery.prize.toString(),
+      draw_date: lottery.draw_date,
+      description: lottery.description || ''
+    });
+  };
+
+  const handleUpdateLottery = () => {
+    console.log('💾 SuperAdmin: Updating lottery:', editingLottery.id);
+    
+    if (!lotteryForm.title || !lotteryForm.prize || !lotteryForm.draw_date) {
+      alert('Por favor, preencha todos os campos obrigatórios');
+      return;
+    }
+
+    const updatedLotteries = lotteries.map(lottery => 
+      lottery.id === editingLottery.id 
+        ? {
+            ...lottery,
+            title: lotteryForm.title,
+            prize: parseFloat(lotteryForm.prize),
+            draw_date: lotteryForm.draw_date,
+            description: lotteryForm.description,
+            updated_by: user.email,
+            updated_at: new Date().toISOString()
+          }
+        : lottery
+    );
+
+    setLotteries(updatedLotteries);
+    localStorage.setItem('raspou_lotteries', JSON.stringify(updatedLotteries));
+
+    // Limpar formulário e estado de edição
+    setEditingLottery(null);
+    setLotteryForm({
+      title: '',
+      prize: '',
+      draw_date: '',
+      description: ''
+    });
+
+    console.log('✅ SuperAdmin: Lottery updated successfully');
+    loadData();
+  };
+
+  const handleCancelEdit = () => {
+    setEditingLottery(null);
+    setLotteryForm({
+      title: '',
+      prize: '',
+      draw_date: '',
+      description: ''
+    });
+  };
             draw_date: '',
             max_participants: ''
         });
@@ -720,7 +778,7 @@ const SuperAdmin = () => {
                     {[
                         { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
                         { id: 'clients', label: 'Clientes', icon: Users },
-                        { id: 'affiliates', label: 'Afiliados', icon: UserCheck },
+                              onClick={() => handleEditLottery(lottery)}
                         { id: 'admins', label: 'Administradores', icon: Shield },
                         { id: 'raffles', label: 'Sorteios', icon: Trophy },
                         { id: 'settings', label: 'Configurações', icon: Settings }

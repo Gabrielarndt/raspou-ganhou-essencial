@@ -31,7 +31,7 @@ export const AuthProvider = ({ children }) => {
       const userData = await apiClient.getProfile();
       setUser(userData.user);
     } catch (error) {
-      console.error('Error loading user profile:', error);
+      console.warn('Error loading user profile:', error);
       apiClient.logout();
       setUser(null);
     } finally {

@@ -627,62 +627,75 @@ const SuperAdmin = () => {
     const handleAffiliateInputChange = (field, value) => {
         setNewAffiliateData(prev => ({
             ...prev,
-      [field]: value
-    console.log('✏️ SuperAdmin: Editing lottery:', lottery);
-    setEditingLottery(lottery.id);
-    setLotteryForm({
-    console.log('💾 SuperAdmin: Saving lottery:', lotteryForm);
-    
-    if (!lotteryForm.title || !lotteryForm.prize || !lotteryForm.draw_date) {
-      alert('Por favor, preencha todos os campos obrigatórios');
-      return;
-    }
-    
-    try {
-      const lotteries = JSON.parse(localStorage.getItem('raspou_lotteries') || '[]');
-      const lotteryIndex = lotteries.findIndex(l => l.id === editingLottery);
-      
-      if (lotteryIndex !== -1) {
-        const updatedLottery = {
-          ...lotteries[lotteryIndex],
-          title: lotteryForm.title,
-          description: lotteryForm.description,
-          prize: parseFloat(lotteryForm.prize),
-          draw_date: lotteryForm.draw_date,
-          max_participants: lotteryForm.max_participants ? parseInt(lotteryForm.max_participants) : null,
-          updated_at: new Date().toISOString()
-        };
+            [field]: value
+        }));
+    };
+
+    const handleEditLottery = (lottery) => {
+        console.log('✏️ SuperAdmin: Editing lottery:', lottery);
+        setEditingLottery(lottery.id);
+        setLotteryForm({
+            title: lottery.title,
+            description: lottery.description,
+            prize: lottery.prize.toString(),
+            draw_date: new Date(lottery.draw_date).toISOString().slice(0, 16),
+            max_participants: lottery.max_participants?.toString() || ''
+        });
+    };
+
+    const handleSaveLottery = () => {
+        console.log('💾 SuperAdmin: Saving lottery:', lotteryForm);
         
-        lotteries[lotteryIndex] = updatedLottery;
-        localStorage.setItem('raspou_lotteries', JSON.stringify(lotteries));
+        if (!lotteryForm.title || !lotteryForm.prize || !lotteryForm.draw_date) {
+            alert('Por favor, preencha todos os campos obrigatórios');
+            return;
+        }
         
-        console.log('✅ SuperAdmin: Lottery updated successfully');
-        loadLotteries();
+        try {
+            const lotteries = JSON.parse(localStorage.getItem('raspou_lotteries') || '[]');
+            const lotteryIndex = lotteries.findIndex(l => l.id === editingLottery);
+            
+            if (lotteryIndex !== -1) {
+                const updatedLottery = {
+                    ...lotteries[lotteryIndex],
+                    title: lotteryForm.title,
+                    description: lotteryForm.description,
+                    prize: parseFloat(lotteryForm.prize),
+                    draw_date: lotteryForm.draw_date,
+                    max_participants: lotteryForm.max_participants ? parseInt(lotteryForm.max_participants) : null,
+                    updated_at: new Date().toISOString()
+                };
+                
+                lotteries[lotteryIndex] = updatedLottery;
+                localStorage.setItem('raspou_lotteries', JSON.stringify(lotteries));
+                
+                console.log('✅ SuperAdmin: Lottery updated successfully');
+                loadLotteries();
+                setEditingLottery(null);
+                setLotteryForm({
+                    title: '',
+                    description: '',
+                    prize: '',
+                    draw_date: '',
+                    max_participants: ''
+                });
+            }
+        } catch (error) {
+            console.error('❌ SuperAdmin: Error updating lottery:', error);
+            alert('Erro ao salvar sorteio');
+        }
+    };
+
+    const handleCancelEditLottery = () => {
         setEditingLottery(null);
         setLotteryForm({
-          title: '',
-          description: '',
-          prize: '',
-          draw_date: '',
-          max_participants: ''
+            title: '',
+            description: '',
+            prize: '',
+            draw_date: '',
+            max_participants: ''
         });
-      }
-    } catch (error) {
-      console.error('❌ SuperAdmin: Error updating lottery:', error);
-      alert('Erro ao salvar sorteio');
-    }
-      prize: lottery.prize.toString(),
-      draw_date: new Date(lottery.draw_date).toISOString().slice(0, 16),
-      max_participants: lottery.max_participants?.toString() || ''
-    });
-    setLotteryForm({
-      title: '',
-      description: '',
-      prize: '',
-      draw_date: '',
-      max_participants: ''
-    });
-  };
+    };
 
     if (!isSuperAdmin()) {
         return null;
@@ -1553,7 +1566,7 @@ const SuperAdmin = () => {
                                 Cancelar
                             </button>
                             <button
-                                onClick={handleEditLottery}
+                                onClick={handleSaveLottery}
                                 className="bg-yellow-600 hover:bg-yellow-700 text-black font-bold py-2 px-4 rounded-lg transition-colors"
                             >
                                 Salvar Alterações

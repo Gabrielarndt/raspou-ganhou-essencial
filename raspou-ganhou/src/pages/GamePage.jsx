@@ -18,10 +18,11 @@ const GamePage = () => {
   const [showResultModal, setShowResultModal] = useState(false);
   const [gameResult, setGameResult] = useState(null);
 
-  const currentGame = games.find(g => g.id === id);
   useEffect(() => {
     loadGames();
   }, []);
+
+  const currentGame = games.find(g => g.id === id);
 
   useEffect(() => {
     console.log('🎮 GamePage: Auth check - User:', !!user, 'Loading:', loading);
@@ -34,14 +35,16 @@ const GamePage = () => {
       return;
     }
 
-    if (!currentGame) {
+    if (games.length > 0 && !currentGame) {
       console.log('🎮 GamePage: No current game found, redirecting to raspadinhas');
       navigate('/raspadinhas');
       return;
     }
     
-    console.log('🎮 GamePage: Auth check passed, user can play');
-  }, [user, loading, currentGame, navigate]);
+    if (currentGame) {
+      console.log('🎮 GamePage: Auth check passed, user can play');
+    }
+  }, [user, loading, currentGame, navigate, games]);
 
   const loadGames = async () => {
     try {

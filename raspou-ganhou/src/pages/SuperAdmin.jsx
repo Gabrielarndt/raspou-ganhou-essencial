@@ -636,17 +636,18 @@ const SuperAdmin = () => {
             console.log('❌ SuperAdmin: User not authenticated or still loading');
             return;
         }
-
-        // Verificar se tem permissão (qualquer admin pode criar)
-        if (!user.is_super_admin && !user.is_admin) {
-            console.log('❌ SuperAdmin: User does not have admin permissions');
-            alert('Você não tem permissão para criar sorteios');
-            return;
-        }
-    };
-
-    if (!isSuperAdmin()) {
-        return null;
+    // Verificar se há usuário autenticado e se tem permissões
+    if (!user || loading) {
+      console.log('❌ SuperAdmin: User not authenticated or still loading');
+      return;
+    }
+    
+    // Verificar se é admin ou super admin
+    const isAdmin = user.is_admin || user.is_super_admin || user.email === 'admin@raspouganhou.com';
+    if (!isAdmin) {
+      console.log('❌ SuperAdmin: User does not have admin permissions');
+      alert('Apenas administradores podem criar sorteios');
+      return;
     }
 
     return (

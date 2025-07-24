@@ -628,7 +628,60 @@ const SuperAdmin = () => {
         setNewAffiliateData(prev => ({
             ...prev,
       [field]: value
-    }));
+    console.log('✏️ SuperAdmin: Editing lottery:', lottery);
+    setEditingLottery(lottery.id);
+    setLotteryForm({
+    console.log('💾 SuperAdmin: Saving lottery:', lotteryForm);
+    
+    if (!lotteryForm.title || !lotteryForm.prize || !lotteryForm.draw_date) {
+      alert('Por favor, preencha todos os campos obrigatórios');
+      return;
+    }
+    
+    try {
+      const lotteries = JSON.parse(localStorage.getItem('raspou_lotteries') || '[]');
+      const lotteryIndex = lotteries.findIndex(l => l.id === editingLottery);
+      
+      if (lotteryIndex !== -1) {
+        const updatedLottery = {
+          ...lotteries[lotteryIndex],
+          title: lotteryForm.title,
+          description: lotteryForm.description,
+          prize: parseFloat(lotteryForm.prize),
+          draw_date: lotteryForm.draw_date,
+          max_participants: lotteryForm.max_participants ? parseInt(lotteryForm.max_participants) : null,
+          updated_at: new Date().toISOString()
+        };
+        
+        lotteries[lotteryIndex] = updatedLottery;
+        localStorage.setItem('raspou_lotteries', JSON.stringify(lotteries));
+        
+        console.log('✅ SuperAdmin: Lottery updated successfully');
+        loadLotteries();
+        setEditingLottery(null);
+        setLotteryForm({
+          title: '',
+          description: '',
+          prize: '',
+          draw_date: '',
+          max_participants: ''
+        });
+      }
+    } catch (error) {
+      console.error('❌ SuperAdmin: Error updating lottery:', error);
+      alert('Erro ao salvar sorteio');
+    }
+      prize: lottery.prize.toString(),
+      draw_date: new Date(lottery.draw_date).toISOString().slice(0, 16),
+      max_participants: lottery.max_participants?.toString() || ''
+    });
+    setLotteryForm({
+      title: '',
+      description: '',
+      prize: '',
+      draw_date: '',
+      max_participants: ''
+    });
   };
 
     if (!isSuperAdmin()) {

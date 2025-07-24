@@ -5,6 +5,37 @@ import { Trophy, Calendar, Users, Coins, Star } from 'lucide-react';
 const Numeros = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('sorteios');
+  const [lotteries, setLotteries] = useState([]);
+  const [lotteryHistory, setLotteryHistory] = useState([]);
+
+  useEffect(() => {
+    loadLotteries();
+  }, []);
+
+  const loadLotteries = () => {
+    try {
+      const savedLotteries = JSON.parse(localStorage.getItem('raspou_lotteries') || '[]');
+      const now = new Date();
+      
+      // Separar sorteios ativos e finalizados
+      const activeLotteries = savedLotteries.filter(lottery => {
+        const drawDate = new Date(lottery.draw_date);
+        return drawDate > now && lottery.status === 'active';
+      });
+      
+      const finishedLotteries = savedLotteries.filter(lottery => {
+        const drawDate = new Date(lottery.draw_date);
+        return drawDate <= now || lottery.status === 'finished';
+      });
+      
+      setLotteries(activeLotteries);
+      setLotteryHistory(finishedLotteries);
+    } catch (error) {
+      console.error('Erro ao carregar sorteios:', error);
+      setLotteries([]);
+      setLotteryHistory([]);
+    }
+  };
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -17,10 +48,33 @@ const Numeros = () => {
     return new Intl.DateTimeFormat('pt-BR', {
       day: '2-digit',
       month: '2-digit',
-      year: 'numeric'
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     }).format(date);
   };
 
+  const formatTimeRemaining = (drawDate) => {
+    const now = new Date();
+    const draw = new Date(drawDate);
+    const diff = draw - now;
+    
+    if (diff <= 0) return 'Finalizado';
+    
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (days > 0) return `${days}d ${hours}h`;
+    if (hours > 0) return `${hours}h ${minutes}m`;
+    return `${minutes}m`;
+  };
+
+  const getTotalParticipants = () => {
+    // Simular participantes baseado nos pontos dos usuários
+    const users = JSON.parse(localStorage.getItem('raspou_users') || '[]');
+    return users.reduce((total, user) => total + (user.pontos_sorteio || 0), 0);
+  };
   // Dados simulados dos ganhadores
   const ganhadores = [
     { id: 1, nome: 'João S.', premio: 1500.00, data: new Date('2024-01-18'), tipo: 'Sorteio Diário' },
@@ -100,35 +154,55 @@ const Numeros = () => {
               </div>
             )}
 
-            {/* Próximo Sorteio */}
+            {/* Próximos Sorteios */}
             <div className="bg-gray-800 rounded-xl p-6">
               <div className="flex items-center space-x-3 mb-4">
                 <div className="w-12 h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
                   <Calendar className="w-6 h-6 text-yellow-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">Próximo Sorteio</h3>
-                  <p className="text-gray-400 text-sm">Sorteio diário às 20:00</p>
+                  <h3 className="text-lg font-bold text-white">Próximos Sorteios</h3>
+                  <p className="text-gray-400 text-sm">Sorteios programados</p>
                 </div>
               </div>
               
-              <div className="bg-gray-700 rounded-lg p-4 mb-4">
-                <div className="text-center">
-                  <p className="text-yellow-400 font-bold text-2xl mb-1">R$ 5.000,00</p>
-                  <p className="text-gray-400 text-sm">Prêmio de hoje</p>
+              {lotteries.length === 0 ? (
+                <div className="text-center py-8">
+                  <Calendar className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                  <p className="text-gray-400">Nenhum sorteio programado</p>
+                  <p className="text-gray-500 text-sm">Novos sorteios aparecerão aqui</p>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 text-center">
-                <div>
-                  <p className="text-2xl font-bold text-white">1.247</p>
-                  <p className="text-gray-400 text-sm">Participantes</p>
+              ) : (
+                <div className="space-y-4">
+                  {lotteries.map((lottery) => (
+                    <div key={lottery.id} className="bg-gray-700 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-white font-bold">{lottery.title}</h4>
+                        <span className="text-yellow-400 font-bold text-lg">
+                          {formatCurrency(lottery.prize)}
+                        </span>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4 text-center">
+                        <div>
+                          <p className="text-lg font-bold text-white">{getTotalParticipants()}</p>
+                          <p className="text-gray-400 text-xs">Participantes</p>
+                        </div>
+                        <div>
+                          <p className="text-lg font-bold text-white">{formatTimeRemaining(lottery.draw_date)}</p>
+                          <p className="text-gray-400 text-xs">Tempo restante</p>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-3 pt-3 border-t border-gray-600">
+                        <p className="text-gray-400 text-sm">
+                          Sorteio: {formatDate(new Date(lottery.draw_date))}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div>
-                  <p className="text-2xl font-bold text-white">18:30</p>
-                  <p className="text-gray-400 text-sm">Horas restantes</p>
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Como Participar */}
@@ -168,31 +242,78 @@ const Numeros = () => {
               </div>
             </div>
 
-            {/* Lista de Ganhadores */}
-            <div className="space-y-3">
-              {ganhadores.map((ganhador) => (
-                <div key={ganhador.id} className="bg-gray-800 rounded-xl p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center">
-                        <Star className="w-5 h-5 text-black" />
+            {/* Histórico de Sorteios */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-bold text-white">Histórico de Sorteios</h3>
+              
+              {lotteryHistory.length === 0 ? (
+                <div className="text-center py-8">
+                  <Trophy className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                  <p className="text-gray-400">Nenhum sorteio finalizado</p>
+                  <p className="text-gray-500 text-sm">Sorteios concluídos aparecerão aqui</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {lotteryHistory.map((lottery) => (
+                    <div key={lottery.id} className="bg-gray-800 rounded-xl p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center">
+                            <Trophy className="w-5 h-5 text-black" />
+                          </div>
+                          <div>
+                            <p className="text-white font-medium">{lottery.title}</p>
+                            <p className="text-gray-400 text-sm">Sorteio finalizado</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-green-400 font-bold">
+                            {formatCurrency(lottery.prize)}
+                          </p>
+                          <p className="text-gray-400 text-sm">
+                            {formatDate(new Date(lottery.draw_date))}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-white font-medium">{ganhador.nome}</p>
-                        <p className="text-gray-400 text-sm">{ganhador.tipo}</p>
-                      </div>
+                      {lottery.winner && (
+                        <div className="mt-3 pt-3 border-t border-gray-600">
+                          <p className="text-green-400 text-sm">
+                            Ganhador: {lottery.winner}
+                          </p>
+                        </div>
+                      )}
                     </div>
-                    <div className="text-right">
-                      <p className="text-green-400 font-bold">
-                        {formatCurrency(ganhador.premio)}
-                      </p>
-                      <p className="text-gray-400 text-sm">
-                        {formatDate(ganhador.data)}
-                      </p>
+                  ))}
+                </div>
+              )}
+              
+              {/* Lista de Ganhadores Recentes */}
+              <h3 className="text-lg font-bold text-white mt-8">Ganhadores Recentes</h3>
+              <div className="space-y-3">
+                {ganhadores.map((ganhador) => (
+                  <div key={ganhador.id} className="bg-gray-800 rounded-xl p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center">
+                          <Star className="w-5 h-5 text-black" />
+                        </div>
+                        <div>
+                          <p className="text-white font-medium">{ganhador.nome}</p>
+                          <p className="text-gray-400 text-sm">{ganhador.tipo}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-green-400 font-bold">
+                          {formatCurrency(ganhador.premio)}
+                        </p>
+                        <p className="text-gray-400 text-sm">
+                          {formatDate(ganhador.data)}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         )}

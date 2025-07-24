@@ -204,6 +204,49 @@ const SuperAdmin = () => {
         }
     };
 
+    const handleEditAdmin = (admin) => {
+        // Implementar edição de admin
+        const newName = prompt('Novo nome:', admin.name);
+        const newEmail = prompt('Novo email:', admin.email);
+        
+        if (newName && newEmail) {
+            const updatedAdmins = admins.map(a => 
+                a.id === admin.id ? { ...a, name: newName, email: newEmail } : a
+            );
+            setAdmins(updatedAdmins);
+            
+            // Atualizar no localStorage
+            const currentAdmins = JSON.parse(localStorage.getItem('raspou_admins') || '[]');
+            const updatedCurrentAdmins = currentAdmins.map(a => 
+                a.id === admin.id ? { ...a, name: newName, email: newEmail } : a
+            );
+            localStorage.setItem('raspou_admins', JSON.stringify(updatedCurrentAdmins));
+            
+            alert('Administrador atualizado com sucesso!');
+            loadData();
+        }
+    };
+
+    const handleDeleteAdmin = (adminId) => {
+        if (window.confirm('Tem certeza que deseja excluir este administrador?')) {
+            const updatedAdmins = admins.filter(a => a.id !== adminId);
+            setAdmins(updatedAdmins);
+            
+            // Remover do localStorage
+            const currentAdmins = JSON.parse(localStorage.getItem('raspou_admins') || '[]');
+            const updatedCurrentAdmins = currentAdmins.filter(a => a.id !== adminId);
+            localStorage.setItem('raspou_admins', JSON.stringify(updatedCurrentAdmins));
+            
+            // Remover também da lista de usuários
+            const currentUsers = JSON.parse(localStorage.getItem('raspou_users') || '[]');
+            const updatedUsers = currentUsers.filter(u => u.id !== adminId);
+            localStorage.setItem('raspou_users', JSON.stringify(updatedUsers));
+            
+            alert('Administrador excluído com sucesso!');
+            loadData();
+        }
+    };
+
     const handleCreateAffiliate = () => {
         setShowCreateAffiliateModal(true);
     };
@@ -835,7 +878,7 @@ const SuperAdmin = () => {
                         <div className="flex flex-col sm:flex-row gap-4 justify-between">
                             <h2 className="text-xl font-bold text-white">Gestão de Administradores</h2>
                             <button
-                                onClick={() => setShowCreateAdminModal(true)}
+                                onClick={handleCreateAdmin}
                                 className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors flex items-center space-x-2"
                             >
                                 <Plus className="w-4 h-4" />
@@ -884,10 +927,37 @@ const SuperAdmin = () => {
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                     <div className="flex space-x-2">
-                                                        <button className="text-yellow-400 hover:text-yellow-300">
+                                                        <button 
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setViewingAffiliate(admin);
+                                                                setShowAffiliateModal(true);
+                                                                setShowManageAffiliate(false);
+                                                                setManagingAffiliate(null);
+                                                            }}
+                                                            className="text-blue-400 hover:text-blue-300"
+                                                            title="Visualizar"
+                                                        >
+                                                            <Eye className="w-4 h-4" />
+                                                        </button>
+                                                        <button 
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleEditAdmin(admin);
+                                                            }}
+                                                            className="text-yellow-400 hover:text-yellow-300"
+                                                            title="Editar"
+                                                        >
                                                             <Edit className="w-4 h-4" />
                                                         </button>
-                                                        <button className="text-red-400 hover:text-red-300">
+                                                        <button 
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleDeleteAdmin(admin.id);
+                                                            }}
+                                                            className="text-red-400 hover:text-red-300"
+                                                            title="Excluir"
+                                                        >
                                                             <Trash2 className="w-4 h-4" />
                                                         </button>
                                                     </div>

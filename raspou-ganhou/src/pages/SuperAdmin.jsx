@@ -685,14 +685,14 @@ const SuperAdmin = () => {
   }); // 👈 ESSA PARTE estava faltando
 };
 
-const handleEditLottery = (lottery) => {
-  console.log('✏️ SuperAdmin: Editing lottery:', lottery.id);
-  setEditingLottery(lottery);
+const handleEditLottery = (item) => {
+  console.log('✏️ SuperAdmin: Editing lottery:', item.id);
+  setEditingLottery(item);
   setLotteryForm({
-    title: lottery.title,
-    prize: lottery.prize.toString(),
-    draw_date: lottery.draw_date,
-    description: lottery.description || ''
+    title: item.title,
+    prize: item.prize.toString(),
+    draw_date: item.draw_date,
+    description: item.description || ''
   });
 };
 

@@ -118,9 +118,9 @@ export const playGame = async (req, res) => {
       .update({
         saldo_real: finalRealBalance,
         saldo_bonus: finalBonusBalance,
-        pontos_sorteio: parseInt(user.pontos_sorteio) + 10,
-        jogos_realizados: parseInt(user.jogos_realizados) + 1,
-        total_ganho: parseFloat(user.total_ganho) + prize
+        pontos_sorteio: (parseInt(user.pontos_sorteio) || 0) + 10,
+        jogos_realizados: (parseInt(user.jogos_realizados) || 0) + 1,
+        total_ganho: (parseFloat(user.total_ganho) || 0) + prize
       })
       .eq('id', userId);
 

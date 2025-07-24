@@ -219,7 +219,6 @@ const SuperAdminLogin = () => {
           <div className="space-y-1 text-sm text-gray-300">
             <p><strong>Super Admin:</strong> superadmin@raspouganhou.com / super123</p>
             <p><strong>Gabriel:</strong> gabriel@gmail.com / admin123</p>
-            <p><strong>Afiliado:</strong> afiliado@teste.com / afiliado123</p>
           </div>
         </div>
       </div>

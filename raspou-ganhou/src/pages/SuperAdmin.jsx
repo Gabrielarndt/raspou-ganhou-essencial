@@ -67,6 +67,19 @@ const SuperAdmin = () => {
         permissions: []
     });
     const [editingAdmin, setEditingAdmin] = useState({});
+    const [showCreateLotteryModal, setShowCreateLotteryModal] = useState(false);
+    const [showEditLotteryModal, setShowEditLotteryModal] = useState(false);
+    const [editingLottery, setEditingLottery] = useState(null);
+    const [lotteryForm, setLotteryForm] = useState({
+        name: '',
+        prize: '',
+        description: '',
+        date: '',
+        time: '',
+        maxParticipants: '',
+        entryCost: '',
+        status: 'agendado'
+    });
 
 
     const [newAffiliate, setNewAffiliate] = useState({

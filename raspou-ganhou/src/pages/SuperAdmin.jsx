@@ -33,7 +33,7 @@ import {
 
 const SuperAdmin = () => {
     const navigate = useNavigate();
-    const { user, loading } = useAuth();
+    const { user } = useAuth();
     const [activeTab, setActiveTab] = useState('dashboard');
     const [users, setUsers] = useState([]);
     const [transactions, setTransactions] = useState([]);
@@ -626,28 +626,12 @@ const SuperAdmin = () => {
     const handleAffiliateInputChange = (field, value) => {
         setNewAffiliateData(prev => ({
             ...prev,
-            [field]: value
-        }));
-    };
+      [field]: value
+    }));
+  };
 
-    const handleEditLottery = () => {
-        // Verificar se há usuário autenticado
-        if (!user || loading) {
-            console.log('❌ SuperAdmin: User not authenticated or still loading');
-            return;
-        }
-    // Verificar se há usuário autenticado e se tem permissões
-    if (!user || loading) {
-      console.log('❌ SuperAdmin: User not authenticated or still loading');
-      return;
-    }
-    
-    // Verificar se é admin ou super admin
-    const isAdmin = user.is_admin || user.is_super_admin || user.email === 'admin@raspouganhou.com';
-    if (!isAdmin) {
-      console.log('❌ SuperAdmin: User does not have admin permissions');
-      alert('Apenas administradores podem criar sorteios');
-      return;
+    if (!isSuperAdmin()) {
+        return null;
     }
 
     return (

@@ -268,6 +268,11 @@ const SuperAdmin = () => {
     const handleCreateLottery = (e) => {
         e.preventDefault();
         
+        if (!user) {
+            console.error('❌ SuperAdmin: No user found for lottery creation');
+            return;
+        }
+
         // Validar campos obrigatórios
         if (!newLotteryData.name || !newLotteryData.prize || !newLotteryData.date || !newLotteryData.time) {
             alert('Por favor, preencha todos os campos obrigatórios');

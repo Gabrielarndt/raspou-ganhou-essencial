@@ -80,6 +80,16 @@ const SuperAdmin = () => {
         entryCost: '',
         status: 'agendado'
     });
+    const [newLotteryData, setNewLotteryData] = useState({
+        name: '',
+        prize: '',
+        description: '',
+        date: '',
+        time: '',
+        maxParticipants: '',
+        entryCost: '',
+        status: 'agendado'
+    });
 
 
     const [newAffiliate, setNewAffiliate] = useState({

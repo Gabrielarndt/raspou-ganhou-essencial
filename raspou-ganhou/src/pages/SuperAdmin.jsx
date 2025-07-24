@@ -626,7 +626,11 @@ const SuperAdmin = () => {
     const handleAffiliateInputChange = (field, value) => {
         setNewAffiliateData(prev => ({
             ...prev,
-            [field]: value
+      [field]: value
+    });
+  };
+
+  const handleCreateLottery = () => {
     // Verificar se há usuário autenticado
     if (!user || loading) {
       console.log('❌ SuperAdmin: User not authenticated or still loading');

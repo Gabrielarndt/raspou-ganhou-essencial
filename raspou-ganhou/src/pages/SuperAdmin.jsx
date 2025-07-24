@@ -1115,7 +1115,7 @@ const SuperAdmin = () => {
                       <span>Novo Cupom</span>
                     </button>
                   </div>
-                  
+                      onClick={() => handleEditAffiliate(affiliate)}
                   {/* Lista de Cupons */}
                   <div className="space-y-3 max-h-96 overflow-y-auto">
                     {getAffiliateCoupons(selectedAffiliate.id).map((coupon) => (

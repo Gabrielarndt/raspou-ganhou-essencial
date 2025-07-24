@@ -49,6 +49,10 @@ const SuperAdmin = () => {
     commission: '',
     cpa: ''
   });
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [showEditUserModal, setShowEditUserModal] = useState(false);
+  const [editUserData, setEditUserData] = useState({});
 
   // Verificar se é super admin
   const isSuperAdmin = () => {
@@ -239,6 +243,86 @@ const SuperAdmin = () => {
     setShowCreateAffiliateModal(false);
   };
 
+  const handleViewUser = (user) => {
+    setSelectedUser(user);
+    setShowUserModal(true);
+  };
+
+  const handleEditUser = (user) => {
+    setSelectedUser(user);
+    setEditUserData({
+      nome: user.nome || '',
+      email: user.email || '',
+      telefone: user.telefone || '',
+      status: user.status || 'active',
+      saldo_real: user.saldo_real || 0,
+      saldo_bonus: user.saldo_bonus || 0
+    });
+    setShowEditUserModal(true);
+  };
+
+  const handleDeleteUser = (user) => {
+    if (window.confirm(`Tem certeza que deseja excluir o usuário ${user.nome}? Esta ação não pode ser desfeita.`)) {
+      const updatedUsers = users.filter(u => u.id !== user.id);
+      setUsers(updatedUsers);
+      localStorage.setItem('raspou_users', JSON.stringify(updatedUsers));
+      
+      // Remover também transações e histórico do usuário
+      const updatedTransactions = transactions.filter(t => t.user_id !== user.id);
+      localStorage.setItem('raspou_transactions', JSON.stringify(updatedTransactions));
+      
+      const gameHistory = JSON.parse(localStorage.getItem('raspou_game_history') || '[]');
+      const updatedGameHistory = gameHistory.filter(g => g.user_id !== user.id);
+      localStorage.setItem('raspou_game_history', JSON.stringify(updatedGameHistory));
+      
+      alert('Usuário excluído com sucesso!');
+      loadData();
+    }
+  };
+
+  const handleSaveUserEdit = () => {
+    const updatedUsers = users.map(u => 
+      u.id === selectedUser.id 
+        ? { 
+            ...u, 
+            nome: editUserData.nome,
+            telefone: editUserData.telefone,
+            status: editUserData.status,
+            saldo_real: parseFloat(editUserData.saldo_real) || 0,
+            saldo_bonus: parseFloat(editUserData.saldo_bonus) || 0
+          }
+        : u
+    );
+    
+    setUsers(updatedUsers);
+    localStorage.setItem('raspou_users', JSON.stringify(updatedUsers));
+    
+    // Se o usuário editado está logado, atualizar também o localStorage do usuário atual
+    const currentUser = JSON.parse(localStorage.getItem('raspou_user') || '{}');
+    if (currentUser.id === selectedUser.id) {
+      const updatedCurrentUser = updatedUsers.find(u => u.id === selectedUser.id);
+      localStorage.setItem('raspou_user', JSON.stringify(updatedCurrentUser));
+    }
+    
+    setShowEditUserModal(false);
+    setSelectedUser(null);
+    setEditUserData({});
+    alert('Usuário atualizado com sucesso!');
+    loadData();
+  };
+
+  const handleCancelUserEdit = () => {
+    setShowEditUserModal(false);
+    setSelectedUser(null);
+    setEditUserData({});
+  };
+
+  const handleUserInputChange = (field, value) => {
+    setEditUserData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
   const handleAffiliateInputChange = (field, value) => {
     setNewAffiliateData(prev => ({
       ...prev,
@@ -490,13 +574,25 @@ const SuperAdmin = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex space-x-2">
-                            <button className="text-blue-400 hover:text-blue-300">
+                            <button 
+                              onClick={() => handleViewUser(user)}
+                              className="text-blue-400 hover:text-blue-300"
+                              title="Visualizar"
+                            >
                               <Eye className="w-4 h-4" />
                             </button>
-                            <button className="text-yellow-400 hover:text-yellow-300">
+                            <button 
+                              onClick={() => handleEditUser(user)}
+                              className="text-yellow-400 hover:text-yellow-300"
+                              title="Editar"
+                            >
                               <Edit className="w-4 h-4" />
                             </button>
-                            <button className="text-red-400 hover:text-red-300">
+                            <button 
+                              onClick={() => handleDeleteUser(user)}
+                              className="text-red-400 hover:text-red-300"
+                              title="Excluir"
+                            >
                               <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
@@ -815,6 +911,246 @@ const SuperAdmin = () => {
         </div>
       )}
 
+      {/* Modal de Visualização de Usuário */}
+      {showUserModal && selectedUser && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto border-2 border-blue-500/30">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-white font-bold text-xl">Informações do Cliente</h3>
+              <button
+                onClick={() => setShowUserModal(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Dados Pessoais */}
+              <div className="space-y-4">
+                <h4 className="text-blue-400 font-bold text-lg">Dados Pessoais</h4>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Nome Completo</label>
+                  <p className="text-white bg-gray-700 py-2 px-3 rounded-lg">{selectedUser.nome || 'N/A'}</p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Email</label>
+                  <p className="text-white bg-gray-700 py-2 px-3 rounded-lg">{selectedUser.email || 'N/A'}</p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Telefone</label>
+                  <p className="text-white bg-gray-700 py-2 px-3 rounded-lg">{selectedUser.telefone || 'N/A'}</p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">CPF</label>
+                  <p className="text-white bg-gray-700 py-2 px-3 rounded-lg">{selectedUser.cpf || 'N/A'}</p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Data de Cadastro</label>
+                  <p className="text-white bg-gray-700 py-2 px-3 rounded-lg">
+                    {selectedUser.data_cadastro ? formatDateTime(selectedUser.data_cadastro) : 'N/A'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Dados Financeiros */}
+              <div className="space-y-4">
+                <h4 className="text-green-400 font-bold text-lg">Dados Financeiros</h4>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Saldo Real</label>
+                  <p className="text-green-400 bg-gray-700 py-2 px-3 rounded-lg font-bold">
+                    {formatCurrency(selectedUser.saldo_real || 0)}
+                  </p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Saldo Bônus</label>
+                  <p className="text-yellow-400 bg-gray-700 py-2 px-3 rounded-lg font-bold">
+                    {formatCurrency(selectedUser.saldo_bonus || 0)}
+                  </p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Pontos de Sorteio</label>
+                  <p className="text-purple-400 bg-gray-700 py-2 px-3 rounded-lg font-bold">
+                    {selectedUser.pontos_sorteio || 0} pts
+                  </p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Total Ganho</label>
+                  <p className="text-blue-400 bg-gray-700 py-2 px-3 rounded-lg font-bold">
+                    {formatCurrency(selectedUser.total_ganho || 0)}
+                  </p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Jogos Realizados</label>
+                  <p className="text-white bg-gray-700 py-2 px-3 rounded-lg font-bold">
+                    {selectedUser.jogos_realizados || 0}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 flex justify-center space-x-4">
+              <button
+                onClick={() => handleEditUser(selectedUser)}
+                className="bg-yellow-600 hover:bg-yellow-700 text-black font-bold py-2 px-6 rounded-lg transition-colors"
+              >
+                Editar Usuário
+              </button>
+              <button
+                onClick={() => setShowUserModal(false)}
+                className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-colors"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Edição de Usuário */}
+      {showEditUserModal && selectedUser && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto border-2 border-yellow-500/30">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-white font-bold text-xl">Editar Cliente: {selectedUser.nome}</h3>
+              <button
+                onClick={handleCancelUserEdit}
+                className="text-gray-400 hover:text-white"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Dados Pessoais */}
+              <div className="space-y-4">
+                <h4 className="text-yellow-400 font-bold text-lg">Dados Pessoais</h4>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Nome Completo</label>
+                  <input
+                    type="text"
+                    value={editUserData.nome}
+                    onChange={(e) => handleUserInputChange('nome', e.target.value)}
+                    className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                  <input
+                    type="email"
+                    value={editUserData.email}
+                    disabled
+                    className="w-full py-2 px-3 bg-gray-600 border border-gray-600 rounded-lg text-gray-400 cursor-not-allowed"
+                  />
+                  <p className="text-gray-400 text-xs mt-1">Email não pode ser alterado</p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Telefone</label>
+                  <input
+                    type="tel"
+                    value={editUserData.telefone}
+                    onChange={(e) => handleUserInputChange('telefone', e.target.value)}
+                    className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Status da Conta</label>
+                  <select
+                    value={editUserData.status}
+                    onChange={(e) => handleUserInputChange('status', e.target.value)}
+                    className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                  >
+                    <option value="active">Ativo</option>
+                    <option value="suspended">Suspenso</option>
+                    <option value="banned">Banido</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Dados Financeiros */}
+              <div className="space-y-4">
+                <h4 className="text-green-400 font-bold text-lg">Dados Financeiros</h4>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Saldo Real (R$)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={editUserData.saldo_real}
+                    onChange={(e) => handleUserInputChange('saldo_real', e.target.value)}
+                    className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-400"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Saldo Bônus (R$)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={editUserData.saldo_bonus}
+                    onChange={(e) => handleUserInputChange('saldo_bonus', e.target.value)}
+                    className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                  />
+                </div>
+                
+                <div className="bg-gray-700 rounded-lg p-4">
+                  <h5 className="text-white font-medium mb-2">Informações Somente Leitura</h5>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">CPF:</span>
+                      <span className="text-white">{selectedUser.cpf || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Total Ganho:</span>
+                      <span className="text-green-400">{formatCurrency(selectedUser.total_ganho || 0)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Jogos Realizados:</span>
+                      <span className="text-blue-400">{selectedUser.jogos_realizados || 0}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Pontos Sorteio:</span>
+                      <span className="text-purple-400">{selectedUser.pontos_sorteio || 0} pts</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Botões */}
+            <div className="flex space-x-4 mt-8">
+              <button
+                onClick={handleCancelUserEdit}
+                className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSaveUserEdit}
+                className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-black font-bold py-3 px-6 rounded-lg transition-colors"
+              >
+                Salvar Alterações
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Modal de Criação de Afiliado */}
       {showCreateAffiliateModal && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">

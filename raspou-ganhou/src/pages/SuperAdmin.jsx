@@ -686,22 +686,25 @@ const SuperAdmin = () => {
         }
     };
 
-    const handleCancelEditLottery = () => {
-        setEditingLottery(null);
-        setLotteryForm({
-            title: '',
-            description: '',
-            prize: '',
-  const handleEditLottery = (lottery) => {
-    console.log('✏️ SuperAdmin: Editing lottery:', lottery.id);
-    setEditingLottery(lottery);
-    setLotteryForm({
-      title: lottery.title,
-      prize: lottery.prize.toString(),
-      draw_date: lottery.draw_date,
-      description: lottery.description || ''
-    });
-  };
+ const handleCancelEditLottery = () => {
+  setEditingLottery(null);
+  setLotteryForm({
+    title: '',
+    description: '',
+    prize: ''
+  }); // 👈 ESSA PARTE estava faltando
+};
+
+const handleEditLottery = (lottery) => {
+  console.log('✏️ SuperAdmin: Editing lottery:', lottery.id);
+  setEditingLottery(lottery);
+  setLotteryForm({
+    title: lottery.title,
+    prize: lottery.prize.toString(),
+    draw_date: lottery.draw_date,
+    description: lottery.description || ''
+  });
+};
 
   const handleUpdateLottery = () => {
     console.log('💾 SuperAdmin: Updating lottery:', editingLottery.id);

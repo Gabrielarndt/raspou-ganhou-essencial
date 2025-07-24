@@ -58,6 +58,15 @@ const SuperAdmin = () => {
     const [selectedCoupon, setSelectedCoupon] = useState(null);
     const [selectedUser, setSelectedUser] = useState(null);
     const [showViewAffiliateModal, setShowViewAffiliateModal] = useState(false);
+    const [showCreateAdminModal, setShowCreateAdminModal] = useState(false);
+    const [showEditAdminModal, setShowEditAdminModal] = useState(false);
+    const [newAdmin, setNewAdmin] = useState({
+        name: '',
+        email: '',
+        password: '',
+        permissions: []
+    });
+    const [editingAdmin, setEditingAdmin] = useState({});
 
 
     const [newAffiliate, setNewAffiliate] = useState({
@@ -173,75 +182,115 @@ const SuperAdmin = () => {
     };
 
     const handleCreateAdmin = () => {
-        // Implementar modal de criação de admin
-        const name = prompt('Nome do administrador:');
-        const email = prompt('Email do administrador:');
-        const password = prompt('Senha do administrador:');
-
-        if (name && email && password) {
-            const newAdmin = {
-                id: Date.now(),
-                name,
-                email,
-                password,
-                permissions: ['dashboard', 'users', 'transactions'],
-                created_at: new Date().toISOString(),
-                is_admin: true
-            };
-
-            const updatedAdmins = [...admins, newAdmin];
-            const currentAdmins = JSON.parse(localStorage.getItem('raspou_admins') || '[]');
-            const newAdminsList = [...currentAdmins, newAdmin];
-            localStorage.setItem('raspou_admins', JSON.stringify(newAdminsList));
-
-            // Adicionar também à lista de usuários para login
-            const currentUsers = JSON.parse(localStorage.getItem('raspou_users') || '[]');
-            const newUsersList = [...currentUsers, newAdmin];
-            localStorage.setItem('raspou_users', JSON.stringify(newUsersList));
-
-            alert('Administrador criado com sucesso!');
-            loadData();
+        if (!newAdmin.name || !newAdmin.email || !newAdmin.password) {
+            alert('Por favor, preencha todos os campos obrigatórios');
+            return;
         }
+
+        // Verificar se email já existe
+        const allUsers = JSON.parse(localStorage.getItem('raspou_users') || '[]');
+        const allAdmins = JSON.parse(localStorage.getItem('raspou_admins') || '[]');
+        
+        if (allUsers.find(u => u.email === newAdmin.email) || allAdmins.find(a => a.email === newAdmin.email)) {
+            alert('Este email já está cadastrado');
+            return;
+        }
+
+        const adminData = {
+            id: Date.now(),
+            name: newAdmin.name,
+            email: newAdmin.email,
+            password: newAdmin.password,
+            permissions: newAdmin.permissions,
+            status: 'active',
+            created_at: new Date().toISOString(),
+            is_admin: true
+        };
+
+        const updatedAdmins = [...admins, adminData];
+        const currentAdmins = JSON.parse(localStorage.getItem('raspou_admins') || '[]');
+        const newAdminsList = [...currentAdmins, adminData];
+        localStorage.setItem('raspou_admins', JSON.stringify(newAdminsList));
+
+        // Adicionar também à lista de usuários para login
+        const currentUsers = JSON.parse(localStorage.getItem('raspou_users') || '[]');
+        const newUsersList = [...currentUsers, adminData];
+        localStorage.setItem('raspou_users', JSON.stringify(newUsersList));
+
+        setShowCreateAdminModal(false);
+        setNewAdmin({ name: '', email: '', password: '', permissions: [] });
+        alert('Administrador criado com sucesso!');
+        loadData();
+    };
+
+    const toggleNewAdminPermission = (permission) => {
+        setNewAdmin(prev => ({
+            ...prev,
+            permissions: prev.permissions.includes(permission)
+                ? prev.permissions.filter(p => p !== permission)
+                : [...prev.permissions, permission]
+        }));
+    };
+
+    const toggleAdminPermission = (permission) => {
+        setEditingAdmin(prev => ({
+            ...prev,
+            permissions: (prev.permissions || []).includes(permission)
+                ? prev.permissions.filter(p => p !== permission)
+                : [...(prev.permissions || []), permission]
+        }));
     };
 
     const handleEditAdmin = (admin) => {
-        // Implementar edição de admin
-        const newName = prompt('Novo nome:', admin.name);
-        const newEmail = prompt('Novo email:', admin.email);
-        
-        if (newName && newEmail) {
-            const updatedAdmins = admins.map(a => 
-                a.id === admin.id ? { ...a, name: newName, email: newEmail } : a
-            );
-            setAdmins(updatedAdmins);
-            
-            // Atualizar no localStorage
-            const currentAdmins = JSON.parse(localStorage.getItem('raspou_admins') || '[]');
-            const updatedCurrentAdmins = currentAdmins.map(a => 
-                a.id === admin.id ? { ...a, name: newName, email: newEmail } : a
-            );
-            localStorage.setItem('raspou_admins', JSON.stringify(updatedCurrentAdmins));
-            
-            alert('Administrador atualizado com sucesso!');
-            loadData();
+        setEditingAdmin({ ...admin });
+        setShowEditAdminModal(true);
+    };
+
+    const handleUpdateAdmin = () => {
+        if (!editingAdmin.name || !editingAdmin.email) {
+            alert('Por favor, preencha todos os campos obrigatórios');
+            return;
         }
+
+        const updatedAdmin = {
+            ...editingAdmin,
+            updated_at: new Date().toISOString()
+        };
+
+        // Se nova senha foi fornecida, atualizar
+        if (editingAdmin.newPassword) {
+            updatedAdmin.password = editingAdmin.newPassword;
+            delete updatedAdmin.newPassword;
+        }
+
+        // Atualizar na lista de admins
+        const currentAdmins = JSON.parse(localStorage.getItem('raspou_admins') || '[]');
+        const updatedAdmins = currentAdmins.map(a => a.id === editingAdmin.id ? updatedAdmin : a);
+        localStorage.setItem('raspou_admins', JSON.stringify(updatedAdmins));
+
+        // Atualizar também na lista de usuários
+        const currentUsers = JSON.parse(localStorage.getItem('raspou_users') || '[]');
+        const updatedUsers = currentUsers.map(u => u.id === editingAdmin.id ? updatedAdmin : u);
+        localStorage.setItem('raspou_users', JSON.stringify(updatedUsers));
+
+        setShowEditAdminModal(false);
+        setEditingAdmin({});
+        alert('Administrador atualizado com sucesso!');
+        loadData();
     };
 
     const handleDeleteAdmin = (adminId) => {
         if (window.confirm('Tem certeza que deseja excluir este administrador?')) {
-            const updatedAdmins = admins.filter(a => a.id !== adminId);
-            setAdmins(updatedAdmins);
-            
-            // Remover do localStorage
+            // Remover da lista de admins
             const currentAdmins = JSON.parse(localStorage.getItem('raspou_admins') || '[]');
-            const updatedCurrentAdmins = currentAdmins.filter(a => a.id !== adminId);
-            localStorage.setItem('raspou_admins', JSON.stringify(updatedCurrentAdmins));
-            
+            const updatedAdmins = currentAdmins.filter(a => a.id !== adminId);
+            localStorage.setItem('raspou_admins', JSON.stringify(updatedAdmins));
+
             // Remover também da lista de usuários
             const currentUsers = JSON.parse(localStorage.getItem('raspou_users') || '[]');
             const updatedUsers = currentUsers.filter(u => u.id !== adminId);
             localStorage.setItem('raspou_users', JSON.stringify(updatedUsers));
-            
+
             alert('Administrador excluído com sucesso!');
             loadData();
         }
@@ -878,7 +927,7 @@ const SuperAdmin = () => {
                         <div className="flex flex-col sm:flex-row gap-4 justify-between">
                             <h2 className="text-xl font-bold text-white">Gestão de Administradores</h2>
                             <button
-                                onClick={handleCreateAdmin}
+                                onClick={() => setShowCreateAdminModal(true)}
                                 className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors flex items-center space-x-2"
                             >
                                 <Plus className="w-4 h-4" />
@@ -928,35 +977,14 @@ const SuperAdmin = () => {
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                     <div className="flex space-x-2">
                                                         <button 
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                setViewingAffiliate(admin);
-                                                                setShowAffiliateModal(true);
-                                                                setShowManageAffiliate(false);
-                                                                setManagingAffiliate(null);
-                                                            }}
-                                                            className="text-blue-400 hover:text-blue-300"
-                                                            title="Visualizar"
-                                                        >
-                                                            <Eye className="w-4 h-4" />
-                                                        </button>
-                                                        <button 
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleEditAdmin(admin);
-                                                            }}
+                                                            onClick={() => handleEditAdmin(admin)}
                                                             className="text-yellow-400 hover:text-yellow-300"
-                                                            title="Editar"
                                                         >
                                                             <Edit className="w-4 h-4" />
                                                         </button>
                                                         <button 
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleDeleteAdmin(admin.id);
-                                                            }}
+                                                            onClick={() => handleDeleteAdmin(admin.id)}
                                                             className="text-red-400 hover:text-red-300"
-                                                            title="Excluir"
                                                         >
                                                             <Trash2 className="w-4 h-4" />
                                                         </button>
@@ -1408,7 +1436,209 @@ const SuperAdmin = () => {
                 </div>
             )}
 
-            {/* Modal do Painel do Afiliado */}
+            {/* Modal de Criação de Administrador */}
+            {showCreateAdminModal && (
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[80] p-4">
+                    <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-xl font-bold text-white">Criar Novo Administrador</h3>
+                            <button
+                                onClick={() => {
+                                    setShowCreateAdminModal(false);
+                                    setNewAdmin({ name: '', email: '', password: '', permissions: [] });
+                                }}
+                                className="text-gray-400 hover:text-white"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+                            {/* Nome */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Nome Completo</label>
+                                <input
+                                    type="text"
+                                    value={newAdmin.name}
+                                    onChange={(e) => setNewAdmin({...newAdmin, name: e.target.value})}
+                                    className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                    placeholder="Nome do administrador"
+                                />
+                            </div>
+
+                            {/* Email */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                                <input
+                                    type="email"
+                                    value={newAdmin.email}
+                                    onChange={(e) => setNewAdmin({...newAdmin, email: e.target.value})}
+                                    className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                    placeholder="email@exemplo.com"
+                                />
+                            </div>
+
+                            {/* Senha */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Senha</label>
+                                <input
+                                    type="password"
+                                    value={newAdmin.password}
+                                    onChange={(e) => setNewAdmin({...newAdmin, password: e.target.value})}
+                                    className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                    placeholder="Senha do administrador"
+                                />
+                            </div>
+
+                            {/* Permissões */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Permissões</label>
+                                <div className="space-y-2">
+                                    {['users', 'transactions', 'games', 'affiliates', 'reports'].map((permission) => (
+                                        <label key={permission} className="flex items-center space-x-2">
+                                            <input
+                                                type="checkbox"
+                                                checked={newAdmin.permissions.includes(permission)}
+                                                onChange={() => toggleNewAdminPermission(permission)}
+                                                className="rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500"
+                                            />
+                                            <span className="text-gray-300 text-sm capitalize">{permission}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Botões */}
+                            <div className="flex space-x-4 pt-4">
+                                <button
+                                    onClick={handleCreateAdmin}
+                                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-colors"
+                                >
+                                    Criar Administrador
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setShowCreateAdminModal(false);
+                                        setNewAdmin({ name: '', email: '', password: '', permissions: [] });
+                                    }}
+                                    className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 rounded-lg transition-colors"
+                                >
+                                    Cancelar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal de Edição de Administrador */}
+            {showEditAdminModal && (
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[80] p-4">
+                    <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-xl font-bold text-white">Editar Administrador</h3>
+                            <button
+                                onClick={() => {
+                                    setShowEditAdminModal(false);
+                                    setEditingAdmin({});
+                                }}
+                                className="text-gray-400 hover:text-white"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+                            {/* Nome */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Nome Completo</label>
+                                <input
+                                    type="text"
+                                    value={editingAdmin.name || ''}
+                                    onChange={(e) => setEditingAdmin({...editingAdmin, name: e.target.value})}
+                                    className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                />
+                            </div>
+
+                            {/* Email */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                                <input
+                                    type="email"
+                                    value={editingAdmin.email || ''}
+                                    onChange={(e) => setEditingAdmin({...editingAdmin, email: e.target.value})}
+                                    className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                />
+                            </div>
+
+                            {/* Nova Senha (opcional) */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Nova Senha (opcional)</label>
+                                <input
+                                    type="password"
+                                    value={editingAdmin.newPassword || ''}
+                                    onChange={(e) => setEditingAdmin({...editingAdmin, newPassword: e.target.value})}
+                                    className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                    placeholder="Deixe em branco para manter a atual"
+                                />
+                            </div>
+
+                            {/* Status */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Status</label>
+                                <select
+                                    value={editingAdmin.status || 'active'}
+                                    onChange={(e) => setEditingAdmin({...editingAdmin, status: e.target.value})}
+                                    className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                >
+                                    <option value="active">Ativo</option>
+                                    <option value="suspended">Suspenso</option>
+                                    <option value="inactive">Inativo</option>
+                                </select>
+                            </div>
+
+                            {/* Permissões */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Permissões</label>
+                                <div className="space-y-2">
+                                    {['users', 'transactions', 'games', 'affiliates', 'reports'].map((permission) => (
+                                        <label key={permission} className="flex items-center space-x-2">
+                                            <input
+                                                type="checkbox"
+                                                checked={(editingAdmin.permissions || []).includes(permission)}
+                                                onChange={() => toggleAdminPermission(permission)}
+                                                className="rounded border-gray-600 bg-gray-700 text-yellow-600 focus:ring-yellow-500"
+                                            />
+                                            <span className="text-gray-300 text-sm capitalize">{permission}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Botões */}
+                            <div className="flex space-x-4 pt-4">
+                                <button
+                                    onClick={handleUpdateAdmin}
+                                    className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-black font-bold py-3 rounded-lg transition-colors"
+                                >
+                                    Salvar Alterações
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setShowEditAdminModal(false);
+                                        setEditingAdmin({});
+                                    }}
+                                    className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 rounded-lg transition-colors"
+                                >
+                                    Cancelar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal de Visualização de Afiliado */}
             {showViewAffiliateModal && selectedAffiliate && (
                 <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
                     <div className="bg-gray-800 rounded-xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">

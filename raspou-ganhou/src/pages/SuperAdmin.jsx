@@ -627,6 +627,19 @@ const SuperAdmin = () => {
         setNewAffiliateData(prev => ({
             ...prev,
             [field]: value
+    // Verificar se há usuário autenticado
+    if (!user || loading) {
+      console.log('❌ SuperAdmin: User not authenticated or still loading');
+      return;
+    }
+
+    // Verificar se tem permissão (qualquer admin pode criar)
+    if (!user.is_super_admin && !user.is_admin) {
+      console.log('❌ SuperAdmin: User does not have admin permissions');
+      alert('Você não tem permissão para criar sorteios');
+      return;
+    }
+
         }));
     };
 

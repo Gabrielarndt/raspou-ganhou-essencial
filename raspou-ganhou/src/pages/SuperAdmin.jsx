@@ -631,17 +631,7 @@ const SuperAdmin = () => {
         }));
     };
 
-    const handleEditLottery = (lottery) => {
-        console.log('✏️ SuperAdmin: Editing lottery:', lottery);
-        setEditingLottery(lottery.id);
-        setLotteryForm({
-            title: lottery.title,
-            description: lottery.description,
-            prize: lottery.prize.toString(),
-            draw_date: new Date(lottery.draw_date).toISOString().slice(0, 16),
-            max_participants: lottery.max_participants?.toString() || ''
-        });
-    };
+    // aqui
 
     const handleSaveLottery = () => {
         console.log('💾 SuperAdmin: Saving lottery:', lotteryForm);

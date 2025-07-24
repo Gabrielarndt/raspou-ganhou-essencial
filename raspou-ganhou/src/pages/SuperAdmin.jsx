@@ -474,6 +474,156 @@ const SuperAdmin = () => {
     }
 
     return (
+  // Funções para gerenciamento de administradores
+  const handleCreateAdmin = () => {
+    try {
+      if (!newAdmin.name || !newAdmin.email || !newAdmin.password) {
+        alert('Por favor, preencha todos os campos obrigatórios');
+        return;
+      }
+
+      // Verificar se email já existe
+      const existingAdmins = JSON.parse(localStorage.getItem('raspou_admins') || '[]');
+      const superAdmins = JSON.parse(localStorage.getItem('raspou_super_admins') || '[]');
+      const users = JSON.parse(localStorage.getItem('raspou_users') || '[]');
+
+      if (existingAdmins.find(a => a.email === newAdmin.email) ||
+          superAdmins.find(sa => sa.email === newAdmin.email) ||
+          users.find(u => u.email === newAdmin.email)) {
+        alert('Este email já está em uso');
+        return;
+      }
+
+      const adminToCreate = {
+        id: Date.now(),
+        name: newAdmin.name,
+        email: newAdmin.email,
+        password: newAdmin.password,
+        permissions: newAdmin.permissions,
+        created_at: new Date().toISOString(),
+        is_admin: true,
+        role: 'admin',
+        status: 'active'
+      };
+
+      existingAdmins.push(adminToCreate);
+      localStorage.setItem('raspou_admins', JSON.stringify(existingAdmins));
+      
+      console.log('✅ Administrador criado:', adminToCreate);
+      
+      // Reset form
+      setNewAdmin({
+        name: '',
+        email: '',
+        password: '',
+        permissions: []
+      });
+      
+      setShowCreateAdminModal(false);
+      loadData(); // Recarregar dados
+      
+      alert('Administrador criado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao criar administrador:', error);
+      alert('Erro ao criar administrador');
+    }
+  };
+
+  const handleEditAdmin = (admin) => {
+    setEditingAdmin({
+      ...admin,
+      permissions: admin.permissions || []
+    });
+    setShowEditAdminModal(true);
+  };
+
+  const handleUpdateAdmin = () => {
+    try {
+      if (!editingAdmin.name || !editingAdmin.email) {
+        alert('Nome e email são obrigatórios');
+        return;
+      }
+
+      const admins = JSON.parse(localStorage.getItem('raspou_admins') || '[]');
+      const adminIndex = admins.findIndex(a => a.id === editingAdmin.id);
+      
+      if (adminIndex !== -1) {
+        admins[adminIndex] = {
+          ...admins[adminIndex],
+          name: editingAdmin.name,
+          email: editingAdmin.email,
+          permissions: editingAdmin.permissions,
+          status: editingAdmin.status,
+          ...(editingAdmin.password && { password: editingAdmin.password })
+        };
+        
+        localStorage.setItem('raspou_admins', JSON.stringify(admins));
+        console.log('✅ Administrador atualizado:', admins[adminIndex]);
+        
+        setShowEditAdminModal(false);
+        setEditingAdmin({});
+        loadData();
+        
+        alert('Administrador atualizado com sucesso!');
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar administrador:', error);
+      alert('Erro ao atualizar administrador');
+    }
+  };
+
+  const handleDeleteAdmin = (adminId) => {
+    if (window.confirm('Tem certeza que deseja excluir este administrador? Esta ação não pode ser desfeita.')) {
+      try {
+        const admins = JSON.parse(localStorage.getItem('raspou_admins') || '[]');
+        const filteredAdmins = admins.filter(a => a.id !== adminId);
+        
+        localStorage.setItem('raspou_admins', JSON.stringify(filteredAdmins));
+        console.log('✅ Administrador excluído:', adminId);
+        
+        loadData();
+        alert('Administrador excluído com sucesso!');
+      } catch (error) {
+        console.error('Erro ao excluir administrador:', error);
+        alert('Erro ao excluir administrador');
+      }
+    }
+  };
+
+  const toggleAdminPermission = (permission) => {
+    const currentPermissions = editingAdmin.permissions || [];
+    const hasPermission = currentPermissions.includes(permission);
+    
+    if (hasPermission) {
+      setEditingAdmin({
+        ...editingAdmin,
+        permissions: currentPermissions.filter(p => p !== permission)
+      });
+    } else {
+      setEditingAdmin({
+        ...editingAdmin,
+        permissions: [...currentPermissions, permission]
+      });
+    }
+  };
+
+  const toggleNewAdminPermission = (permission) => {
+    const currentPermissions = newAdmin.permissions || [];
+    const hasPermission = currentPermissions.includes(permission);
+    
+    if (hasPermission) {
+      setNewAdmin({
+        ...newAdmin,
+        permissions: currentPermissions.filter(p => p !== permission)
+      });
+    } else {
+      setNewAdmin({
+        ...newAdmin,
+        permissions: [...currentPermissions, permission]
+      });
+    }
+  };
+
         <div className="min-h-screen bg-black text-white pt-20 pb-20 lg:pb-8">
             <div className="container mx-auto px-4 lg:px-8">
 

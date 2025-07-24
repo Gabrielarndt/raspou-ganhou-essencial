@@ -769,6 +769,7 @@ const handleEditLottery = (item) => {
                     {[
                         { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
                         { id: 'clients', label: 'Clientes', icon: Users },
+          { id: 'affiliates', label: 'Afiliados', icon: UserCheck },
                         { id: 'admins', label: 'Administradores', icon: Shield },
                         { id: 'raffles', label: 'Sorteios', icon: Trophy },
                         { id: 'settings', label: 'Configurações', icon: Settings }

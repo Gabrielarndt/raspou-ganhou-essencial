@@ -33,7 +33,7 @@ import {
 
 const SuperAdmin = () => {
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user, loading } = useAuth();
     const [activeTab, setActiveTab] = useState('dashboard');
     const [users, setUsers] = useState([]);
     const [transactions, setTransactions] = useState([]);
@@ -626,25 +626,23 @@ const SuperAdmin = () => {
     const handleAffiliateInputChange = (field, value) => {
         setNewAffiliateData(prev => ({
             ...prev,
-      [field]: value
-    });
-  };
-
-  const handleCreateLottery = () => {
-    // Verificar se há usuário autenticado
-    if (!user || loading) {
-      console.log('❌ SuperAdmin: User not authenticated or still loading');
-      return;
-    }
-
-    // Verificar se tem permissão (qualquer admin pode criar)
-    if (!user.is_super_admin && !user.is_admin) {
-      console.log('❌ SuperAdmin: User does not have admin permissions');
-      alert('Você não tem permissão para criar sorteios');
-      return;
-    }
-
+            [field]: value
         }));
+    };
+
+    const handleEditLottery = () => {
+        // Verificar se há usuário autenticado
+        if (!user || loading) {
+            console.log('❌ SuperAdmin: User not authenticated or still loading');
+            return;
+        }
+
+        // Verificar se tem permissão (qualquer admin pode criar)
+        if (!user.is_super_admin && !user.is_admin) {
+            console.log('❌ SuperAdmin: User does not have admin permissions');
+            alert('Você não tem permissão para criar sorteios');
+            return;
+        }
     };
 
     if (!isSuperAdmin()) {

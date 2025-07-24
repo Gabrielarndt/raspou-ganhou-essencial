@@ -740,7 +740,7 @@ const handleEditLottery = (lottery) => {
       title: '',
       prize: '',
       draw_date: '',
-      description: ''
+      description: '',
             draw_date: '',
             max_participants: ''
         });

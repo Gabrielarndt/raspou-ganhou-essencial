@@ -264,6 +264,47 @@ const SuperAdmin = () => {
         }));
     };
 
+    // Função para criar sorteio
+    const handleCreateLottery = (e) => {
+        e.preventDefault();
+        
+        // Validar campos obrigatórios
+        if (!newLotteryData.name || !newLotteryData.prize || !newLotteryData.date || !newLotteryData.time) {
+            alert('Por favor, preencha todos os campos obrigatórios');
+            return;
+        }
+
+        // Criar novo sorteio
+        const newLottery = {
+            id: Date.now().toString(),
+            ...newLotteryData,
+            participants: [],
+            createdAt: new Date().toISOString(),
+            createdBy: user.email
+        };
+
+        // Salvar no localStorage
+        const existingLotteries = JSON.parse(localStorage.getItem('raspou_lotteries') || '[]');
+        existingLotteries.push(newLottery);
+        localStorage.setItem('raspou_lotteries', JSON.stringify(existingLotteries));
+
+        // Resetar formulário e fechar modal
+        setNewLotteryData({
+            name: '',
+            description: '',
+            prize: '',
+            date: '',
+            time: '',
+            maxParticipants: '',
+            entryCost: '',
+            status: 'agendado'
+        });
+        setShowCreateLotteryModal(false);
+        
+        // Atualizar lista (se necessário)
+        console.log('Sorteio criado:', newLottery);
+    };
+
     const handleEditAdmin = (admin) => {
         setEditingAdmin({ ...admin });
         setShowEditAdminModal(true);
@@ -1150,13 +1191,13 @@ const SuperAdmin = () => {
                                     setShowCreateLotteryModal(false);
                                     setNewLotteryData({
                                         name: '',
-                                        description: '',
                                         prize: '',
-                                        draw_date: '',
-                                        draw_time: '',
-                                        max_participants: '',
-                                        entry_cost: '',
-                                        status: 'scheduled'
+                                        description: '',
+                                        date: '',
+                                        time: '',
+                                        maxParticipants: '',
+                                        entryCost: '',
+                                        status: 'agendado'
                                     });
                                 }}
                                 className="text-gray-400 hover:text-white"
@@ -1199,8 +1240,8 @@ const SuperAdmin = () => {
                                 </label>
                                 <input
                                     type="date"
-                                    value={newLotteryData.draw_date}
-                                    onChange={(e) => setNewLotteryData({...newLotteryData, draw_date: e.target.value})}
+                                    value={newLotteryData.date}
+                                    onChange={(e) => setNewLotteryData({...newLotteryData, date: e.target.value})}
                                     className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
                                 />
                             </div>
@@ -1211,8 +1252,8 @@ const SuperAdmin = () => {
                                 </label>
                                 <input
                                     type="time"
-                                    value={newLotteryData.draw_time}
-                                    onChange={(e) => setNewLotteryData({...newLotteryData, draw_time: e.target.value})}
+                                    value={newLotteryData.time}
+                                    onChange={(e) => setNewLotteryData({...newLotteryData, time: e.target.value})}
                                     className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
                                 />
                             </div>
@@ -1223,8 +1264,8 @@ const SuperAdmin = () => {
                                 </label>
                                 <input
                                     type="number"
-                                    value={newLotteryData.max_participants}
-                                    onChange={(e) => setNewLotteryData({...newLotteryData, max_participants: e.target.value})}
+                                    value={newLotteryData.maxParticipants}
+                                    onChange={(e) => setNewLotteryData({...newLotteryData, maxParticipants: e.target.value})}
                                     className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
                                     placeholder="Deixe vazio para ilimitado"
                                 />
@@ -1237,8 +1278,8 @@ const SuperAdmin = () => {
                                 <input
                                     type="number"
                                     step="0.01"
-                                    value={newLotteryData.entry_cost}
-                                    onChange={(e) => setNewLotteryData({...newLotteryData, entry_cost: e.target.value})}
+                                    value={newLotteryData.entryCost}
+                                    onChange={(e) => setNewLotteryData({...newLotteryData, entryCost: e.target.value})}
                                     className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
                                     placeholder="0.00 para gratuito"
                                 />
@@ -1280,13 +1321,13 @@ const SuperAdmin = () => {
                                     setShowCreateLotteryModal(false);
                                     setNewLotteryData({
                                         name: '',
-                                        description: '',
                                         prize: '',
-                                        draw_date: '',
-                                        draw_time: '',
-                                        max_participants: '',
-                                        entry_cost: '',
-                                        status: 'scheduled'
+                                        description: '',
+                                        date: '',
+                                        time: '',
+                                        maxParticipants: '',
+                                        entryCost: '',
+                                        status: 'agendado'
                                     });
                                 }}
                                 className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"

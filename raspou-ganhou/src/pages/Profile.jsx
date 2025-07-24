@@ -24,7 +24,7 @@ import {
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { user, logout, updateUser, getGameHistory, getTransactionHistory } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({});
   const [activeTab, setActiveTab] = useState('perfil');
@@ -38,25 +38,42 @@ const Profile = () => {
     }
     
     // Carregar históricos
-    setGameHistory(getGameHistory());
-    setTransactionHistory(getTransactionHistory());
+    loadHistories();
     
     setEditData({
       nome: user.nome || '',
       telefone: user.telefone || ''
     });
-  }, [user, navigate, getGameHistory, getTransactionHistory]);
+  }, [user, navigate]);
+
+  const loadHistories = async () => {
+    try {
+      const [gameData, transactionData] = await Promise.all([
+        apiClient.getGameHistory(),
+        apiClient.getTransactionHistory()
+      ]);
+      
+      setGameHistory(gameData.history || []);
+      setTransactionHistory(transactionData.transactions || []);
+    } catch (error) {
+      console.error('Error loading histories:', error);
+    }
+  };
 
   const handleEdit = () => {
     setIsEditing(true);
   };
 
-  const handleSave = () => {
-    const result = updateUser(editData);
-    if (result.success) {
-      setIsEditing(false);
-    } else {
-      alert(result.message || 'Erro ao salvar alterações');
+  const handleSave = async () => {
+    try {
+      const result = await updateUser(editData);
+      if (result.success) {
+        setIsEditing(false);
+      } else {
+        alert(result.message || 'Erro ao salvar alterações');
+      }
+    } catch (error) {
+      alert('Erro ao salvar alterações: ' + error.message);
     }
   };
 

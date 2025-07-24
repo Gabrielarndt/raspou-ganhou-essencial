@@ -33,18 +33,17 @@ const Login = () => {
       return;
     }
 
-    try {
-      const result = login(formData.email, formData.senha);
+    login(formData.email, formData.senha).then(result => {
       if (result.success) {
         navigate('/');
       } else {
         setError(result.message || 'Erro ao fazer login');
+        setIsLoading(false);
       }
-    } catch (err) {
+    }).catch(err => {
       setError('Erro inesperado. Tente novamente.');
-    } finally {
       setIsLoading(false);
-    }
+    });
   };
 
   return (

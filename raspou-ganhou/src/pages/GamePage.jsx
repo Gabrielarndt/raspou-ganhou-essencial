@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { apiClient } from '../lib/api';
 import { ArrowLeft, Play, RotateCcw, Coins } from 'lucide-react';
 import ScratchCard from '../components/game/ScratchCard';
 import { useState, useEffect } from 'react';
@@ -7,24 +8,20 @@ import { useState, useEffect } from 'react';
 const GamePage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, loading, updateBalance, addGameResult } = useAuth();
+  const { user, loading, refreshUser } = useAuth();
   const [gameState, setGameState] = useState('ready'); // ready, playing, revealed, finished
+  const [games, setGames] = useState([]);
   const [prizes, setPrizes] = useState([]);
   const [winningPrizes, setWinningPrizes] = useState([]);
   const [wonAmount, setWonAmount] = useState(0);
   const [isRevealed, setIsRevealed] = useState(false);
   const [showResultModal, setShowResultModal] = useState(false);
-  const [paymentBreakdown, setPaymentBreakdown] = useState({ realUsed: 0, bonusUsed: 0 });
+  const [gameResult, setGameResult] = useState(null);
 
-  const raspadinhas = {
-    1: { nome: 'Sorte Dourada', preco: 1.00, premio_max: 100.00 },
-    2: { nome: 'Fortuna Real', preco: 2.00, premio_max: 250.00 },
-    3: { nome: 'Tesouro Escondido', preco: 5.00, premio_max: 500.00 },
-    4: { nome: 'Diamante Negro', preco: 10.00, premio_max: 1000.00 },
-    5: { nome: 'Jackpot Premium', preco: 20.00, premio_max: 5000.00 }
-  };
-
-  const currentGame = raspadinhas[id];
+  const currentGame = games.find(g => g.id === id);
+  useEffect(() => {
+    loadGames();
+  }, []);
 
   useEffect(() => {
     console.log('🎮 GamePage: Auth check - User:', !!user, 'Loading:', loading);
@@ -46,6 +43,15 @@ const GamePage = () => {
     console.log('🎮 GamePage: Auth check passed, user can play');
   }, [user, loading, currentGame, navigate]);
 
+  const loadGames = async () => {
+    try {
+      const data = await apiClient.getGames();
+      setGames(data.games || []);
+    } catch (error) {
+      console.error('Error loading games:', error);
+    }
+  };
+
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -53,98 +59,37 @@ const GamePage = () => {
     }).format(value);
   };
 
-  const generatePrizes = () => {
-    console.log('🎮 GamePage: Generating prizes for game');
-    const symbols = ['💎', '🍀', '⭐', '🎯', '🏆', '💰', '🎲', '🔥'];
-    const newPrizes = [];
-    
-    for (let i = 0; i < 9; i++) {
-      const randomSymbol = symbols[Math.floor(Math.random() * symbols.length)];
-      newPrizes.push(randomSymbol);
-    }
-    
-    // 30% de chance de ganhar
-    const shouldWin = Math.random() < 0.3;
-    console.log('🎮 GamePage: Should win?', shouldWin);
-    
-    if (shouldWin) {
-      const winningSymbol = symbols[Math.floor(Math.random() * symbols.length)];
-      const positions = [0, 4, 8]; // Diagonal principal
-      positions.forEach(pos => {
-        newPrizes[pos] = winningSymbol;
-      });
-      setWinningPrizes(positions);
-      
-      // Calcular prêmio baseado no símbolo
-      const prizeMultipliers = {
-        '💎': 10, '🍀': 8, '⭐': 6, '🎯': 5,
-        '🏆': 4, '💰': 3, '🎲': 2, '🔥': 1.5
-      };
-      const multiplier = prizeMultipliers[winningSymbol] || 1;
-      const prize = currentGame.preco * multiplier;
-      setWonAmount(prize);
-      console.log('🎮 GamePage: Won amount:', prize);
-    } else {
-      setWinningPrizes([]);
-      setWonAmount(0);
-      console.log('🎮 GamePage: No prize won');
-    }
-    
-    setPrizes(newPrizes);
-  };
-
-  const handleStartGame = () => {
+  const handleStartGame = async () => {
     console.log('🎮 GamePage: Starting game for user:', user?.email);
     const totalBalance = (user.saldo_real || 0) + (user.saldo_bonus || 0);
-    console.log('🎮 GamePage: Total balance:', totalBalance, 'Game cost:', currentGame.preco);
+    console.log('🎮 GamePage: Total balance:', totalBalance, 'Game cost:', currentGame.price);
     
-    if (totalBalance < currentGame.preco) {
+    if (totalBalance < currentGame.price) {
       console.log('🎮 GamePage: Insufficient balance');
       alert('Saldo insuficiente! Faça um depósito para continuar jogando.');
       return;
     }
 
-    // Calcular quanto será usado de cada saldo
-    let newSaldoReal = user.saldo_real || 0;
-    let newSaldoBonus = user.saldo_bonus || 0;
-    let remainingCost = currentGame.preco;
-    let realUsed = 0;
-    let bonusUsed = 0;
-
-    if (newSaldoReal >= remainingCost) {
-      // Usar apenas saldo real
-      realUsed = remainingCost;
-      newSaldoReal -= remainingCost;
-      remainingCost = 0;
-    } else if (newSaldoReal > 0) {
-      // Usar saldo real parcialmente e depois bônus
-      realUsed = newSaldoReal;
-      remainingCost -= newSaldoReal;
-      newSaldoReal = 0;
-      bonusUsed = remainingCost;
-      newSaldoBonus -= remainingCost;
-    } else {
-      // Usar apenas saldo bônus
-      bonusUsed = remainingCost;
-      newSaldoBonus -= remainingCost;
+    try {
+      const result = await apiClient.playGame(currentGame.id);
+      
+      if (result.success) {
+        setGameResult(result.result);
+        setPrizes(result.result.symbols);
+        setWinningPrizes(result.result.winning_positions);
+        setWonAmount(result.result.prize);
+        
+        // Atualizar usuário com novos saldos
+        await refreshUser();
+        
+        setGameState('playing');
+        setIsRevealed(false);
+        setShowResultModal(false);
+      }
+    } catch (error) {
+      console.error('Error playing game:', error);
+      alert('Erro ao iniciar jogo: ' + error.message);
     }
-
-    console.log('🎮 GamePage: Payment breakdown - Real used:', realUsed, 'Bonus used:', bonusUsed);
-    console.log('🎮 GamePage: New balances - Real:', newSaldoReal, 'Bonus:', newSaldoBonus);
-
-    // Salvar breakdown do pagamento para distribuir prêmio corretamente
-    setPaymentBreakdown({ realUsed, bonusUsed });
-
-    updateBalance({
-      saldo_real: newSaldoReal,
-      saldo_bonus: newSaldoBonus,
-      pontos_sorteio: (user.pontos_sorteio || 0)
-    });
-
-    generatePrizes();
-    setGameState('playing');
-    setIsRevealed(false);
-    setShowResultModal(false);
   };
 
   const handleReveal = () => {
@@ -159,77 +104,7 @@ const GamePage = () => {
   };
 
   const processWinnings = () => {
-    console.log('💰 processWinnings: Iniciando processamento do prêmio');
-    console.log('💰 processWinnings: wonAmount =', wonAmount);
-    console.log('💰 processWinnings: user atual =', user);
-    
-    if (wonAmount > 0) {
-      console.log('💰 GANHOU! Valor:', wonAmount);
-      console.log('💰 Saldo atual - Real:', user.saldo_real, 'Bonus:', user.saldo_bonus);
-      console.log('💰 Pagamento foi - Real usado:', paymentBreakdown.realUsed, 'Bonus usado:', paymentBreakdown.bonusUsed);
-      
-      // Pegar saldos atuais do usuário mais recente
-      const savedUser = JSON.parse(localStorage.getItem('raspou_user') || '{}');
-      const currentRealBalance = savedUser.saldo_real || 0;
-      const currentBonusBalance = savedUser.saldo_bonus || 0;
-      
-      console.log('💰 Saldos do localStorage - Real:', currentRealBalance, 'Bonus:', currentBonusBalance);
-      
-      let newRealBalance = currentRealBalance;
-      let newBonusBalance = currentBonusBalance;
-      
-      // Aplicar regras de distribuição
-      if (paymentBreakdown.realUsed > 0 && paymentBreakdown.bonusUsed === 0) {
-        // Usou apenas saldo real → prêmio vai para real
-        newRealBalance += wonAmount;
-        console.log('💰 Prêmio adicionado ao SALDO REAL (pagou só com real)');
-      } else if (paymentBreakdown.realUsed === 0 && paymentBreakdown.bonusUsed > 0) {
-        // Usou apenas saldo bônus → prêmio vai para bônus
-        newBonusBalance += wonAmount;
-        console.log('💰 Prêmio adicionado ao SALDO BÔNUS (pagou só com bônus)');
-      } else {
-        // Usou ambos → prêmio vai para real
-        newRealBalance += wonAmount;
-        console.log('💰 Prêmio adicionado ao SALDO REAL (pagou com ambos)');
-      }
-      
-      console.log('💰 Novos saldos - Real:', newRealBalance, 'Bonus:', newBonusBalance);
-      
-      // Atualizar saldo com força
-      console.log('💰 Chamando updateBalance...');
-      const updateResult = updateBalance({
-        saldo_real: newRealBalance,
-        saldo_bonus: newBonusBalance,
-        pontos_sorteio: (user.pontos_sorteio || 0) + 10
-      });
-      
-      console.log('💰 Resultado da atualização:', updateResult);
-      
-      // Forçar atualização do estado local
-      setTimeout(() => {
-        const updatedUser = JSON.parse(localStorage.getItem('raspou_user') || '{}');
-        console.log('💰 Verificação final - Saldo no localStorage:', updatedUser.saldo_real, updatedUser.saldo_bonus);
-        
-        // Forçar re-renderização
-        window.dispatchEvent(new CustomEvent('userLogin', { detail: updatedUser }));
-      }, 100);
-    } else {
-      console.log('😞 Não ganhou, mas adicionando pontos');
-      updateBalance({
-        saldo_real: user.saldo_real || 0,
-        saldo_bonus: user.saldo_bonus || 0,
-        pontos_sorteio: (user.pontos_sorteio || 0) + 10
-      });
-    }
-
-    // Adicionar ao histórico
-    addGameResult({
-      game_name: currentGame.nome,
-      cost: currentGame.preco,
-      premio: wonAmount,
-      ganhou: wonAmount > 0,
-      paymentBreakdown: paymentBreakdown
-    });
+    console.log('💰 processWinnings: Game result processed by backend');
 
     // Mostrar modal de resultado
     setTimeout(() => {
@@ -244,7 +119,7 @@ const GamePage = () => {
     setPrizes([]);
     setWinningPrizes([]);
     setWonAmount(0);
-    setPaymentBreakdown({ realUsed: 0, bonusUsed: 0 });
+    setGameResult(null);
     setShowResultModal(false);
   };
 
@@ -294,12 +169,12 @@ const GamePage = () => {
                 <div className="w-24 h-24 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl mx-auto mb-4 flex items-center justify-center">
                   <Play className="w-12 h-12 text-black" />
                 </div>
-                <h2 className="text-2xl font-bold mb-2">{currentGame.nome}</h2>
-                <p className="text-gray-400 mb-4">Prêmio máximo: {formatCurrency(currentGame.premio_max)}</p>
+                <h2 className="text-2xl font-bold mb-2">{currentGame.name}</h2>
+                <p className="text-gray-400 mb-4">Prêmio máximo: {formatCurrency(currentGame.max_prize)}</p>
                 
                 <div className="flex items-center justify-center space-x-2 mb-6">
                   <Coins className="w-5 h-5 text-yellow-400" />
-                  <span className="text-lg font-bold">Custo: {formatCurrency(currentGame.preco)}</span>
+                  <span className="text-lg font-bold">Custo: {formatCurrency(currentGame.price)}</span>
                 </div>
 
                 <button

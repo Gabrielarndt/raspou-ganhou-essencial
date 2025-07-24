@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { apiClient } from '../lib/api';
 import { 
   BarChart3,
   Users, 
@@ -35,61 +36,50 @@ const Admin = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [users, setUsers] = useState([]);
   const [transactions, setTransactions] = useState([]);
-  const [games, setGames] = useState([]);
   const [stats, setStats] = useState({});
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [dateFilter, setDateFilter] = useState('30d');
+  const [loading, setLoading] = useState(true);
 
   // Verificar se é admin
-  const isAdmin = user?.email === 'admin@raspouganhou.com' || user?.is_admin === true || user?.id === 1;
+  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin' || user?.is_super_admin;
 
   useEffect(() => {
     if (!isAdmin) {
-      navigate('/');
+      navigate('/super-admin-login');
       return;
     }
 
-    // Carregar dados do localStorage
     loadData();
   }, [isAdmin, navigate]);
 
-  const loadData = () => {
-    // Carregar usuários
-    const savedUsers = JSON.parse(localStorage.getItem('raspou_users') || '[]');
-    setUsers(savedUsers);
-
-    // Carregar transações
-    const savedTransactions = JSON.parse(localStorage.getItem('raspou_transactions') || '[]');
-    setTransactions(savedTransactions);
-
-    // Carregar jogos (simulado)
-    const savedGames = JSON.parse(localStorage.getItem('raspou_games') || '[]');
-    setGames(savedGames);
-
-    // Calcular estatísticas
-    calculateStats(savedUsers, savedTransactions, savedGames);
+  const loadData = async () => {
+    try {
+      if (activeTab === 'dashboard') {
+        const dashboardData = await apiClient.getAdminDashboard();
+        setStats(dashboardData.stats);
+        setTransactions(dashboardData.recent_transactions);
+        setUsers(dashboardData.active_users);
+      } else if (activeTab === 'users') {
+        const usersData = await apiClient.getAdminUsers();
+        setUsers(usersData.users);
+      } else if (activeTab === 'transactions') {
+        const transactionsData = await apiClient.getAdminTransactions();
+        setTransactions(transactionsData.transactions);
+      }
+    } catch (error) {
+      console.error('Error loading admin data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const calculateStats = (users, transactions, games) => {
-    const totalUsers = users.length;
-    const totalDeposits = transactions
-      .filter(t => t.type === 'deposit' && t.status === 'completed')
-      .reduce((sum, t) => sum + t.amount, 0);
-    const totalWithdraws = transactions
-      .filter(t => t.type === 'withdraw')
-      .reduce((sum, t) => sum + t.amount, 0);
-    const totalGames = games.length;
-    const totalRevenue = totalDeposits - totalWithdraws;
-
-    setStats({
-      totalUsers,
-      totalDeposits,
-      totalWithdraws,
-      totalGames,
-      totalRevenue,
-      pendingWithdraws: transactions.filter(t => t.type === 'withdraw' && t.status === 'processing').length
-    });
-  };
+  // Recarregar dados quando mudar de aba
+  useEffect(() => {
+    if (isAdmin) {
+      loadData();
+    }
+  }, [activeTab, isAdmin]);
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -102,28 +92,29 @@ const Admin = () => {
     return new Date(dateString).toLocaleDateString('pt-BR');
   };
 
-  const handleApproveWithdraw = (transactionId) => {
-    const updatedTransactions = transactions.map(t => 
-      t.id === transactionId ? { ...t, status: 'completed' } : t
-    );
-    setTransactions(updatedTransactions);
-    localStorage.setItem('raspou_transactions', JSON.stringify(updatedTransactions));
-    loadData();
+  const handleApproveWithdraw = async (transactionId) => {
+    try {
+      await apiClient.approveWithdraw(transactionId);
+      loadData(); // Recarregar dados
+    } catch (error) {
+      console.error('Error approving withdraw:', error);
+      alert('Erro ao aprovar saque: ' + error.message);
+    }
   };
 
-  const handleRejectWithdraw = (transactionId) => {
-    const updatedTransactions = transactions.map(t => 
-      t.id === transactionId ? { ...t, status: 'rejected' } : t
-    );
-    setTransactions(updatedTransactions);
-    localStorage.setItem('raspou_transactions', JSON.stringify(updatedTransactions));
-    loadData();
+  const handleRejectWithdraw = async (transactionId) => {
+    try {
+      await apiClient.rejectWithdraw(transactionId);
+      loadData(); // Recarregar dados
+    } catch (error) {
+      console.error('Error rejecting withdraw:', error);
+      alert('Erro ao rejeitar saque: ' + error.message);
+    }
   };
 
   const handleLogout = () => {
     if (window.confirm('Tem certeza que deseja sair?')) {
-      localStorage.removeItem('raspou_user');
-      window.dispatchEvent(new CustomEvent('userLogout'));
+      apiClient.logout();
       navigate('/super-admin-login');
     }
   };
@@ -139,9 +130,9 @@ const Admin = () => {
   ];
 
   const pieData = [
-    { name: 'Depósitos', value: stats.totalDeposits, color: '#10B981' },
-    { name: 'Saques', value: stats.totalWithdraws, color: '#EF4444' },
-    { name: 'Comissões', value: stats.totalRevenue * 0.1, color: '#F59E0B' },
+    { name: 'Depósitos', value: stats.total_deposits || 0, color: '#10B981' },
+    { name: 'Saques', value: stats.total_withdraws || 0, color: '#EF4444' },
+    { name: 'Comissões', value: (stats.total_revenue || 0) * 0.1, color: '#F59E0B' },
   ];
 
   const menuItems = [
@@ -307,7 +298,7 @@ const Admin = () => {
                     </div>
                     <div>
                       <p className="text-gray-400 text-sm">Total de Usuários</p>
-                      <p className="text-white text-2xl font-bold">{stats.totalUsers}</p>
+                      <p className="text-white text-2xl font-bold">{stats.total_users || 0}</p>
                     </div>
                   </div>
                 </div>
@@ -319,7 +310,7 @@ const Admin = () => {
                     </div>
                     <div>
                       <p className="text-gray-400 text-sm">Receita Total</p>
-                      <p className="text-white text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</p>
+                      <p className="text-white text-2xl font-bold">{formatCurrency(stats.total_revenue || 0)}</p>
                     </div>
                   </div>
                 </div>
@@ -331,7 +322,7 @@ const Admin = () => {
                     </div>
                     <div>
                       <p className="text-gray-400 text-sm">Total Depósitos</p>
-                      <p className="text-white text-2xl font-bold">{formatCurrency(stats.totalDeposits)}</p>
+                      <p className="text-white text-2xl font-bold">{formatCurrency(stats.total_deposits || 0)}</p>
                     </div>
                   </div>
                 </div>
@@ -343,7 +334,7 @@ const Admin = () => {
                     </div>
                     <div>
                       <p className="text-gray-400 text-sm">Saques Pendentes</p>
-                      <p className="text-white text-2xl font-bold">{stats.pendingWithdraws}</p>
+                      <p className="text-white text-2xl font-bold">{stats.pending_withdraws || 0}</p>
                     </div>
                   </div>
                 </div>
@@ -600,7 +591,7 @@ const Admin = () => {
                             {formatCurrency(user.saldo_real || 0)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                            {user.data_cadastro ? formatDate(user.data_cadastro) : 'N/A'}
+                            {user.created_at ? formatDate(user.created_at) : 'N/A'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div className="flex space-x-2">
@@ -690,7 +681,7 @@ const Admin = () => {
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                            {formatDate(transaction.date)}
+                            {formatDate(transaction.created_at)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             {transaction.type === 'withdraw' && transaction.status === 'processing' && (
@@ -728,31 +719,8 @@ const Admin = () => {
               
               <div className="bg-gray-800 rounded-xl p-6">
                 <h3 className="text-white font-bold text-lg mb-4">Configurações de Raspadinhas</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {[
-                    { nome: 'Sorte Dourada', preco: 1.00, premio_max: 100.00 },
-                    { nome: 'Fortuna Real', preco: 2.00, premio_max: 250.00 },
-                    { nome: 'Tesouro Escondido', preco: 5.00, premio_max: 500.00 },
-                    { nome: 'Diamante Negro', preco: 10.00, premio_max: 1000.00 },
-                    { nome: 'Jackpot Premium', preco: 20.00, premio_max: 5000.00 }
-                  ].map((game, index) => (
-                    <div key={index} className="bg-gray-700 rounded-lg p-4">
-                      <h4 className="text-white font-bold mb-2">{game.nome}</h4>
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-gray-400 text-sm">Preço:</span>
-                          <span className="text-yellow-400 font-bold">{formatCurrency(game.preco)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-400 text-sm">Prêmio Máx:</span>
-                          <span className="text-green-400 font-bold">{formatCurrency(game.premio_max)}</span>
-                        </div>
-                      </div>
-                      <button className="w-full mt-3 bg-red-600 hover:bg-red-700 text-white font-medium py-2 rounded-lg transition-colors">
-                        Editar
-                      </button>
-                    </div>
-                  ))}
+                <div className="text-center py-8">
+                  <p className="text-gray-400">Configurações de jogos serão implementadas em breve</p>
                 </div>
               </div>
             </div>

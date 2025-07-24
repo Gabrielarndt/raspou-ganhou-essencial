@@ -1,59 +1,36 @@
 import React from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { apiClient } from '../lib/api';
 import { Play, Star, Zap } from 'lucide-react';
 
 const Raspadinhas = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const [games, setGames] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const raspadinhas = [
-    {
-      id: 1,
-      nome: 'Sorte Dourada',
-      preco: 1.00,
-      premio_max: 100.00,
-      cor: 'from-yellow-400 to-yellow-600',
-      icone: Star,
-      descricao: 'Sua primeira chance de ganhar!'
-    },
-    {
-      id: 2,
-      nome: 'Fortuna Real',
-      preco: 2.00,
-      premio_max: 250.00,
-      cor: 'from-blue-400 to-blue-600',
-      icone: Zap,
-      descricao: 'Dobre suas chances de vitória!'
-    },
-    {
-      id: 3,
-      nome: 'Tesouro Escondido',
-      preco: 5.00,
-      premio_max: 500.00,
-      cor: 'from-green-400 to-green-600',
-      icone: Star,
-      descricao: 'Encontre o tesouro perdido!'
-    },
-    {
-      id: 4,
-      nome: 'Diamante Negro',
-      preco: 10.00,
-      premio_max: 1000.00,
-      cor: 'from-purple-400 to-purple-600',
-      icone: Zap,
-      descricao: 'Raridade e grandes prêmios!'
-    },
-    {
-      id: 5,
-      nome: 'Jackpot Premium',
-      preco: 20.00,
-      premio_max: 5000.00,
-      cor: 'from-red-400 to-red-600',
-      icone: Star,
-      descricao: 'O maior prêmio te espera!'
+  useEffect(() => {
+    loadGames();
+  }, []);
+
+  const loadGames = async () => {
+    try {
+      const data = await apiClient.getGames();
+      const gamesWithUI = (data.games || []).map((game, index) => ({
+        ...game,
+        cor: ['from-yellow-400 to-yellow-600', 'from-blue-400 to-blue-600', 'from-green-400 to-green-600', 'from-purple-400 to-purple-600', 'from-red-400 to-red-600'][index % 5],
+        icone: [Star, Zap, Star, Zap, Star][index % 5],
+        descricao: game.description || 'Tente a sorte!'
+      }));
+      setGames(gamesWithUI);
+    } catch (error) {
+      console.error('Error loading games:', error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -62,13 +39,23 @@ const Raspadinhas = () => {
     }).format(value);
   };
 
-  const handlePlay = (raspadinha) => {
+  const handlePlay = (game) => {
     if (!isAuthenticated) {
       navigate('/login');
       return;
     }
-    navigate(`/jogo/${raspadinha.id}`);
+    navigate(`/jogo/${game.id}`);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-white pt-20 pb-20 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-yellow-400 text-xl">Carregando jogos...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black text-white pt-20 pb-20">
@@ -85,22 +72,22 @@ const Raspadinhas = () => {
 
         {/* Lista de Raspadinhas */}
         <div className="space-y-4">
-          {raspadinhas.map((raspadinha) => {
-            const Icon = raspadinha.icone;
+          {games.map((game) => {
+            const Icon = game.icone;
             
             return (
               <div
-                key={raspadinha.id}
+                key={game.id}
                 className="bg-gray-800 rounded-xl p-6 hover:bg-gray-700 transition-all duration-200 transform hover:scale-105"
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-4">
-                    <div className={`w-16 h-16 bg-gradient-to-br ${raspadinha.cor} rounded-xl flex items-center justify-center`}>
+                    <div className={`w-16 h-16 bg-gradient-to-br ${game.cor} rounded-xl flex items-center justify-center`}>
                       <Icon className="w-8 h-8 text-white" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-white">{raspadinha.nome}</h3>
-                      <p className="text-gray-400 text-sm">{raspadinha.descricao}</p>
+                      <h3 className="text-xl font-bold text-white">{game.name}</h3>
+                      <p className="text-gray-400 text-sm">{game.descricao}</p>
                     </div>
                   </div>
                 </div>
@@ -110,21 +97,21 @@ const Raspadinhas = () => {
                     <div>
                       <p className="text-gray-400 text-sm">Preço</p>
                       <p className="text-yellow-400 font-bold text-lg">
-                        {formatCurrency(raspadinha.preco)}
+                        {formatCurrency(game.price)}
                       </p>
                     </div>
                     <div>
                       <p className="text-gray-400 text-sm">Prêmio Máximo</p>
                       <p className="text-green-400 font-bold text-lg">
-                        {formatCurrency(raspadinha.premio_max)}
+                        {formatCurrency(game.max_prize)}
                       </p>
                     </div>
                   </div>
                 </div>
 
                 <button
-                  onClick={() => handlePlay(raspadinha)}
-                  className={`w-full bg-gradient-to-r ${raspadinha.cor} hover:opacity-90 text-white font-bold py-3 px-6 rounded-xl transition-all duration-200 flex items-center justify-center space-x-2`}
+                  onClick={() => handlePlay(game)}
+                  className={`w-full bg-gradient-to-r ${game.cor} hover:opacity-90 text-white font-bold py-3 px-6 rounded-xl transition-all duration-200 flex items-center justify-center space-x-2`}
                 >
                   <Play className="w-5 h-5" />
                   <span>Jogar Agora</span>

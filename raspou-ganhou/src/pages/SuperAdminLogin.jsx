@@ -5,7 +5,7 @@ import { Mail, Lock, Eye, EyeOff, ArrowLeft, Shield, Crown } from 'lucide-react'
 
 const SuperAdminLogin = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     senha: ''
@@ -33,52 +33,18 @@ const SuperAdminLogin = () => {
       return;
     }
 
-    try {
-      console.log('🔐 SuperAdminLogin: Tentando login para:', formData.email);
-      
-      // Verificar super admins
-      const superAdmins = JSON.parse(localStorage.getItem('raspou_super_admins') || '[]');
-      console.log('🔍 SuperAdminLogin: Super admins encontrados:', superAdmins.length);
-      console.log('🔍 SuperAdminLogin: Super admins:', superAdmins);
-      
-      const foundSuperAdmin = superAdmins.find(sa => 
-        sa.email === formData.email && sa.password === formData.senha
-      );
-      
-      console.log('🔍 SuperAdminLogin: Found super admin:', foundSuperAdmin);
-      
-      if (foundSuperAdmin) {
-        console.log('✅ SuperAdminLogin: Super admin encontrado:', foundSuperAdmin.email);
-        
-        // Criar usuário temporário para o contexto de autenticação
-        const tempUser = {
-          id: foundSuperAdmin.id,
-          nome: foundSuperAdmin.name,
-          email: foundSuperAdmin.email,
-          is_super_admin: true,
-          role: 'super_admin'
-        };
-        
-        console.log('💾 SuperAdminLogin: Salvando usuário temporário:', tempUser);
-        localStorage.setItem('raspou_user', JSON.stringify(tempUser));
-        
-        // Disparar evento para atualizar o contexto de autenticação
-        window.dispatchEvent(new CustomEvent('userLogin', { detail: tempUser }));
-        
-        console.log('🎯 SuperAdminLogin: Redirecionando para super admin panel');
-        setIsLoading(false);
-        navigate('/super-admin');
-        return;
+    apiClient.adminLogin(formData.email, formData.senha).then(result => {
+      if (result.success) {
+        navigate('/admin');
       } else {
-        console.log('❌ SuperAdminLogin: Credenciais inválidas');
-        setError('Credenciais inválidas para administrador');
-        setIsLoading(false);
+        setError(result.error || 'Credenciais inválidas');
       }
-    } catch (err) {
+      setIsLoading(false);
+    }).catch(err => {
       console.error('Erro no login admin:', err);
       setError('Erro inesperado. Tente novamente.');
       setIsLoading(false);
-    }
+    });
   };
 
   return (

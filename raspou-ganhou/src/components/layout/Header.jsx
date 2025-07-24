@@ -8,11 +8,10 @@ import { useState, useEffect } from 'react';
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, loading, forceUpdate, isAuthenticated } = useAuth();
+  const { user, loading, isAuthenticated } = useAuth();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showWalletDrawer, setShowWalletDrawer] = useState(false);
   const [showProfileDrawer, setShowProfileDrawer] = useState(false);
-  const [localUser, setLocalUser] = useState(null);
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -31,61 +30,7 @@ const Header = () => {
     return location.pathname === path;
   };
 
-  // Escutar mudanças no AuthContext
-  useEffect(() => {
-    console.log('🎯 Header: Auth state changed - User:', !!user, 'Loading:', loading);
-    setLocalUser(user);
-  }, [user, loading, forceUpdate]);
-
-  // Escutar eventos customizados de login/logout
-  useEffect(() => {
-    const handleUserLogin = (event) => {
-      console.log('🎯 Header: User login event received:', event.detail?.email);
-      setLocalUser(event.detail);
-    };
-
-    const handleUserLogout = () => {
-      console.log('🎯 Header: User logout event received');
-      setLocalUser(null);
-    };
-
-    window.addEventListener('userLogin', handleUserLogin);
-    window.addEventListener('userLogout', handleUserLogout);
-
-    return () => {
-      window.removeEventListener('userLogin', handleUserLogin);
-      window.removeEventListener('userLogout', handleUserLogout);
-    };
-  }, []);
-
-  // Verificar localStorage diretamente como fallback
-  useEffect(() => {
-    const checkLocalStorage = () => {
-      try {
-        const savedUser = localStorage.getItem('raspou_user');
-        if (savedUser && !localUser) {
-          const parsedUser = JSON.parse(savedUser);
-          console.log('🎯 Header: Found user in localStorage:', parsedUser.email);
-          setLocalUser(parsedUser);
-        } else if (!savedUser && localUser) {
-          console.log('🎯 Header: No user in localStorage, clearing local state');
-          setLocalUser(null);
-        }
-      } catch (error) {
-        console.error('🎯 Header: Error checking localStorage:', error);
-      }
-    };
-
-    // Verificar imediatamente
-    checkLocalStorage();
-
-    // Verificar periodicamente
-    const interval = setInterval(checkLocalStorage, 1000);
-
-    return () => clearInterval(interval);
-  }, [localUser]);
-
-  console.log('🎯 Header: Rendering - LocalUser:', !!localUser, 'AuthUser:', !!user, 'Loading:', loading);
+  console.log('🎯 Header: Rendering - User:', !!user, 'Loading:', loading);
 
   // Mostrar loading durante carregamento inicial
   if (loading) {
@@ -109,8 +54,7 @@ const Header = () => {
     );
   }
 
-  // Usar localUser como fonte de verdade
-  const currentUser = localUser || user;
+  const currentUser = user;
 
   return (
     <>
@@ -135,8 +79,6 @@ const Header = () => {
             <div className="flex items-center space-x-4">
               {currentUser ? (
                 <>
-                  {console.log('🎯 Header: Rendering user section for:', currentUser.email)}
-                  
                   {/* Saldo Total */}
                   <div className="hidden md:flex items-center space-x-2 bg-gray-800 px-3 py-2 rounded-lg">
                     <Coins className="w-4 h-4 text-yellow-400" />
@@ -155,10 +97,7 @@ const Header = () => {
 
                   {/* Botão Carteira */}
                   <button
-                    onClick={() => {
-                      console.log('🎯 Header: Carteira button clicked');
-                      setShowWalletDrawer(true);
-                    }}
+                    onClick={() => setShowWalletDrawer(true)}
                     className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
                   >
                     <Wallet className="w-4 h-4" />
@@ -167,10 +106,7 @@ const Header = () => {
 
                   {/* Botão Perfil */}
                   <button
-                    onClick={() => {
-                      console.log('🎯 Header: Perfil button clicked');
-                      setShowProfileDrawer(true);
-                    }}
+                    onClick={() => setShowProfileDrawer(true)}
                     className="flex items-center space-x-2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
                   >
                     <User className="w-4 h-4" />
@@ -179,19 +115,15 @@ const Header = () => {
                 </>
               ) : (
                 <>
-                  {console.log('🎯 Header: Rendering login/register section')}
-                  
                   <Link
                     to="/login"
                     className="text-gray-300 hover:text-white font-medium transition-colors"
-                    onClick={() => console.log('🎯 Header: Login link clicked')}
                   >
                     Entrar
                   </Link>
                   <Link
                     to="/registro"
                     className="bg-yellow-600 hover:bg-yellow-700 text-black font-bold py-2 px-4 rounded-lg transition-colors"
-                    onClick={() => console.log('🎯 Header: Register link clicked')}
                   >
                     Criar Conta
                   </Link>

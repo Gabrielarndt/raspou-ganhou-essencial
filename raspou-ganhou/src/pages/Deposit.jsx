@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { apiClient } from '../lib/api';
 import { 
   ArrowLeft, 
   CreditCard, 
@@ -17,7 +18,7 @@ import {
 
 const Deposit = () => {
   const navigate = useNavigate();
-  const { user, updateBalance, getTotalBalance } = useAuth();
+  const { user, refreshUser, getTotalBalance } = useAuth();
   const [selectedMethod, setSelectedMethod] = useState('pix');
   const [amount, setAmount] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -92,48 +93,27 @@ const Deposit = () => {
     setIsProcessing(true);
 
     try {
-      // Simular processamento do pagamento
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Atualizar saldo do usuário
-      const newBalance = {
-        saldo_real: user.saldo_real + numericAmount,
-        saldo_bonus: user.saldo_bonus + bonusAmount
-      };
-
-      updateBalance(newBalance);
-
-      // Salvar transação no histórico
-      const transactions = JSON.parse(localStorage.getItem('raspou_transactions') || '[]');
-      const newTransaction = {
-        id: Date.now(),
-        user_id: user.id,
-        type: 'deposit',
-        method: selectedPayment.name,
-        amount: numericAmount,
-        fee: feeAmount,
-        bonus: bonusAmount,
-        status: 'completed',
-        date: new Date().toISOString()
-      };
+      const result = await apiClient.deposit(numericAmount, selectedPayment.name);
       
-      transactions.push(newTransaction);
-      localStorage.setItem('raspou_transactions', JSON.stringify(transactions));
-
-      setShowSuccess(true);
-      setAmount('');
-      
-      setTimeout(() => {
-        setShowSuccess(false);
-        navigate('/minha-conta');
-      }, 3000);
-
+      if (result.success) {
+        await refreshUser();
+        
+        setShowSuccess(true);
+        setAmount('');
+        
+        setTimeout(() => {
+          setShowSuccess(false);
+          navigate('/minha-conta');
+        }, 3000);
+      }
     } catch (error) {
       console.error('Erro no depósito:', error);
+      alert('Erro ao processar depósito: ' + error.message);
     } finally {
       setIsProcessing(false);
     }
   };
+
 
   const isValidAmount = numericAmount >= (selectedPayment?.minAmount || 0) && 
                        numericAmount <= (selectedPayment?.maxAmount || 0);

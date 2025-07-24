@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { apiClient } from '../lib/api';
 import { 
   ArrowLeft, 
   CreditCard, 
@@ -16,7 +17,7 @@ import {
 
 const Withdraw = () => {
   const navigate = useNavigate();
-  const { user, updateBalance, getTotalBalance } = useAuth();
+  const { user, refreshUser, getTotalBalance } = useAuth();
   const [selectedMethod, setSelectedMethod] = useState('pix');
   const [amount, setAmount] = useState('');
   const [pixKey, setPixKey] = useState('');
@@ -103,51 +104,30 @@ const Withdraw = () => {
     setIsProcessing(true);
 
     try {
-      // Simular processamento do saque
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Atualizar saldo do usuário
-      const newBalance = {
-        saldo_real: user.saldo_real - numericAmount,
-        saldo_bonus: user.saldo_bonus
-      };
-
-      updateBalance(newBalance);
-
-      // Salvar transação no histórico
-      const transactions = JSON.parse(localStorage.getItem('raspou_transactions') || '[]');
-      const newTransaction = {
-        id: Date.now(),
-        user_id: user.id,
-        type: 'withdraw',
-        method: selectedPayment.name,
-        amount: numericAmount,
-        fee: feeAmount,
-        net_amount: totalReceived,
-        status: 'processing',
-        date: new Date().toISOString(),
-        details: selectedMethod === 'pix' ? { pix_key: pixKey } : bankData
-      };
+      const details = selectedMethod === 'pix' ? { pix_key: pixKey } : bankData;
+      const result = await apiClient.withdraw(numericAmount, selectedPayment.name, details);
       
-      transactions.push(newTransaction);
-      localStorage.setItem('raspou_transactions', JSON.stringify(transactions));
-
-      setShowSuccess(true);
-      setAmount('');
-      setPixKey('');
-      setBankData({ bank: '', agency: '', account: '', accountType: 'corrente' });
-      
-      setTimeout(() => {
-        setShowSuccess(false);
-        navigate('/minha-conta');
-      }, 3000);
-
+      if (result.success) {
+        await refreshUser();
+        
+        setShowSuccess(true);
+        setAmount('');
+        setPixKey('');
+        setBankData({ bank: '', agency: '', account: '', accountType: 'corrente' });
+        
+        setTimeout(() => {
+          setShowSuccess(false);
+          navigate('/minha-conta');
+        }, 3000);
+      }
     } catch (error) {
       console.error('Erro no saque:', error);
+      alert('Erro ao processar saque: ' + error.message);
     } finally {
       setIsProcessing(false);
     }
   };
+
 
   const isValidAmount = numericAmount >= (selectedPayment?.minAmount || 0) && 
                        numericAmount <= availableBalance &&

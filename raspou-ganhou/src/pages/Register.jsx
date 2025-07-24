@@ -86,18 +86,17 @@ const Register = () => {
       return;
     }
 
-    try {
-      const result = register(formData);
+    register(formData).then(result => {
       if (result.success) {
         navigate('/login');
       } else {
         setError(result.message || 'Erro ao criar conta');
+        setIsLoading(false);
       }
-    } catch (err) {
+    }).catch(err => {
       setError('Erro inesperado. Tente novamente.');
-    } finally {
       setIsLoading(false);
-    }
+    });
   };
 
   return (

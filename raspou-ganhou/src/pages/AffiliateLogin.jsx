@@ -31,52 +31,18 @@ const AffiliateLogin = () => {
       return;
     }
 
-    try {
-      console.log('🔐 AffiliateLogin: Tentando login para:', formData.email);
-      
-      // Verificar afiliados
-      const affiliates = JSON.parse(localStorage.getItem('raspou_affiliates') || '[]');
-      console.log('🔍 AffiliateLogin: Afiliados encontrados:', affiliates.length);
-      
-      const foundAffiliate = affiliates.find(affiliate => 
-        affiliate.email === formData.email && affiliate.password === formData.senha
-      );
-      
-      console.log('🔍 AffiliateLogin: Found affiliate:', foundAffiliate);
-      
-      if (foundAffiliate) {
-        console.log('✅ AffiliateLogin: Afiliado encontrado:', foundAffiliate.email);
-        
-        // Criar usuário temporário para o contexto de autenticação
-        const tempUser = {
-          id: foundAffiliate.id,
-          nome: foundAffiliate.name,
-          email: foundAffiliate.email,
-          is_affiliate: true,
-          role: 'affiliate',
-          affiliate_data: foundAffiliate
-        };
-        
-        console.log('💾 AffiliateLogin: Salvando usuário temporário:', tempUser);
-        localStorage.setItem('raspou_user', JSON.stringify(tempUser));
-        
-        // Disparar evento para atualizar o contexto de autenticação
-        window.dispatchEvent(new CustomEvent('userLogin', { detail: tempUser }));
-        
-        console.log('🎯 AffiliateLogin: Redirecionando para affiliate panel');
-        setIsLoading(false);
+    apiClient.affiliateLogin(formData.email, formData.senha).then(result => {
+      if (result.success) {
         navigate('/affiliate');
-        return;
       } else {
-        console.log('❌ AffiliateLogin: Credenciais inválidas');
-        setError('Credenciais inválidas para afiliado');
-        setIsLoading(false);
+        setError(result.error || 'Credenciais inválidas');
       }
-    } catch (err) {
+      setIsLoading(false);
+    }).catch(err => {
       console.error('Erro no login afiliado:', err);
       setError('Erro inesperado. Tente novamente.');
       setIsLoading(false);
-    }
+    });
   };
 
   return (

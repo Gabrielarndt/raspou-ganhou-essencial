@@ -119,9 +119,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Verificar se o usuário está logado
-  const isAuthenticated = () => {
-    return !!user && !loading;
-  };
+  const isAuthenticated = !!user && !loading;
 
   const value = {
     user,

@@ -565,6 +565,123 @@ const SuperAdmin = () => {
         return null;
     }
 
+  
+  // Funções para sorteios
+  const handleCreateLottery = () => {
+    try {
+      if (!newLotteryData.name || !newLotteryData.prize || !newLotteryData.draw_date || !newLotteryData.draw_time) {
+        alert('Por favor, preencha todos os campos obrigatórios');
+        return;
+      }
+
+      const lotteryToCreate = {
+        id: Date.now(),
+        name: newLotteryData.name,
+        description: newLotteryData.description,
+        prize: parseFloat(newLotteryData.prize),
+        draw_date: newLotteryData.draw_date,
+        draw_time: newLotteryData.draw_time,
+        max_participants: parseInt(newLotteryData.max_participants) || null,
+        entry_cost: parseFloat(newLotteryData.entry_cost) || 0,
+        status: newLotteryData.status,
+        participants: [],
+        created_at: new Date().toISOString(),
+        created_by: user.email
+      };
+
+      const updatedLotteries = [...lotteries, lotteryToCreate];
+      setLotteries(updatedLotteries);
+      localStorage.setItem('raspou_lotteries', JSON.stringify(updatedLotteries));
+
+      setNewLotteryData({
+        name: '',
+        description: '',
+        prize: '',
+        draw_date: '',
+        draw_time: '',
+        max_participants: '',
+        entry_cost: '',
+        status: 'scheduled'
+      });
+      setShowCreateLotteryModal(false);
+      
+      alert('Sorteio criado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao criar sorteio:', error);
+      alert('Erro ao criar sorteio');
+    }
+  };
+
+  const handleEditLottery = () => {
+    try {
+      if (!editingLottery.name || !editingLottery.prize || !editingLottery.draw_date || !editingLottery.draw_time) {
+        alert('Por favor, preencha todos os campos obrigatórios');
+        return;
+      }
+
+      const updatedLotteries = lotteries.map(lottery =>
+        lottery.id === editingLottery.id
+          ? {
+              ...lottery,
+              name: editingLottery.name,
+              description: editingLottery.description,
+              prize: parseFloat(editingLottery.prize),
+              draw_date: editingLottery.draw_date,
+              draw_time: editingLottery.draw_time,
+              max_participants: parseInt(editingLottery.max_participants) || null,
+              entry_cost: parseFloat(editingLottery.entry_cost) || 0,
+              status: editingLottery.status,
+              updated_at: new Date().toISOString(),
+              updated_by: user.email
+            }
+          : lottery
+      );
+
+      setLotteries(updatedLotteries);
+      localStorage.setItem('raspou_lotteries', JSON.stringify(updatedLotteries));
+      setShowEditLotteryModal(false);
+      setEditingLottery(null);
+      
+      alert('Sorteio atualizado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao editar sorteio:', error);
+      alert('Erro ao editar sorteio');
+    }
+  };
+
+  const handleDeleteLottery = (lotteryId) => {
+    if (window.confirm('Tem certeza que deseja excluir este sorteio? Esta ação não pode ser desfeita.')) {
+      try {
+        const updatedLotteries = lotteries.filter(lottery => lottery.id !== lotteryId);
+        setLotteries(updatedLotteries);
+        localStorage.setItem('raspou_lotteries', JSON.stringify(updatedLotteries));
+        alert('Sorteio excluído com sucesso!');
+      } catch (error) {
+        console.error('Erro ao excluir sorteio:', error);
+        alert('Erro ao excluir sorteio');
+      }
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'scheduled': return 'bg-blue-100 text-blue-800';
+      case 'active': return 'bg-green-100 text-green-800';
+      case 'completed': return 'bg-gray-100 text-gray-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case 'scheduled': return 'Agendado';
+      case 'active': return 'Ativo';
+      case 'completed': return 'Finalizado';
+      case 'cancelled': return 'Cancelado';
+      default: return 'Desconhecido';
+    }
+  };
     return (
         <div className="min-h-screen bg-black text-white pt-20 pb-20 lg:pb-8">
             <div className="container mx-auto px-4 lg:px-8">

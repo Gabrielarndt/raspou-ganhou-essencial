@@ -18,8 +18,17 @@ const HistoricoFinanceiro = () => {
     }
 
     // Carregar histórico de transações
-    const history = getTransactionHistory();
-    setTransactions(history);
+    const loadTransactions = async () => {
+      try {
+        const history = await getTransactionHistory();
+        setTransactions(Array.isArray(history) ? history : []);
+      } catch (error) {
+        console.error('Erro ao carregar transações:', error);
+        setTransactions([]);
+      }
+    };
+
+    loadTransactions();
   }, [user, loading, navigate, getTransactionHistory]);
 
   const formatCurrency = (value) => {

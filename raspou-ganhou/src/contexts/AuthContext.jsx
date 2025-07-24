@@ -65,8 +65,19 @@ export const AuthProvider = ({ children }) => {
       }
     };
 
+    const handleUserLogin = (event) => {
+      console.log('🔄 AuthContext: User login event received:', event.detail);
+      setUser(event.detail);
+      triggerUpdate();
+    };
+
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener('userLogin', handleUserLogin);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('userLogin', handleUserLogin);
+    };
   }, []);
 
   const login = (email, senha) => {

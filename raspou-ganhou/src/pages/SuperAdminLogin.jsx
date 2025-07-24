@@ -62,6 +62,9 @@ const SuperAdminLogin = () => {
         console.log('💾 SuperAdminLogin: Salvando usuário temporário:', tempUser);
         localStorage.setItem('raspou_user', JSON.stringify(tempUser));
         
+        // Disparar evento para atualizar o contexto de autenticação
+        window.dispatchEvent(new CustomEvent('userLogin', { detail: tempUser }));
+        
         console.log('🎯 SuperAdminLogin: Redirecionando para super admin panel');
         setIsLoading(false);
         navigate('/super-admin');

@@ -34,6 +34,7 @@ export const AuthProvider = ({ children }) => {
       console.warn('Error loading user profile:', error);
       apiClient.logout();
       setUser(null);
+      return;
     } finally {
       setLoading(false);
     }

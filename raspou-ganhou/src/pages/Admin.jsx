@@ -528,6 +528,13 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
   };
 
   const handleDeleteAdmin = async (adminId) => {
+    console.log('handleDeleteAdmin called with adminId:', adminId);
+    
+    if (!adminId) {
+      alert('ID do admin é obrigatório');
+      return;
+    }
+    
     console.log('Deleting admin with ID:', adminId);
     
     if (!window.confirm('Tem certeza que deseja excluir este admin?')) {
@@ -545,7 +552,6 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
 
 
 
-      if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Erro ao excluir admin');
       }

@@ -677,6 +677,13 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
     setShowAffiliateModal(false);
     alert(editingAffiliate ? 'Afiliado atualizado!' : 'Afiliado criado!');
   };
+
+  const handleDeleteAffiliate = async (affiliateId) => {
+    if (!window.confirm('Tem certeza que deseja excluir este afiliado?')) {
+      return;
+    }
+
+    try {
       const result = await apiClient.createAffiliate(affiliateForm);
         // Recarregar lista de afiliados
         await loadAffiliates();

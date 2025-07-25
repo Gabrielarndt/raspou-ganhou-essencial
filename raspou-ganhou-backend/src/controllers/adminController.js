@@ -622,23 +622,22 @@ export const getAffiliates = async (req, res) => {
 
 export const createAffiliate = async (req, res) => {
   try {
-    const { name, email, password, affiliate_code, cpa, commission_rate } = req.body;
+    const { name, email, password, cpa, commission_rate } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'Nome, email e senha são obrigatórios' });
     }
 
     // Gerar código de afiliado único
-    const generatedAffiliateCode = affiliate_code || `AFF${Date.now()}${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+    const generatedAffiliateCode = `AFF${Date.now()}${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
 
     // Verificar se email ou código já existe
     const { data: existingAffiliate } = await supabaseAdmin
       .from('affiliates')
       .select('id')
-      .or(`email.eq.${email},affiliate_code.eq.${generatedAffiliateCode}`)
-      .single();
+      .eq('email', email);
 
-    if (existingAffiliate) {
+    if (existingAffiliate && existingAffiliate.length > 0) {
       return res.status(409).json({ error: 'Email já está em uso' });
     }
 

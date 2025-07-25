@@ -43,55 +43,45 @@ const Affiliate = () => {
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    // Carregar dados do localStorage
-    try {
-      const stored = localStorage.getItem('user');
-      if (stored) {
-        const userData = JSON.parse(stored);
-        console.log('📦 Affiliate: Stored user data:', userData);
-        
-        // Check if user is affiliate - either by role property or by having affiliate_code
-        if (userData.role === 'affiliate' || userData.affiliate_code) {
-          console.log('✅ Affiliate: Found affiliate in localStorage');
-          // Atualizar todos os estados de uma vez
-          setStoredUser(userData);
-          setCurrentUser(userData);
-          setIsAffiliate(true);
-          return;
-        } else {
-          console.log('❌ Affiliate: User data found but not an affiliate:', userData);
-        }
-      }
-    } catch (error) {
-      console.error('Error parsing stored user:', error);
-    }
-    
-    // Verificar user do context
-    if (user?.role === 'affiliate' || user?.affiliate_code) {
-      console.log('✅ Affiliate: Found affiliate in context');
-      setCurrentUser(user);
-      setIsAffiliate(true);
-    } else {
-      console.log('❌ Affiliate: No affiliate found in context, user:', user);
-      // Only set to false if we haven't found an affiliate in localStorage
-      if (!storedUser) {
+  try {
+    const stored = localStorage.getItem('user');
+    if (stored) {
+      const userData = JSON.parse(stored);
+      console.log('📦 Affiliate: Stored user data:', userData);
+      
+      if (userData.role === 'affiliate' || userData.affiliate_code) {
+        console.log('✅ Affiliate: Found affiliate in localStorage');
+        setStoredUser(userData);
+        setCurrentUser(userData);
+        setIsAffiliate(true);
+      } else {
+        console.log('❌ Affiliate: User data found but not an affiliate:', userData);
         setIsAffiliate(false);
         setCurrentUser(null);
       }
     }
-  }, [user]);
+  } catch (error) {
+    console.error('Error parsing stored user:', error);
+  } finally {
+    setAuthChecked(true); // <-- ✅ marca que a verificação foi feita
+  }
+}, []);
+
 
   useEffect(() => {
-    console.log('🔍 Affiliate: Checking auth - isAffiliate:', isAffiliate, 'currentUser:', !!currentUser);
-    
-    if (!isAffiliate || !currentUser) {
-      console.log('❌ Affiliate: Not an affiliate, redirecting to login');
-      navigate('/affiliate-login');
-      return;
-    }
+  if (!authChecked) return; // aguarda até verificar
 
-    loadAffiliateData();
-  }, [isAffiliate, currentUser, navigate]);
+  console.log('🔍 Affiliate: Checking auth - isAffiliate:', isAffiliate, 'currentUser:', !!currentUser);
+
+  if (!isAffiliate || !currentUser) {
+    console.log('❌ Affiliate: Not an affiliate, redirecting to login');
+    navigate('/affiliate-login');
+    return;
+  }
+
+  loadAffiliateData();
+}, [authChecked, isAffiliate, currentUser, navigate]);
+
 
   const loadAffiliateData = () => {
     // Carregar dados do afiliado

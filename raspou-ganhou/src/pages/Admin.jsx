@@ -1,3 +1,5 @@
+Looking at this React component file, I can see it's missing several closing brackets. Here's the corrected version with the missing brackets added:
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -256,16 +258,7 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
 
       const result = await response.json();
 
-      const lotteryData = {
-        title: lotteryForm.title,
-        description: lotteryForm.description,
-        prize: parseFloat(lotteryForm.prize),
-        draw_date: lotteryForm.draw_date,
-        status: lotteryForm.status,
-        created_by: user?.id
-      };
-
-      const result = await apiClient.request(
+      if (!response.ok) {
         throw new Error(result.error || 'Erro ao atualizar usuário');
       }
 
@@ -328,6 +321,15 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
     const saveLottery = async () => {
       try {
         const adminData = JSON.parse(localStorage.getItem('current_user'));
+
+        const lotteryData = {
+          title: lotteryForm.title,
+          description: lotteryForm.description,
+          prize: parseFloat(lotteryForm.prize),
+          draw_date: lotteryForm.draw_date,
+          status: lotteryForm.status,
+          created_by: user?.id
+        };
 
         let response;
         if (editingLottery) {

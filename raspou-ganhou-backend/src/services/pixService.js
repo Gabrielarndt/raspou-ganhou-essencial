@@ -20,6 +20,12 @@ class PixService {
         amount: amount,
         description: `Depósito RaspouGanhou - ${transactionId}`,
         external_id: transactionId,
+        customer: {
+          name: customerData.name || customerData.nome,
+          email: customerData.email,
+          document: customerData.cpf,
+          phone: customerData.telefone || customerData.phone
+        },
         webhook_url: `${this.publicBaseUrl}/api/webhook/pix`,
         return_url: `${this.publicBaseUrl}/deposito?status=success`,
         cancel_url: `${this.publicBaseUrl}/deposito?status=cancel`

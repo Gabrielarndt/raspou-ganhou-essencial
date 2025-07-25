@@ -27,6 +27,8 @@ const SuperAdminLogin = () => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+    
+    console.log('🔐 SuperAdminLogin: Attempting login with:', formData.email);
 
     if (!formData.email || !formData.senha) {
       setError('Por favor, preencha todos os campos');
@@ -35,17 +37,20 @@ const SuperAdminLogin = () => {
     }
 
     apiClient.adminLogin(formData.email, formData.senha).then(result => {
+      console.log('🔐 SuperAdminLogin: Login result:', result);
+      
       if (result.success) {
-  apiClient.setToken(result.token);
-  localStorage.setItem('user', JSON.stringify(result.user));
-  navigate('/admin');
-}
- else {
+        console.log('✅ SuperAdminLogin: Login successful, setting token and navigating');
+        apiClient.setToken(result.token);
+        localStorage.setItem('user', JSON.stringify(result.user));
+        navigate('/admin');
+      } else {
+        console.log('❌ SuperAdminLogin: Login failed:', result.error);
         setError(result.error || 'Credenciais inválidas');
+        setIsLoading(false);
       }
-      setIsLoading(false);
     }).catch(err => {
-      console.error('Erro no login admin:', err);
+      console.error('❌ SuperAdminLogin: Login error:', err);
       setError('Erro inesperado. Tente novamente.');
       setIsLoading(false);
     });

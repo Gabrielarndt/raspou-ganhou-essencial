@@ -53,9 +53,10 @@ const Affiliate = () => {
         // Check if user is affiliate - either by role property or by having affiliate_code
         if (userData.role === 'affiliate' || userData.affiliate_code) {
           console.log('✅ Affiliate: Found affiliate in localStorage');
+          // Atualizar todos os estados de uma vez
           setStoredUser(userData);
-          setIsAffiliate(true);
           setCurrentUser(userData);
+          setIsAffiliate(true);
           return;
         } else {
           console.log('❌ Affiliate: User data found but not an affiliate:', userData);
@@ -68,12 +69,12 @@ const Affiliate = () => {
     // Verificar user do context
     if (user?.role === 'affiliate' || user?.affiliate_code) {
       console.log('✅ Affiliate: Found affiliate in context');
-      setIsAffiliate(true);
       setCurrentUser(user);
+      setIsAffiliate(true);
     } else {
       console.log('❌ Affiliate: No affiliate found in context, user:', user);
       // Only set to false if we haven't found an affiliate in localStorage
-      if (!isAffiliate) {
+      if (!storedUser) {
         setIsAffiliate(false);
         setCurrentUser(null);
       }
@@ -83,14 +84,13 @@ const Affiliate = () => {
   useEffect(() => {
     console.log('🔍 Affiliate: Checking auth - isAffiliate:', isAffiliate, 'currentUser:', !!currentUser);
     
-    if (!isAffiliate) {
+    if (!isAffiliate || !currentUser) {
       console.log('❌ Affiliate: Not an affiliate, redirecting to login');
       navigate('/affiliate-login');
       return;
     }
 
     loadAffiliateData();
-  }, [isAffiliate, navigate]);
 
   const loadAffiliateData = () => {
     // Carregar dados do afiliado

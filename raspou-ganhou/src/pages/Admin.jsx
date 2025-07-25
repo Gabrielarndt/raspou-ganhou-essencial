@@ -318,6 +318,7 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
 
     const saveLottery = async () => {
       try {
+        const adminData = JSON.parse(localStorage.getItem('current_user'));
         const lotteryData = {
           title: lotteryForm.title,
           description: lotteryForm.description || null,

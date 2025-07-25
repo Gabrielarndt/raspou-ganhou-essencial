@@ -160,10 +160,11 @@ console.log({
     })
     .eq('id', userId);
 
- if (updateError) {
-  console.error('Erro ao atualizar usuário (ganhou):', updateError);
+if (updateError) {
+  console.error('Erro ao atualizar usuário (perdeu):', updateError);
   return res.status(500).json({ error: 'Erro ao atualizar usuário', details: updateError.message });
 }
+
 }
 
 // Registrar resultado do jogo

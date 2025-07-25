@@ -4,60 +4,55 @@ import { useAuth } from '../contexts/AuthContext';
 import { apiClient } from '../lib/api';
 import { 
   ArrowLeft, 
-  CreditCard, 
-  Smartphone, 
   QrCode,
   DollarSign,
-  Plus,
-  Minus,
   Check,
   Clock,
   AlertCircle,
-  Gift
+  Gift,
+  Copy,
+  RefreshCw
 } from 'lucide-react';
 
 const Deposit = () => {
   const navigate = useNavigate();
   const { user, refreshUser, getTotalBalance } = useAuth();
-  const [selectedMethod, setSelectedMethod] = useState('pix');
   const [amount, setAmount] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [pixData, setPixData] = useState(null);
+  const [timeRemaining, setTimeRemaining] = useState(0);
+  const [checkingStatus, setCheckingStatus] = useState(false);
 
-  const paymentMethods = [
-    {
-      id: 'pix',
-      name: 'PIX',
-      icon: QrCode,
-      description: 'Transferência instantânea',
-      fee: 0,
-      minAmount: 10,
-      maxAmount: 5000,
-      processingTime: 'Instantâneo'
-    },
-    {
-      id: 'credit',
-      name: 'Cartão de Crédito',
-      icon: CreditCard,
-      description: 'Visa, Mastercard, Elo',
-      fee: 3.99,
-      minAmount: 20,
-      maxAmount: 2000,
-      processingTime: 'Até 5 minutos'
-    },
-    {
-      id: 'debit',
-      name: 'Cartão de Débito',
-      icon: CreditCard,
-      description: 'Débito online',
-      fee: 1.99,
-      minAmount: 10,
-      maxAmount: 1000,
-      processingTime: 'Até 2 minutos'
+  const quickAmounts = [20, 50, 100, 200, 500, 1000];
+
+  // Timer para expiração do PIX
+  React.useEffect(() => {
+    if (pixData && timeRemaining > 0) {
+      const timer = setInterval(() => {
+        setTimeRemaining(prev => {
+          if (prev <= 1) {
+            setPixData(null);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      
+      return () => clearInterval(timer);
     }
-  ];
+  }, [pixData, timeRemaining]);
 
-  const quickAmounts = [10, 25, 50, 100, 200, 500];
+  // Verificar status do pagamento periodicamente
+  React.useEffect(() => {
+    if (pixData && !checkingStatus) {
+      const statusTimer = setInterval(async () => {
+        await checkPaymentStatus();
+      }, 5000); // Verifica a cada 5 segundos
+      
+      return () => clearInterval(statusTimer);
+    }
+  }, [pixData, checkingStatus]);
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -66,10 +61,13 @@ const Deposit = () => {
     }).format(value);
   };
 
-  const selectedPayment = paymentMethods.find(method => method.id === selectedMethod);
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
   const numericAmount = parseFloat(amount) || 0;
-  const feeAmount = selectedPayment ? (numericAmount * selectedPayment.fee / 100) : 0;
-  const totalAmount = numericAmount + feeAmount;
   const bonusAmount = numericAmount >= 100 ? numericAmount * 0.1 : 0; // 10% bônus para depósitos acima de R$ 100
 
   const handleAmountChange = (value) => {
@@ -82,22 +80,45 @@ const Deposit = () => {
   };
 
   const handleQuickAmount = (value) => {
-    setAmount(value.toString());
+    if (!pixData) setAmount(value.toString());
   };
 
-  const handleDeposit = async () => {
-    if (!selectedPayment || numericAmount < selectedPayment.minAmount) {
+  const handleGeneratePix = async () => {
+    if (numericAmount < 20) {
+      alert('Valor mínimo para depósito é R$ 20,00');
       return;
     }
 
     setIsProcessing(true);
 
     try {
-      const result = await apiClient.deposit(numericAmount, selectedPayment.name);
+      const result = await apiClient.createPixDeposit(numericAmount);
       
       if (result.success) {
+        setPixData(result.data);
+        setTimeRemaining(15 * 60); // 15 minutos
+      } else {
+        alert('Erro ao gerar PIX: ' + (result.error || 'Erro desconhecido'));
+      }
+    } catch (error) {
+      console.error('Erro ao gerar PIX:', error);
+      alert('Erro ao gerar PIX: ' + error.message);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const checkPaymentStatus = async () => {
+    if (!pixData || checkingStatus) return;
+    
+    setCheckingStatus(true);
+    
+    try {
+      const result = await apiClient.checkPixStatus(pixData.transaction_id);
+      
+      if (result.success && result.data.status === 'completed') {
         await refreshUser();
-        
+        setPixData(null);
         setShowSuccess(true);
         setAmount('');
         
@@ -107,16 +128,26 @@ const Deposit = () => {
         }, 3000);
       }
     } catch (error) {
-      console.error('Erro no depósito:', error);
-      alert('Erro ao processar depósito: ' + error.message);
+      console.error('Erro ao verificar status:', error);
     } finally {
-      setIsProcessing(false);
+      setCheckingStatus(false);
     }
   };
 
+  const copyPixCode = () => {
+    if (pixData?.qr_code_text) {
+      navigator.clipboard.writeText(pixData.qr_code_text);
+      alert('Código PIX copiado para a área de transferência!');
+    }
+  };
 
-  const isValidAmount = numericAmount >= (selectedPayment?.minAmount || 0) && 
-                       numericAmount <= (selectedPayment?.maxAmount || 0);
+  const handleNewDeposit = () => {
+    setPixData(null);
+    setAmount('');
+    setTimeRemaining(0);
+  };
+
+  const isValidAmount = numericAmount >= 20 && numericAmount <= 5000;
 
   if (!user) {
     navigate('/login');
@@ -158,139 +189,194 @@ const Deposit = () => {
         <div className="grid lg:grid-cols-2 gap-8">
           
           {/* Formulário de Depósito */}
-          <div className="space-y-6">
-            
-            {/* Métodos de Pagamento */}
-            <div className="bg-gray-800 rounded-xl p-6">
-              <h3 className="text-white font-bold text-lg mb-4">Método de Pagamento</h3>
-              
-              <div className="space-y-3">
-                {paymentMethods.map((method) => (
-                  <button
-                    key={method.id}
-                    onClick={() => setSelectedMethod(method.id)}
-                    className={`w-full p-4 rounded-lg border-2 transition-all ${
-                      selectedMethod === method.id
-                        ? 'border-yellow-400 bg-yellow-400/10'
-                        : 'border-gray-600 bg-gray-700 hover:border-gray-500'
-                    }`}
-                  >
+          <div className="space-y-6">            
+            {!pixData ? (
+              <>
+                {/* Método PIX */}
+                <div className="bg-gray-800 rounded-xl p-6">
+                  <h3 className="text-white font-bold text-lg mb-4">Método de Pagamento</h3>
+                  
+                  <div className="p-4 rounded-lg border-2 border-green-400 bg-green-400/10">
                     <div className="flex items-center space-x-4">
-                      <method.icon className={`w-6 h-6 ${
-                        selectedMethod === method.id ? 'text-yellow-400' : 'text-gray-400'
-                      }`} />
+                      <QrCode className="w-6 h-6 text-green-400" />
                       <div className="flex-1 text-left">
-                        <p className={`font-medium ${
-                          selectedMethod === method.id ? 'text-yellow-400' : 'text-white'
-                        }`}>
-                          {method.name}
-                        </p>
-                        <p className="text-gray-400 text-sm">{method.description}</p>
+                        <p className="font-medium text-green-400">PIX</p>
+                        <p className="text-gray-400 text-sm">Transferência instantânea</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm text-gray-400">
-                          Taxa: {method.fee > 0 ? `${method.fee}%` : 'Grátis'}
-                        </p>
-                        <p className="text-xs text-gray-500">{method.processingTime}</p>
+                        <p className="text-sm text-gray-400">Taxa: Grátis</p>
+                        <p className="text-xs text-gray-500">Instantâneo</p>
                       </div>
                     </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Valor do Depósito */}
-            <div className="bg-gray-800 rounded-xl p-6">
-              <h3 className="text-white font-bold text-lg mb-4">Valor do Depósito</h3>
-              
-              {/* Valores Rápidos */}
-              <div className="grid grid-cols-3 gap-3 mb-4">
-                {quickAmounts.map((value) => (
-                  <button
-                    key={value}
-                    onClick={() => handleQuickAmount(value)}
-                    className="bg-gray-700 hover:bg-yellow-600 hover:text-black text-white font-medium py-2 px-4 rounded-lg transition-colors"
-                  >
-                    {formatCurrency(value)}
-                  </button>
-                ))}
-              </div>
-
-              {/* Input Personalizado */}
-              <div className="relative mb-4">
-                <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="number"
-                  value={amount}
-                  onChange={(e) => handleAmountChange(e.target.value)}
-                  placeholder="Digite o valor"
-                  className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                  min={selectedPayment?.minAmount || 0}
-                  max={selectedPayment?.maxAmount || 0}
-                />
-              </div>
-
-              {/* Limites */}
-              {selectedPayment && (
-                <div className="text-sm text-gray-400 mb-4">
-                  Limite: {formatCurrency(selectedPayment.minAmount)} - {formatCurrency(selectedPayment.maxAmount)}
-                </div>
-              )}
-
-              {/* Resumo */}
-              {numericAmount > 0 && (
-                <div className="bg-gray-700 rounded-lg p-4 space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-gray-300">Valor do depósito:</span>
-                    <span className="text-white">{formatCurrency(numericAmount)}</span>
                   </div>
+                </div>
+
+                {/* Valor do Depósito */}
+                <div className="bg-gray-800 rounded-xl p-6">
+                  <h3 className="text-white font-bold text-lg mb-4">Valor do Depósito</h3>
                   
-                  {feeAmount > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-300">Taxa ({selectedPayment.fee}%):</span>
-                      <span className="text-red-400">{formatCurrency(feeAmount)}</span>
+                  {/* Valores Rápidos */}
+                  <div className="grid grid-cols-3 gap-3 mb-4">
+                    {quickAmounts.map((value) => (
+                      <button
+                        key={value}
+                        onClick={() => handleQuickAmount(value)}
+                        className="bg-gray-700 hover:bg-green-600 hover:text-white text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                      >
+                        {formatCurrency(value)}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Input Personalizado */}
+                  <div className="relative mb-4">
+                    <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="number"
+                      value={amount}
+                      onChange={(e) => handleAmountChange(e.target.value)}
+                      placeholder="Digite o valor (mín. R$ 20)"
+                      className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
+                      min={20}
+                      max={5000}
+                    />
+                  </div>
+
+                  {/* Limites */}
+                  <div className="text-sm text-gray-400 mb-4">
+                    Limite: {formatCurrency(20)} - {formatCurrency(5000)}
+                  </div>
+
+                  {/* Resumo */}
+                  {numericAmount > 0 && (
+                    <div className="bg-gray-700 rounded-lg p-4 space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-gray-300">Valor do depósito:</span>
+                        <span className="text-white">{formatCurrency(numericAmount)}</span>
+                      </div>
+                      
+                      {bonusAmount > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-green-400">Bônus (10%):</span>
+                          <span className="text-green-400">+{formatCurrency(bonusAmount)}</span>
+                        </div>
+                      )}
+                      
+                      <div className="border-t border-gray-600 pt-2">
+                        <div className="flex justify-between font-bold">
+                          <span className="text-white">Você receberá:</span>
+                          <span className="text-green-400">{formatCurrency(numericAmount + bonusAmount)}</span>
+                        </div>
+                      </div>
                     </div>
                   )}
+                </div>
+
+                {/* Botão de Gerar PIX */}
+                <button
+                  onClick={handleGeneratePix}
+                  disabled={!isValidAmount || isProcessing}
+                  className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-center space-x-2"
+                >
+                  {isProcessing ? (
+                    <>
+                      <Clock className="w-5 h-5 animate-spin" />
+                      <span>Gerando PIX...</span>
+                    </>
+                  ) : (
+                    <>
+                      <QrCode className="w-5 h-5" />
+                      <span>Gerar PIX {numericAmount > 0 ? formatCurrency(numericAmount) : ''}</span>
+                    </>
+                  )}
+                </button>
+              </>
+            ) : (
+              <>
+                {/* QR Code PIX */}
+                <div className="bg-gray-800 rounded-xl p-6 text-center">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-white font-bold text-lg">PIX Gerado</h3>
+                    <div className="flex items-center space-x-2 text-orange-400">
+                      <Clock className="w-4 h-4" />
+                      <span className="font-mono text-sm">{formatTime(timeRemaining)}</span>
+                    </div>
+                  </div>
+                  
+                  {/* QR Code */}
+                  <div className="bg-white p-4 rounded-lg mb-4 inline-block">
+                    <img 
+                      src={pixData.qr_code} 
+                      alt="QR Code PIX" 
+                      className="w-48 h-48 mx-auto"
+                    />
+                  </div>
+                  
+                  <p className="text-gray-400 text-sm mb-4">
+                    Escaneie o QR Code ou copie o código PIX
+                  </p>
+                  
+                  {/* Código PIX */}
+                  <div className="bg-gray-700 rounded-lg p-3 mb-4">
+                    <p className="text-xs text-gray-400 mb-1">Código PIX:</p>
+                    <p className="text-white font-mono text-sm break-all">
+                      {pixData.qr_code_text}
+                    </p>
+                  </div>
+                  
+                  {/* Botões */}
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={copyPixCode}
+                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-colors flex items-center justify-center space-x-2"
+                    >
+                      <Copy className="w-4 h-4" />
+                      <span>Copiar Código</span>
+                    </button>
+                    
+                    <button
+                      onClick={checkPaymentStatus}
+                      disabled={checkingStatus}
+                      className="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-bold py-3 rounded-lg transition-colors flex items-center justify-center space-x-2"
+                    >
+                      <RefreshCw className={`w-4 h-4 ${checkingStatus ? 'animate-spin' : ''}`} />
+                      <span>Verificar</span>
+                    </button>
+                  </div>
+                  
+                  <button
+                    onClick={handleNewDeposit}
+                    className="w-full mt-3 bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 rounded-lg transition-colors"
+                  >
+                    Novo Depósito
+                  </button>
+                </div>
+
+                {/* Informações do Pagamento */}
+                <div className="bg-gray-800 rounded-xl p-6">
+                  <h3 className="text-white font-bold text-lg mb-4">Detalhes do Pagamento</h3>
+                  
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Valor:</span>
+                    <span className="text-white font-bold">{formatCurrency(pixData.amount)}</span>
+                  </div>
                   
                   {bonusAmount > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-green-400">Bônus (10%):</span>
-                      <span className="text-green-400">+{formatCurrency(bonusAmount)}</span>
+                      <span className="text-gray-400">Bônus:</span>
+                      <span className="text-green-400 font-bold">+{formatCurrency(bonusAmount)}</span>
                     </div>
                   )}
                   
-                  <div className="border-t border-gray-600 pt-2">
-                    <div className="flex justify-between font-bold">
-                      <span className="text-white">Total a pagar:</span>
-                      <span className="text-yellow-400">{formatCurrency(totalAmount)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-300">Você receberá:</span>
-                      <span className="text-green-400">{formatCurrency(numericAmount + bonusAmount)}</span>
+                  <div className="border-t border-gray-600 pt-2 mt-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Total a receber:</span>
+                      <span className="text-green-400 font-bold">{formatCurrency(pixData.amount + bonusAmount)}</span>
                     </div>
                   </div>
                 </div>
-              )}
-            </div>
-
-            {/* Botão de Depósito */}
-            <button
-              onClick={handleDeposit}
-              disabled={!isValidAmount || isProcessing}
-              className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-center space-x-2"
-            >
-              {isProcessing ? (
-                <>
-                  <Clock className="w-5 h-5 animate-spin" />
-                  <span>Processando...</span>
-                </>
-              ) : (
-                <>
-                  <Plus className="w-5 h-5" />
-                  <span>Depositar {numericAmount > 0 ? formatCurrency(totalAmount) : ''}</span>
-                </>
-              )}
-            </button>
+              </>
+            )}
           </div>
 
           {/* Sidebar */}
@@ -317,11 +403,11 @@ const Deposit = () => {
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                  <span className="text-gray-300 text-sm">Transações criptografadas SSL</span>
+                  <span className="text-gray-300 text-sm">PIX 100% seguro</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                  <span className="text-gray-300 text-sm">Dados protegidos PCI DSS</span>
+                  <span className="text-gray-300 text-sm">Criptografia bancária</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-green-400 rounded-full"></div>
@@ -341,17 +427,17 @@ const Deposit = () => {
               <div className="space-y-4">
                 <div>
                   <p className="text-yellow-400 text-sm font-medium mb-1">Quanto tempo demora?</p>
-                  <p className="text-gray-300 text-xs">PIX é instantâneo, cartões até 5 minutos.</p>
+                  <p className="text-gray-300 text-xs">PIX é processado instantaneamente após o pagamento.</p>
                 </div>
                 
                 <div>
-                  <p className="text-yellow-400 text-sm font-medium mb-1">Posso cancelar?</p>
-                  <p className="text-gray-300 text-xs">Sim, antes da confirmação do pagamento.</p>
+                  <p className="text-yellow-400 text-sm font-medium mb-1">O PIX expira?</p>
+                  <p className="text-gray-300 text-xs">Sim, você tem 15 minutos para efetuar o pagamento.</p>
                 </div>
                 
                 <div>
                   <p className="text-yellow-400 text-sm font-medium mb-1">É seguro?</p>
-                  <p className="text-gray-300 text-xs">100% seguro com criptografia bancária.</p>
+                  <p className="text-gray-300 text-xs">Totalmente seguro, processado pelo Banco Central.</p>
                 </div>
               </div>
             </div>
@@ -371,7 +457,7 @@ const Deposit = () => {
               </p>
               <div className="bg-gray-700 rounded-lg p-4 mb-4">
                 <p className="text-green-400 font-bold text-lg">
-                  +{formatCurrency(numericAmount + bonusAmount)}
+                  +{formatCurrency((pixData?.amount || numericAmount) + bonusAmount)}
                 </p>
                 <p className="text-gray-400 text-sm">adicionado à sua conta</p>
               </div>

@@ -14,6 +14,7 @@ import * as gameController from './controllers/gameController.js';
 import * as transactionController from './controllers/transactionController.js';
 import * as userController from './controllers/userController.js';
 import * as adminController from './controllers/adminController.js';
+import * as pixController from './controllers/pixController.js';
 
 
 console.log('authController:', Object.keys(authController));
@@ -21,6 +22,7 @@ console.log('gameController:', Object.keys(gameController));
 console.log('transactionController:', Object.keys(transactionController));
 console.log('userController:', Object.keys(userController));
 console.log('adminController:', Object.keys(adminController));
+console.log('pixController:', Object.keys(pixController));
 
 
 // Configurar variáveis de ambiente
@@ -69,6 +71,13 @@ app.get('/api/games/history', authenticateToken, gameController.getGameHistory);
 app.post('/api/transactions/deposit', authenticateToken, transactionController.deposit);
 app.post('/api/transactions/withdraw', authenticateToken, transactionController.withdraw);
 app.get('/api/transactions/history', authenticateToken, transactionController.getTransactionHistory);
+
+// Rotas PIX (usuários autenticados)
+app.post('/api/pix/create-deposit', authenticateToken, pixController.createPixDeposit);
+app.get('/api/pix/status/:transaction_id', authenticateToken, pixController.checkPixStatus);
+
+// Webhook PIX (público)
+app.post('/api/webhook/pix', pixController.handlePixWebhook);
 
 // Rotas administrativas (apenas admins)
 app.get('/api/admin/dashboard', authenticateAdmin, adminController.getDashboard);

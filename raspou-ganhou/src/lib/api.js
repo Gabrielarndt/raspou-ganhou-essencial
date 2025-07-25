@@ -146,6 +146,18 @@ class ApiClient {
     return this.request('/transactions/history');
   }
 
+  // PIX endpoints
+  async createPixDeposit(amount) {
+    return this.request('/pix/create-deposit', {
+      method: 'POST',
+      body: JSON.stringify({ amount }),
+    });
+  }
+
+  async checkPixStatus(transactionId) {
+    return this.request(`/pix/status/${transactionId}`);
+  }
+
   // Admin endpoints
   async getAdminDashboard() {
     return this.request('/admin/dashboard');

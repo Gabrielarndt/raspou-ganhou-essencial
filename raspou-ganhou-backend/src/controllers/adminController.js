@@ -534,7 +534,8 @@ export const updateAdmin = async (req, res) => {
 
 export const deleteAdmin = async (req, res) => {
   try {
-    const { admin_id } = req.body;
+    const { admin_id } = req.query;
+
 
     if (!admin_id) {
       return res.status(400).json({ error: 'ID do admin é obrigatório' });

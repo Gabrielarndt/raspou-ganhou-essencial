@@ -1,4 +1,4 @@
-Looking at this React component file, I can see it's missing several closing brackets. Here's the corrected version with the missing brackets added:
+Looking at your script, I can see several missing closing brackets. Here's the corrected version:
 
 ```javascript
 import React, { useState, useEffect } from 'react';
@@ -412,10 +412,33 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
 
   const handleDeleteLottery = (lottery) => {
     if (window.confirm(`Tem certeza que deseja excluir o sorteio "${lottery.title}"?`)) {
-      const updatedLotteries = lotteries.filter(l => l.id !== lottery.id);
-      setLotteries(updatedLotteries);
-      localStorage.setItem('raspou_lotteries', JSON.stringify(updatedLotteries));
-      alert('Sorteio excluído!');
+      const deleteLottery = async () => {
+        try {
+          const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/admin/delete-lottery`, {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+            },
+            body: JSON.stringify({ lottery_id: lottery.id })
+          });
+
+          const result = await response.json();
+          
+          if (!response.ok) {
+            throw new Error(result.error || 'Erro ao excluir sorteio');
+          }
+
+          alert('Sorteio excluído com sucesso!');
+          loadLotteries();
+          
+        } catch (error) {
+          console.error('Erro ao excluir sorteio:', error);
+          alert('Erro ao excluir sorteio: ' + error.message);
+        }
+      };
+
+      deleteLottery();
     }
   };
 

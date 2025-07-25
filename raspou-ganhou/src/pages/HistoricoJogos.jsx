@@ -18,8 +18,17 @@ const HistoricoJogos = () => {
     }
 
     // Carregar histórico de jogos
-    const history = getGameHistory();
-    setGames(history);
+    const loadHistory = async () => {
+      try {
+        const history = await getGameHistory();
+        setGames(history || []);
+      } catch (error) {
+        console.error('Erro ao carregar histórico:', error);
+        setGames([]);
+      }
+    };
+    
+    loadHistory();
   }, [user, loading, navigate, getGameHistory]);
 
   const formatCurrency = (value) => {

@@ -82,7 +82,7 @@ app.put('/api/admin/update-user', authenticateAdmin, adminController.updateUser)
 app.get('/api/admin/admins', authenticateAdmin, adminController.getAdmins);
 app.post('/api/admin/create-admin', authenticateAdmin, adminController.createAdmin);
 app.put('/api/admin/update-admin', authenticateAdmin, adminController.updateAdmin);
-app.delete('/admin/delete-admin', (req, res) => {
+app.delete('/api/admin/delete-admin', (req, res) => {
   const { admin_id } = req.query;
 
   if (!admin_id) {

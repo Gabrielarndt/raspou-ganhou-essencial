@@ -43,7 +43,7 @@ class PixService {
       };
 
       const response = await axios.post(
-        `${this.apiUrl}/v1/transactions`,
+        `${this.apiUrl}/transactions`,
         payload,
         { headers: this.getHeaders() }
       );

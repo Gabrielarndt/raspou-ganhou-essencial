@@ -78,10 +78,6 @@ app.get('/api/admin/lotteries', authenticateAdmin, adminController.getLotteries)
 app.post('/api/admin/create-lottery', authenticateAdmin, adminController.createLottery);
 app.put('/api/admin/update-lottery', authenticateAdmin, adminController.updateLottery);
 app.delete('/api/admin/delete-lottery', authenticateAdmin, adminController.deleteLottery);
-app.get('/api/admin/admins', authenticateAdmin, adminController.getAdmins);
-app.post('/api/admin/create-admin', authenticateAdmin, adminController.createAdmin);
-app.put('/api/admin/update-admin', authenticateAdmin, adminController.updateAdmin);
-app.delete('/api/admin/delete-admin', authenticateAdmin, adminController.deleteAdmin);
 app.put('/api/admin/update-user', authenticateAdmin, adminController.updateUser);
 app.post('/api/admin/approve-withdraw', authenticateAdmin, adminController.approveWithdraw);
 app.post('/api/admin/reject-withdraw', authenticateAdmin, adminController.rejectWithdraw);

@@ -57,6 +57,10 @@ const Admin = () => {
 
   // Verificar se é admin usando dados do contexto ou localStorage
   const currentUser = user || adminUser;
+  console.log('Current User:', currentUser);
+console.log('Role:', currentUser?.role);
+console.log('Is Super Admin flag:', currentUser?.is_super_admin);
+
   const isAdmin = currentUser?.role === 'admin' || 
                   currentUser?.role === 'super_admin' || 
                   currentUser?.is_super_admin;

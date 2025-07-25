@@ -44,8 +44,8 @@ export const deposit = async (req, res) => {
     }
 
     // Atualizar saldo do usuário
-    const newRealBalance = parseFloat(user.saldo_real) + depositAmount;
-    const newBonusBalance = parseFloat(user.saldo_bonus) + bonus;
+    const newRealBalance = parseFloat(user.saldo_real || 0) + depositAmount;
+    const newBonusBalance = parseFloat(user.saldo_bonus || 0) + bonus;
 
     const { error: updateError } = await supabaseAdmin
       .from('users')
@@ -68,7 +68,7 @@ export const deposit = async (req, res) => {
         type: 'credit',
         balance_type: 'real',
         amount: depositAmount,
-        previous_balance: parseFloat(user.saldo_real),
+        previous_balance: parseFloat(user.saldo_real || 0),
         new_balance: newRealBalance,
         description: `Depósito via ${method}`
       });
@@ -81,7 +81,7 @@ export const deposit = async (req, res) => {
           type: 'credit',
           balance_type: 'bonus',
           amount: bonus,
-          previous_balance: parseFloat(user.saldo_bonus),
+          previous_balance: parseFloat(user.saldo_bonus || 0),
           new_balance: newBonusBalance,
           description: 'Bônus de depósito'
         });
@@ -125,7 +125,7 @@ export const withdraw = async (req, res) => {
     const withdrawAmount = parseFloat(amount);
 
     // Verificar saldo real (só pode sacar saldo real)
-    if (parseFloat(user.saldo_real) < withdrawAmount) {
+    if (parseFloat(user.saldo_real || 0) < withdrawAmount) {
       return res.status(400).json({ error: 'Saldo real insuficiente' });
     }
 
@@ -153,7 +153,7 @@ export const withdraw = async (req, res) => {
     }
 
     // Atualizar saldo do usuário
-    const newRealBalance = parseFloat(user.saldo_real) - withdrawAmount;
+    const newRealBalance = parseFloat(user.saldo_real || 0) - withdrawAmount;
 
     const { error: updateError } = await supabaseAdmin
       .from('users')
@@ -175,7 +175,7 @@ export const withdraw = async (req, res) => {
         type: 'debit',
         balance_type: 'real',
         amount: withdrawAmount,
-        previous_balance: parseFloat(user.saldo_real),
+        previous_balance: parseFloat(user.saldo_real || 0),
         new_balance: newRealBalance,
         description: `Saque via ${method}`
       });
@@ -186,6 +186,7 @@ export const withdraw = async (req, res) => {
       new_balance: {
         saldo_real: newRealBalance,
         saldo_bonus: parseFloat(user.saldo_bonus)
+        saldo_bonus: parseFloat(user.saldo_bonus || 0)
       }
     });
 

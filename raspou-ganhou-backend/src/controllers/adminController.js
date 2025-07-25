@@ -535,36 +535,41 @@ export const updateAdmin = async (req, res) => {
 export const deleteAdmin = async (req, res) => {
   try {
     const { admin_id } = req.query;
+    console.log('Recebido admin_id para exclusão:', admin_id);
 
     if (!admin_id) {
       return res.status(400).json({ error: 'ID do admin é obrigatório' });
     }
 
-    // Verificar se é super admin
     const { data: admin } = await supabaseAdmin
       .from('admins')
-      .select('is_super_admin')
+      .select('id, is_super_admin')
       .eq('id', admin_id)
       .single();
 
-    if (admin?.is_super_admin) {
+    console.log('Admin encontrado:', admin);
+
+    if (!admin) {
+      return res.status(404).json({ error: 'Admin não encontrado' });
+    }
+
+    if (admin.is_super_admin) {
       return res.status(403).json({ error: 'Super admins não podem ser excluídos' });
     }
 
-    // Executar deleção com retorno
-    const { data, error } = await supabaseAdmin
+    const { data: deleted, error } = await supabaseAdmin
       .from('admins')
       .delete()
       .eq('id', admin_id)
-      .select(); // importante!
+      .select();
 
     if (error) {
       console.error('Delete admin error:', error);
       return res.status(500).json({ error: 'Erro ao excluir admin: ' + error.message });
     }
 
-    if (!data || data.length === 0) {
-      return res.status(404).json({ error: 'Admin não encontrado ou já foi excluído' });
+    if (!deleted || deleted.length === 0) {
+      return res.status(500).json({ error: 'Falha ao excluir admin. Nenhum registro afetado.' });
     }
 
     res.json({

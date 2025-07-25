@@ -173,7 +173,6 @@ console.log({
   updatedUser = data;
 }
 
-}
 
 // Registrar resultado do jogo
 const { error: gameResultError } = await supabaseAdmin

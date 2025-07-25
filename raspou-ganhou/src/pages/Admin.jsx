@@ -86,13 +86,21 @@ const Admin = () => {
 
   useEffect(() => {
     // Carregar dados do admin do localStorage se não estiver no contexto
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
+        await apiClient.request('/admin/delete-admin', {
+          method: 'DELETE',
+          body: JSON.stringify({ admin_id: adminId })
+        });
+        await apiClient.request('/admin/delete-affiliate', {
+          method: 'DELETE',
+          body: JSON.stringify({ affiliate_id: affiliateId })
+        });
+        
+        // Recarregar lista do banco
+        await loadAffiliates();
         const parsedUser = JSON.parse(storedUser);
         setAdminUser(parsedUser);
       } catch (error) {
-        console.error('Error parsing stored user:', error);
+        alert('Erro ao excluir afiliado: ' + error.message);
       }
     }
   }, []);
@@ -160,15 +168,10 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
       const savedAdmins = JSON.parse(localStorage.getItem('raspou_admins') || '[]');
       setAdmins(savedAdmins);
     } catch (error) {
-      console.error('Erro ao carregar admins:', error);
-      setAdmins([]);
-    }
-  };
-
-  const loadAffiliates = () => {
-    try {
-      const savedAffiliates = JSON.parse(localStorage.getItem('raspou_affiliates') || '[]');
-      setAffiliates(savedAffiliates);
+      const response = await apiClient.request('/admin/affiliates');
+      if (response.affiliates) {
+        setAffiliates(response.affiliates);
+      }
     } catch (error) {
       console.error('Erro ao carregar afiliados:', error);
       setAffiliates([]);
@@ -307,27 +310,15 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
       draw_date: lottery.draw_date.slice(0, 16), // Para datetime-local
       status: lottery.status
     });
-    setShowLotteryModal(true);
-  };
+        // Atualizar afiliado no banco
+        await apiClient.request('/admin/update-affiliate', {
+          method: 'PUT',
+          body: JSON.stringify({
+            affiliate_id: editingAffiliate.id,
+            ...affiliateForm
+          })
+        });
 
-  const handleSaveLottery = () => {
-    if (!lotteryForm.title || !lotteryForm.prize || !lotteryForm.draw_date) {
-      alert('Preencha todos os campos obrigatórios');
-      return;
-    }
-
-    const saveLottery = async () => {
-      try {
-        const adminData = JSON.parse(localStorage.getItem('current_user'));
-
-        const lotteryData = {
-          title: lotteryForm.title,
-          description: lotteryForm.description,
-          prize: parseFloat(lotteryForm.prize),
-          draw_date: lotteryForm.draw_date,
-          status: lotteryForm.status,
-          created_by: user?.id
-        };
 
         let response;
         if (editingLottery) {
@@ -383,17 +374,14 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
   const loadLotteries = async () => {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/admin/lotteries`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setLotteries(data.lotteries || []);
-      } else {
-        console.error('Erro ao carregar sorteios');
-        setLotteries([]);
+        // Atualizar admin no banco
+        // Criar novo admin no banco
+        await apiClient.request('/admin/create-admin', {
+      // Recarregar lista do banco
+      await loadAdmins();
+          method: 'POST',
+          body: JSON.stringify(adminForm)
+        });
       }
     } catch (error) {
       console.error('Erro ao carregar sorteios:', error);

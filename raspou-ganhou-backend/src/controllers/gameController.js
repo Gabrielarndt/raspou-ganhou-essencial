@@ -25,6 +25,7 @@ export const playGame = async (req, res) => {
   try {
     const { game_id } = req.body;
     const userId = req.user.user_id;
+console.log('ID do usuário que está jogando:', userId);
 
     if (!game_id) {
       return res.status(400).json({ error: 'ID do jogo é obrigatório' });
@@ -107,6 +108,17 @@ export const playGame = async (req, res) => {
   const newJogosRealizados = (user.jogos_realizados || 0) + 1;
   const newTotalGanho = parseFloat(user.total_ganho || 0) + prize;
 
+console.log('Atualizando usuário (ganhou) com os valores:');
+console.log({
+  saldo_real: finalRealBalance,
+  saldo_bonus: finalBonusBalance,
+  pontos_sorteio: newPontosSorteio,
+  jogos_realizados: newJogosRealizados,
+  total_ganho: newTotalGanho
+});
+
+
+      
   const { error: updateError } = await supabaseAdmin
     .from('users')
     .update({
@@ -137,10 +149,10 @@ export const playGame = async (req, res) => {
     })
     .eq('id', userId);
 
-  if (updateError) {
-    console.error('Erro ao atualizar usuário (perdeu):', updateError);
-    return res.status(500).json({ error: 'Erro ao atualizar usuário' });
-  }
+ if (updateError) {
+  console.error('Erro ao atualizar usuário (ganhou):', updateError);
+  return res.status(500).json({ error: 'Erro ao atualizar usuário', details: updateError.message });
+}
 }
 
 // Registrar resultado do jogo

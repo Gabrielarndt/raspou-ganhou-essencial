@@ -15,6 +15,14 @@ import * as transactionController from './controllers/transactionController.js';
 import * as userController from './controllers/userController.js';
 import * as adminController from './controllers/adminController.js';
 
+
+console.log('authController:', Object.keys(authController));
+console.log('gameController:', Object.keys(gameController));
+console.log('transactionController:', Object.keys(transactionController));
+console.log('userController:', Object.keys(userController));
+console.log('adminController:', Object.keys(adminController));
+
+
 // Configurar variáveis de ambiente
 dotenv.config();
 

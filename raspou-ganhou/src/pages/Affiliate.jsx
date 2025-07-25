@@ -41,6 +41,7 @@ const Affiliate = () => {
   const [storedUser, setStoredUser] = useState(null);
   const [isAffiliate, setIsAffiliate] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
   try {

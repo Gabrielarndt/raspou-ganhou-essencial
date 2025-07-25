@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { apiClient } from '../lib/api';
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, Shield, Crown } from 'lucide-react';
 
 const SuperAdminLogin = () => {

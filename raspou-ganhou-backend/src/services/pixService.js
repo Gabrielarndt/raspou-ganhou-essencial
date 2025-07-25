@@ -1,135 +1,68 @@
 import axios from 'axios';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 class PixService {
   constructor() {
-    this.apiUrl = process.env.FASTSOFT_API_URL;
     this.apiKey = process.env.FASTSOFT_API_KEY;
-    this.webhookSecret = process.env.FASTSOFT_WEBHOOK_SECRET;
-
-    if (!this.apiUrl) {
-      throw new Error('FASTSOFT_API_URL environment variable is required');
-    }
-    if (!this.apiKey) {
-      throw new Error('FASTSOFT_API_KEY environment variable is required');
-    }
-  }
-
-  // Headers padrão para autenticação
-  getHeaders() {
-    return {
-      'Authorization': `${this.apiKey}`,
-      'Content-Type': 'application/json'
-    };
-  }
-
-  // Criar transação PIX
-  async createPixTransaction(amount, customerData, orderId) {
-    const payload = {
-      amount: parseFloat(amount),
-      payment_method: 'pix',
-      customer: {
-        name: customerData.name,
-        email: customerData.email,
-        cpf: customerData.cpf,
-        phone: customerData.phone
-      },
-      order_id: orderId,
-      description: `Depósito RaspouGanhou - ${orderId}`,
-      notification_url: `${process.env.PUBLIC_BASE_URL}/api/webhook/pix`,
-      return_url: `${process.env.PUBLIC_BASE_URL}/deposito`
-    };
-
-    console.log('PIX Service – API URL:', this.apiUrl);
-    console.log('PAYLOAD PIX:', JSON.stringify(payload, null, 2));
-
-    try {
-      const response = await axios.post(
-        `${this.apiUrl}/transactions`,
-        payload,
-        { headers: this.getHeaders() }
-      );
-      return { success: true, data: response.data };
-    } catch (error) {
-      console.error('PIX Service error:', error.response?.data || error.message);
-      return { success: false, error: error.response?.data?.message || error.message };
-    }
-  }
-
-  // Consultar status da transação
-  async getTransactionStatus(transactionId) {
-    try {
-      const response = await axios.get(
-        `${this.apiUrl}/api/transactions/${transactionId}`,
-        { headers: this.getHeaders() }
-      );
-
-      return {
-        success: true,
-        data: response.data
-      };
-
-    } catch (error) {
-      console.error('PIX Service - Get transaction error:', error.response?.data || error.message);
-      return {
-        success: false,
-        error: error.response?.data?.message || 'Erro ao consultar transação'
-      };
-    }
-  }
-
-  // Verificar webhook signature
-  verifyWebhookSignature(payload, signature) {
-    const crypto = require('crypto');
-    const expectedSignature = crypto
-      .createHmac('sha256', this.webhookSecret)
-      .update(payload)
-      .digest('hex');
+    this.baseUrl = process.env.FASTSOFT_API_URL;
+    this.publicBaseUrl = process.env.PUBLIC_BASE_URL || 'https://your-domain.com';
     
-    return signature === expectedSignature;
-  }
-
-  // Processar webhook de pagamento
-  async processWebhook(webhookData) {
-    try {
-      const { transaction_id, status, amount, order_id } = webhookData;
-
-      return {
-        success: true,
-        data: {
-          transactionId: transaction_id,
-          status,
-          amount: parseFloat(amount),
-          orderId: order_id
-        }
-      };
-
-    } catch (error) {
-      console.error('PIX Service - Process webhook error:', error);
-      return {
-        success: false,
-        error: 'Erro ao processar webhook'
-      };
+    if (!this.apiKey || !this.baseUrl) {
+      throw new Error('FastSoft API credentials not configured');
     }
   }
 
-  // Obter taxas
-  async getFees(amount) {
+  async createPixTransaction(amount, userId, transactionId) {
     try {
-      const response = await axios.get(
-        `${this.apiUrl}/v1/fees?amount=${amount}&payment_method=pix`,
-        { headers: this.getHeaders() }
-      );
+      const payload = {
+        amount: amount,
+        description: `Depósito RaspouGanhou - ${transactionId}`,
+        external_id: transactionId,
+        webhook_url: `${this.publicBaseUrl}/api/webhook/pix`,
+        return_url: `${this.publicBaseUrl}/deposito?status=success`,
+        cancel_url: `${this.publicBaseUrl}/deposito?status=cancel`
+      };
+
+      const response = await axios.post(`${this.baseUrl}/transactions`, payload, {
+        headers: {
+          'Authorization': this.apiKey,
+          'Content-Type': 'application/json'
+        }
+      });
 
       return {
         success: true,
         data: response.data
       };
-
     } catch (error) {
-      console.error('PIX Service - Get fees error:', error.response?.data || error.message);
+      console.error('FastSoft API Error:', error.response?.data || error.message);
       return {
         success: false,
-        error: 'Erro ao consultar taxas'
+        error: error.response?.data?.message || error.message
+      };
+    }
+  }
+
+  async checkTransactionStatus(transactionId) {
+    try {
+      const response = await axios.get(`${this.baseUrl}/transactions/${transactionId}`, {
+        headers: {
+          'Authorization': this.apiKey,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      console.error('FastSoft Status Check Error:', error.response?.data || error.message);
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message
       };
     }
   }

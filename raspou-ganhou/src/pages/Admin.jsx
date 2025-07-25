@@ -1,5 +1,3 @@
-import { supabaseAdmin } from '../config/database.js';
-
 export const getDashboard = async (req, res) => {
   try {
     // Estatísticas gerais

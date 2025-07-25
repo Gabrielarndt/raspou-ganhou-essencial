@@ -82,18 +82,7 @@ app.put('/api/admin/update-user', authenticateAdmin, adminController.updateUser)
 app.get('/api/admin/admins', authenticateAdmin, adminController.getAdmins);
 app.post('/api/admin/create-admin', authenticateAdmin, adminController.createAdmin);
 app.put('/api/admin/update-admin', authenticateAdmin, adminController.updateAdmin);
-app.delete('/api/admin/delete-admin', (req, res) => {
-  const { admin_id } = req.query;
-
-  if (!admin_id) {
-    return res.status(400).json({ error: 'ID do admin é obrigatório' });
-  }
-
-  // lógica para deletar o admin usando o ID...
-  console.log('Deletando admin com ID:', admin_id);
-
-  return res.json({ message: 'Admin deletado com sucesso' });
-});
+app.delete('/api/admin/delete-admin', authenticateAdmin, adminController.deleteAdmin);
 
 app.post('/api/admin/approve-withdraw', authenticateAdmin, adminController.approveWithdraw);
 app.post('/api/admin/reject-withdraw', authenticateAdmin, adminController.rejectWithdraw);

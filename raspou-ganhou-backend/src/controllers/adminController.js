@@ -534,7 +534,7 @@ export const updateAdmin = async (req, res) => {
 
 export const deleteAdmin = async (req, res) => {
   try {
-    const { admin_id } = req.query;
+    const { admin_id } = req.body;
     console.log('Recebido admin_id para exclusão:', admin_id);
 
     if (!admin_id) {
@@ -557,19 +557,14 @@ export const deleteAdmin = async (req, res) => {
       return res.status(403).json({ error: 'Super admins não podem ser excluídos' });
     }
 
-    const { data: deleted, error } = await supabaseAdmin
+    const { error } = await supabaseAdmin
       .from('admins')
       .delete()
-      .eq('id', admin_id)
-      .select();
+      .eq('id', admin_id);
 
     if (error) {
       console.error('Delete admin error:', error);
       return res.status(500).json({ error: 'Erro ao excluir admin: ' + error.message });
-    }
-
-    if (!deleted || deleted.length === 0) {
-      return res.status(500).json({ error: 'Falha ao excluir admin. Nenhum registro afetado.' });
     }
 
     res.json({

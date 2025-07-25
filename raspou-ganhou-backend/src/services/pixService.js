@@ -24,24 +24,36 @@ class PixService {
 
   // Criar transação PIX
   async createPixTransaction(amount, customerData, orderId) {
-  console.log('PIX Service – API URL:', this.apiUrl);
-  console.log('PAYLOAD PIX:', JSON.stringify({
-    amount, payment_method: 'pix', customer: customerData,
-    order_id: orderId, description: `...`, notification_url: ..., return_url: ...
-  }, null, 2));
+    const payload = {
+      amount: parseFloat(amount),
+      payment_method: 'pix',
+      customer: {
+        name: customerData.name,
+        email: customerData.email,
+        cpf: customerData.cpf,
+        phone: customerData.phone
+      },
+      order_id: orderId,
+      description: `Depósito RaspouGanhou - ${orderId}`,
+      notification_url: `${process.env.PUBLIC_BASE_URL}/api/webhook/pix`,
+      return_url: `${process.env.PUBLIC_BASE_URL}/deposito`
+    };
 
-  try {
-    const response = await axios.post(
-      `${this.apiUrl}/api/user/transactions`,
-      payload,
-      { headers: this.getHeaders() }
-    );
-    return { success: true, data: response.data };
-  } catch (error) {
-    console.error('PIX Service error:', error.response?.data || error.message);
-    return { success: false, error: error.response?.data?.message || error.message };
+    console.log('PIX Service – API URL:', this.apiUrl);
+    console.log('PAYLOAD PIX:', JSON.stringify(payload, null, 2));
+
+    try {
+      const response = await axios.post(
+        `${this.apiUrl}/transactions`,
+        payload,
+        { headers: this.getHeaders() }
+      );
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('PIX Service error:', error.response?.data || error.message);
+      return { success: false, error: error.response?.data?.message || error.message };
+    }
   }
-}
 
   // Consultar status da transação
   async getTransactionStatus(transactionId) {

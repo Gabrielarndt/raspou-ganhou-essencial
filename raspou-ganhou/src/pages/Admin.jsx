@@ -65,18 +65,27 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
                   currentUser?.role === 'super_admin' || 
                   currentUser?.is_super_admin;
 
-  useEffect(() => {
-    if (loading) return; // Aguardar carregamento do contexto
-    
-    if (!isAdmin) {
-      console.log('Not admin, redirecting to login');
-      navigate('/super-admin-login');
-      return;
-    }
+ useEffect(() => {
+  // Só execute depois que o loading acabar E o user estiver carregado (não null)
+  if (loading) return;
 
-    console.log('Admin verified, loading data');
-    loadData();
-  }, [isAdmin, navigate, loading]);
+  if (!currentUser) {
+    // usuário ainda não carregado, pode ser que esteja buscando ainda
+    console.log('User not loaded yet, aguardando...');
+    return;
+  }
+
+  if (!isAdmin) {
+    console.log('Not admin, redirecting to login');
+    navigate('/super-admin-login');
+    return;
+  }
+
+  console.log('Admin verified, loading data');
+  loadData();
+
+}, [isAdmin, navigate, loading, currentUser]);
+
 
   const loadData = async () => {
     try {

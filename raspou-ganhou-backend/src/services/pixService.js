@@ -38,8 +38,8 @@ class PixService {
         order_id: orderId,
         description: `Depósito RaspouGanhou - ${amount}`,
         expires_in: 900, // 15 minutos
-        notification_url: `${process.env.CORS_ORIGIN}/api/webhook/pix`,
-        return_url: `${process.env.CORS_ORIGIN}/deposito/sucesso`
+        notification_url: `${process.env.PUBLIC_BASE_URL}/api/webhook/pix`,
+        return_url: `${process.env.PUBLIC_BASE_URL}/deposito/sucesso`
       };
 
       const response = await axios.post(

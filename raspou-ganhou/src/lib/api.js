@@ -165,7 +165,7 @@ class ApiClient {
   async rejectWithdraw(transactionId) {
     return this.request('/admin/reject-withdraw', {
       method: 'POST',
-      body: JSON.stringify({ transaction_id: transactionId }),
+      body: JSON.stringify({ admin_id: adminId })
     });
   }
 

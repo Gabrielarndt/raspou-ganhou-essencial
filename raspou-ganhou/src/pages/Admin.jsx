@@ -528,6 +528,8 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
   };
 
   const handleDeleteAdmin = async (adminId) => {
+    console.log('Deleting admin with ID:', adminId);
+    
     if (!window.confirm('Tem certeza que deseja excluir este admin?')) {
       return;
     }
@@ -560,7 +562,7 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
       const admins = JSON.parse(localStorage.getItem('raspou_admins') || '[]');
       
       if (editingAdmin) {
-        const adminIndex = admins.findIndex(a => a.id === editingAdmin.id);
+      const result = await apiClient.deleteAdmin(adminId);
         if (adminIndex !== -1) {
           admins[adminIndex] = { ...editingAdmin, ...adminForm };
         }

@@ -139,6 +139,17 @@ console.log({
   const newPontosSorteio = (user.pontos_sorteio || 0) + 10;
   const newJogosRealizados = (user.jogos_realizados || 0) + 1;
 
+
+
+      console.log('Atualizando usuário (perdeu) com os valores:');
+console.log({
+  saldo_real: newRealBalance,
+  saldo_bonus: newBonusBalance,
+  pontos_sorteio: newPontosSorteio,
+  jogos_realizados: newJogosRealizados
+});
+
+
   const { error: updateError } = await supabaseAdmin
     .from('users')
     .update({

@@ -82,7 +82,7 @@ export const playGame = async (req, res) => {
     const won = Math.random() < winProbability;
     let prize = 0;
     let winningPositions = [];
-
+let updatedUser = null;
     if (won) {
   // Símbolo vencedor e posições
   const winningSymbol = symbols[Math.floor(Math.random() * symbols.length)];
@@ -119,23 +119,24 @@ console.log({
 
 
       
-  const { data: updatedUser, error: updateError } = await supabaseAdmin
-  .from('users')
-  .update({
-    saldo_real: finalRealBalance,
-    saldo_bonus: finalBonusBalance,
-    pontos_sorteio: newPontosSorteio,
-    jogos_realizados: newJogosRealizados,
-    total_ganho: newTotalGanho
-  })
-   .eq('id', userId)
-  .select()
-  .single();
+  const { data, error } = await supabaseAdmin
+    .from('users')
+    .update({
+      saldo_real: finalRealBalance,
+      saldo_bonus: finalBonusBalance,
+      pontos_sorteio: newPontosSorteio,
+      jogos_realizados: newJogosRealizados,
+      total_ganho: newTotalGanho
+    })
+    .eq('id', userId)
+    .select()
+    .single();
 
-if (updateError) {
-  console.error('Erro ao atualizar usuário (ganhou):', updateError);
-  return res.status(500).json({ error: 'Erro ao atualizar usuário' });
-}
+  if (error) {
+    console.error('Erro ao atualizar usuário (ganhou):', error);
+    return res.status(500).json({ error: 'Erro ao atualizar usuário' });
+  }
+  updatedUser = data;
 
 } else {
   // Jogador perdeu - apenas atualiza estatísticas
@@ -153,23 +154,24 @@ console.log({
 });
 
 
-  const { data: updatedUser, error: updateError } = await supabaseAdmin
-  .from('users')
-  .update({
-    saldo_real: newRealBalance,
-    saldo_bonus: newBonusBalance,
-    pontos_sorteio: newPontosSorteio,
-    jogos_realizados: newJogosRealizados
-  })
-  .eq('id', userId)
-  .select()
-  .single();
+  const { data, error } = await supabaseAdmin
+    .from('users')
+    .update({
+      saldo_real: newRealBalance,
+      saldo_bonus: newBonusBalance,
+      pontos_sorteio: newPontosSorteio,
+      jogos_realizados: newJogosRealizados
+    })
+    .eq('id', userId)
+    .select()
+    .single();
 
-if (updateError) {
-  console.error('Erro ao atualizar usuário (perdeu):', updateError);
-  return res.status(500).json({ error: 'Erro ao atualizar usuário', details: updateError.message });
+  if (error) {
+    console.error('Erro ao atualizar usuário (perdeu):', error);
+    return res.status(500).json({ error: 'Erro ao atualizar usuário', details: error.message });
+  }
+  updatedUser = data;
 }
-
 
 }
 

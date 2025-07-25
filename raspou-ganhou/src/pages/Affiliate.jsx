@@ -38,9 +38,41 @@ const Affiliate = () => {
   const [security, setSecurity] = useState({});
 
   // Verificar se é afiliado - primeiro verifica localStorage, depois user do context
-  const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-  const isAffiliate = storedUser?.role === 'affiliate' || user?.role === 'affiliate';
-  const currentUser = storedUser?.role === 'affiliate' ? storedUser : user;
+  const [storedUser, setStoredUser] = useState(null);
+  const [isAffiliate, setIsAffiliate] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    // Carregar dados do localStorage
+    try {
+      const stored = localStorage.getItem('user');
+      if (stored) {
+        const userData = JSON.parse(stored);
+        console.log('📦 Affiliate: Stored user data:', userData);
+        setStoredUser(userData);
+        
+        if (userData.role === 'affiliate') {
+          setIsAffiliate(true);
+          setCurrentUser(userData);
+          console.log('✅ Affiliate: Found affiliate in localStorage');
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('Error parsing stored user:', error);
+    }
+    
+    // Verificar user do context
+    if (user?.role === 'affiliate') {
+      setIsAffiliate(true);
+      setCurrentUser(user);
+      console.log('✅ Affiliate: Found affiliate in context');
+    } else {
+      setIsAffiliate(false);
+      setCurrentUser(null);
+      console.log('❌ Affiliate: No affiliate found');
+    }
+  }, [user]);
 
   useEffect(() => {
     console.log('🔍 Affiliate: Checking auth - isAffiliate:', isAffiliate, 'currentUser:', !!currentUser);

@@ -677,19 +677,9 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
     setShowAffiliateModal(false);
     alert(editingAffiliate ? 'Afiliado atualizado!' : 'Afiliado criado!');
   };
-
-  const handleDeleteAffiliate = async (affiliateId) => {
-    if (!affiliateId) {
-      alert('ID do afiliado é obrigatório');
-      return;
-    }
-
-    if (!window.confirm('Tem certeza que deseja excluir este afiliado?')) {
-      return;
-    }
-
-    try {
-      const result = await apiClient.deleteAffiliate(affiliateId);
+      const result = await apiClient.createAffiliate(affiliateForm);
+        // Recarregar lista de afiliados
+        await loadAffiliates();
       if (result.success) {
         await loadAffiliates();
         alert('Afiliado excluído com sucesso!');

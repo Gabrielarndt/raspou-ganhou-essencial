@@ -9,27 +9,22 @@ const Numeros = () => {
   const [lotteryHistory, setLotteryHistory] = useState([]);
 
   useEffect(() => {
-    loadLotteries();
+    loadActiveLotteries();
   }, []);
 
-  const loadLotteries = () => {
+  const loadActiveLotteries = async () => {
     try {
-      const savedLotteries = JSON.parse(localStorage.getItem('raspou_lotteries') || '[]');
-      const now = new Date();
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/lotteries/active`);
       
-      // Separar sorteios ativos e finalizados
-      const activeLotteries = savedLotteries.filter(lottery => {
-        const drawDate = new Date(lottery.draw_date);
-        return drawDate > now && lottery.status === 'active';
-      });
-      
-      const finishedLotteries = savedLotteries.filter(lottery => {
-        const drawDate = new Date(lottery.draw_date);
-        return drawDate <= now || lottery.status === 'finished';
-      });
-      
-      setLotteries(activeLotteries);
-      setLotteryHistory(finishedLotteries);
+      if (response.ok) {
+        const data = await response.json();
+        setLotteries(data.active_lotteries || []);
+        setLotteryHistory(data.finished_lotteries || []);
+      } else {
+        console.error('Erro ao carregar sorteios');
+        setLotteries([]);
+        setLotteryHistory([]);
+      }
     } catch (error) {
       console.error('Erro ao carregar sorteios:', error);
       setLotteries([]);

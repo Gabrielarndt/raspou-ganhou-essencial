@@ -292,6 +292,19 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
       // Aqui você pode implementar a exclusão via API
       alert('Funcionalidade de exclusão será implementada em breve');
     }
+  };
+
+  const handleCreateLottery = () => {
+    setEditingLottery(null);
+    setLotteryForm({
+      title: '',
+      description: '',
+      prize: '',
+      draw_date: '',
+      status: 'active'
+    });
+    setShowLotteryModal(true);
+  };
 
   const handleEditLottery = (lottery) => {
     setEditingLottery(lottery);
@@ -319,7 +332,7 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
           prize: parseFloat(lotteryForm.prize),
           draw_date: new Date(lotteryForm.draw_date).toISOString(),
           status: lotteryForm.status || 'active',
-          created_by: adminData.id
+          created_by: currentUser.id
         };
 
         let response;
@@ -391,12 +404,7 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
     } catch (error) {
       console.error('Erro ao carregar sorteios:', error);
       setLotteries([]);
-      : [...lotteries, lotteryData];
-
-    setLotteries(updatedLotteries);
-    localStorage.setItem('raspou_lotteries', JSON.stringify(updatedLotteries));
-    setShowLotteryModal(false);
-    alert(editingLottery ? 'Sorteio atualizado!' : 'Sorteio criado!');
+    }
   };
 
   const handleDeleteLottery = (lottery) => {
@@ -428,6 +436,7 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
       };
 
       deleteLottery();
+    }
   };
 
   // Funções para Admins

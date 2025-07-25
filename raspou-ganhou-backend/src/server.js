@@ -74,9 +74,16 @@ app.get('/api/transactions/history', authenticateToken, transactionController.ge
 app.get('/api/admin/dashboard', authenticateAdmin, adminController.getDashboard);
 app.get('/api/admin/users', authenticateAdmin, adminController.getUsers);
 app.get('/api/admin/transactions', authenticateAdmin, adminController.getTransactions);
+app.get('/api/admin/lotteries', authenticateAdmin, adminController.getLotteries);
+app.post('/api/admin/create-lottery', authenticateAdmin, adminController.createLottery);
+app.put('/api/admin/update-lottery', authenticateAdmin, adminController.updateLottery);
+app.delete('/api/admin/delete-lottery', authenticateAdmin, adminController.deleteLottery);
 app.put('/api/admin/update-user', authenticateAdmin, adminController.updateUser);
 app.post('/api/admin/approve-withdraw', authenticateAdmin, adminController.approveWithdraw);
 app.post('/api/admin/reject-withdraw', authenticateAdmin, adminController.rejectWithdraw);
+
+// Rotas públicas para sorteios
+app.get('/api/lotteries/active', adminController.getActiveLotteries);
 
 // Middleware de tratamento de erros
 app.use((err, req, res, next) => {

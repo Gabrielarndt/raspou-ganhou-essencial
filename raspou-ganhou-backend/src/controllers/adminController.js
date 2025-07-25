@@ -252,3 +252,172 @@ export const updateUser = async (req, res) => {
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 };
+
+export const createLottery = async (req, res) => {
+  try {
+    const { title, description, prize, draw_date, status, created_by } = req.body;
+
+    if (!title || !prize || !draw_date) {
+      return res.status(400).json({ error: 'Título, prêmio e data do sorteio são obrigatórios' });
+    }
+
+    const { data: lottery, error } = await supabaseAdmin
+      .from('lotteries')
+      .insert({
+        title,
+        description,
+        prize: parseFloat(prize),
+        draw_date,
+        status: status || 'active',
+        created_by
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Create lottery error:', error);
+      return res.status(500).json({ error: 'Erro ao criar sorteio: ' + error.message });
+    }
+
+    res.json({
+      success: true,
+      message: 'Sorteio criado com sucesso',
+      lottery
+    });
+
+  } catch (error) {
+    console.error('Create lottery error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+};
+
+export const updateLottery = async (req, res) => {
+  try {
+    const { lottery_id, title, description, prize, draw_date, status } = req.body;
+
+    if (!lottery_id) {
+      return res.status(400).json({ error: 'ID do sorteio é obrigatório' });
+    }
+
+    const updateData = {};
+    if (title !== undefined) updateData.title = title;
+    if (description !== undefined) updateData.description = description;
+    if (prize !== undefined) updateData.prize = parseFloat(prize);
+    if (draw_date !== undefined) updateData.draw_date = draw_date;
+    if (status !== undefined) updateData.status = status;
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ error: 'Nenhum campo para atualizar' });
+    }
+
+    const { data: lottery, error } = await supabaseAdmin
+      .from('lotteries')
+      .update(updateData)
+      .eq('id', lottery_id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Update lottery error:', error);
+      return res.status(500).json({ error: 'Erro ao atualizar sorteio: ' + error.message });
+    }
+
+    res.json({
+      success: true,
+      message: 'Sorteio atualizado com sucesso',
+      lottery
+    });
+
+  } catch (error) {
+    console.error('Update lottery error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+};
+
+export const deleteLottery = async (req, res) => {
+  try {
+    const { lottery_id } = req.body;
+
+    if (!lottery_id) {
+      return res.status(400).json({ error: 'ID do sorteio é obrigatório' });
+    }
+
+    const { error } = await supabaseAdmin
+      .from('lotteries')
+      .delete()
+      .eq('id', lottery_id);
+
+    if (error) {
+      console.error('Delete lottery error:', error);
+      return res.status(500).json({ error: 'Erro ao excluir sorteio: ' + error.message });
+    }
+
+    res.json({
+      success: true,
+      message: 'Sorteio excluído com sucesso'
+    });
+
+  } catch (error) {
+    console.error('Delete lottery error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+};
+
+export const getLotteries = async (req, res) => {
+  try {
+    const { data: lotteries, error } = await supabaseAdmin
+      .from('lotteries')
+      .select(`
+        *,
+        admins(name)
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Get lotteries error:', error);
+      return res.status(500).json({ error: 'Erro ao carregar sorteios' });
+    }
+
+    res.json({ lotteries });
+
+  } catch (error) {
+    console.error('Get lotteries error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+};
+
+export const getActiveLotteries = async (req, res) => {
+  try {
+    const now = new Date().toISOString();
+
+    // Sorteios ativos (data futura e status ativo)
+    const { data: activeLotteries, error: activeError } = await supabaseAdmin
+      .from('lotteries')
+      .select('*')
+      .eq('status', 'active')
+      .gt('draw_date', now)
+      .order('draw_date', { ascending: true });
+
+    // Sorteios finalizados (data passada ou status finalizado)
+    const { data: finishedLotteries, error: finishedError } = await supabaseAdmin
+      .from('lotteries')
+      .select('*')
+      .or(`draw_date.lt.${now},status.eq.finished`)
+      .order('draw_date', { ascending: false })
+      .limit(10);
+
+    if (activeError || finishedError) {
+      console.error('Get active lotteries error:', activeError || finishedError);
+      return res.status(500).json({ error: 'Erro ao carregar sorteios' });
+    }
+
+    res.json({
+      active_lotteries: activeLotteries || [],
+      finished_lotteries: finishedLotteries || []
+    });
+
+  } catch (error) {
+    console.error('Get active lotteries error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+};

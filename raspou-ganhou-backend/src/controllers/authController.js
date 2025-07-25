@@ -87,7 +87,9 @@ export const register = async (req, res) => {
         senha: hashedPassword,
         saldo_real: 0.00,
         saldo_bonus: 10.00, // Bônus de boas-vindas
-        pontos_sorteio: 0
+        pontos_sorteio: 0,
+        jogos_realizados: 0,
+        total_ganho: 0.00
       })
       .select()
       .single();

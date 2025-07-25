@@ -311,7 +311,7 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
     setEditingLottery(lottery);
     setLotteryForm({
       title: lottery.title,
-      description: lottery.description || '',
+      description: lottery.description?.slice(0, 100) || '',
       prize: lottery.prize.toString(),
       draw_date: lottery.draw_date.slice(0, 16), // Para datetime-local
       status: lottery.status

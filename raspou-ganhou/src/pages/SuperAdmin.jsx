@@ -741,8 +741,7 @@ const handleEditLottery = (item) => {
       prize: '',
       draw_date: '',
       description: '',
-            draw_date: '',
-            max_participants: ''
+      max_participants: ''
         });
     };
 

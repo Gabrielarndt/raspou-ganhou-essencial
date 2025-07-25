@@ -113,21 +113,27 @@ export const playGame = async (req, res) => {
     }
 
     // Atualizar usuário no banco
-    const { error: updateError } = await supabaseAdmin
+    const { data: updatedUser, error: updateError } = await supabaseAdmin
       .from('users')
       .update({
-        saldo_real: finalRealBalance,
-        saldo_bonus: finalBonusBalance,
-        pontos_sorteio: (parseInt(user.pontos_sorteio) || 0) + 10,
-        jogos_realizados: (parseInt(user.jogos_realizados) || 0) + 1,
-        total_ganho: (parseFloat(user.total_ganho) || 0) + prize
+        saldo_real: newRealBalance + (won && realUsed > 0 ? prize : 0),
+        saldo_bonus: newBonusBalance + (won && realUsed === 0 ? prize : 0),
+        pontos_sorteio: supabaseAdmin.raw(`COALESCE(pontos_sorteio, 0) + 10`),
+        jogos_realizados: supabaseAdmin.raw(`COALESCE(jogos_realizados, 0) + 1`),
+        total_ganho: supabaseAdmin.raw(`COALESCE(total_ganho, 0) + ${prize}`)
       })
-      .eq('id', userId);
+      .eq('id', userId)
+      .select()
+      .single();
 
     if (updateError) {
       console.error('Update user error:', updateError);
       return res.status(500).json({ error: 'Erro ao atualizar usuário' });
     }
+
+    // Usar dados atualizados do banco
+    finalRealBalance = parseFloat(updatedUser.saldo_real);
+    finalBonusBalance = parseFloat(updatedUser.saldo_bonus);
 
     // Registrar resultado do jogo
     const { error: gameResultError } = await supabaseAdmin

@@ -268,12 +268,13 @@ res.json({
     symbols: gameSymbols,
     winning_positions: winningPositions,
     new_balance: {
-      saldo_real: refreshedUser.saldo_real,
-      saldo_bonus: refreshedUser.saldo_bonus,
-      pontos_sorteio: refreshedUser.pontos_sorteio
+      saldo_real: updatedUser.saldo_real,
+      saldo_bonus: updatedUser.saldo_bonus,
+      pontos_sorteio: updatedUser.pontos_sorteio
     }
   }
 });
+
 
 
 

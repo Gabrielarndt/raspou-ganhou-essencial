@@ -540,7 +540,7 @@ export const deleteAdmin = async (req, res) => {
       return res.status(400).json({ error: 'ID do admin é obrigatório' });
     }
 
-    // Verificar se é super admin (não pode ser excluído)
+    // Verificar se é super admin
     const { data: admin } = await supabaseAdmin
       .from('admins')
       .select('is_super_admin')
@@ -551,21 +551,21 @@ export const deleteAdmin = async (req, res) => {
       return res.status(403).json({ error: 'Super admins não podem ser excluídos' });
     }
 
+    // Executar deleção com retorno
     const { data, error } = await supabaseAdmin
-  .from('admins')
-  .delete()
-  .eq('id', admin_id)
-  .select();
+      .from('admins')
+      .delete()
+      .eq('id', admin_id)
+      .select(); // importante!
 
-if (error) {
-  console.error('Delete admin error:', error);
-  return res.status(500).json({ error: 'Erro ao excluir admin: ' + error.message });
-}
+    if (error) {
+      console.error('Delete admin error:', error);
+      return res.status(500).json({ error: 'Erro ao excluir admin: ' + error.message });
+    }
 
-if (!data || data.length === 0) {
-  return res.status(404).json({ error: 'Admin não encontrado ou já excluído' });
-}
-
+    if (!data || data.length === 0) {
+      return res.status(404).json({ error: 'Admin não encontrado ou já foi excluído' });
+    }
 
     res.json({
       success: true,
@@ -577,6 +577,7 @@ if (!data || data.length === 0) {
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 };
+
 
 
 export const getAdmins = async (req, res) => {

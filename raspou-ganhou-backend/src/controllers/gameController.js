@@ -119,21 +119,24 @@ console.log({
 
 
       
-  const { error: updateError } = await supabaseAdmin
-    .from('users')
-    .update({
-      saldo_real: finalRealBalance,
-      saldo_bonus: finalBonusBalance,
-      pontos_sorteio: newPontosSorteio,
-      jogos_realizados: newJogosRealizados,
-      total_ganho: newTotalGanho
-    })
-    .eq('id', userId);
+  const { data: updatedUser, error: updateError } = await supabaseAdmin
+  .from('users')
+  .update({
+    saldo_real: finalRealBalance,
+    saldo_bonus: finalBonusBalance,
+    pontos_sorteio: newPontosSorteio,
+    jogos_realizados: newJogosRealizados,
+    total_ganho: newTotalGanho
+  })
+  .eq('id', userId)
+  .select()
+  .single();
 
-  if (updateError) {
-    console.error('Erro ao atualizar usuário (ganhou):', updateError);
-    return res.status(500).json({ error: 'Erro ao atualizar usuário' });
-  }
+if (updateError) {
+  console.error('Erro ao atualizar usuário (ganhou):', updateError);
+  return res.status(500).json({ error: 'Erro ao atualizar usuário' });
+}
+
 } else {
   // Jogador perdeu - apenas atualiza estatísticas
   const newPontosSorteio = (user.pontos_sorteio || 0) + 10;

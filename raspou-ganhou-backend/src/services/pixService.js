@@ -14,7 +14,7 @@ class PixService {
     }
   }
 
-  async createPixTransaction(amount, userId, transactionId) {
+  async createPixTransaction(amount, customerData, transactionId) {
     try {
       const payload = {
         amount: amount,

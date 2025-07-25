@@ -17,7 +17,7 @@ class PixService {
   // Headers padrão para autenticação
   getHeaders() {
     return {
-      'Authorization': `Bearer ${this.apiKey}`,
+      'Authorization': `${this.apiKey}`,
       'Content-Type': 'application/json'
     };
   }

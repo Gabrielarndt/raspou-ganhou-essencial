@@ -47,6 +47,43 @@ const Admin = () => {
   const [editForm, setEditForm] = useState({});
   const [isLoading, setIsLoading] = useState(false);
 
+  // Estados para Sorteios
+  const [lotteries, setLotteries] = useState([]);
+  const [showLotteryModal, setShowLotteryModal] = useState(false);
+  const [lotteryForm, setLotteryForm] = useState({
+    title: '',
+    description: '',
+    prize: '',
+    draw_date: '',
+    status: 'active'
+  });
+  const [editingLottery, setEditingLottery] = useState(null);
+
+  // Estados para Admins
+  const [admins, setAdmins] = useState([]);
+  const [showAdminModal, setShowAdminModal] = useState(false);
+  const [adminForm, setAdminForm] = useState({
+    name: '',
+    email: '',
+    password: '',
+    role: 'admin',
+    is_super_admin: false
+  });
+  const [editingAdmin, setEditingAdmin] = useState(null);
+
+  // Estados para Afiliados
+  const [affiliates, setAffiliates] = useState([]);
+  const [showAffiliateModal, setShowAffiliateModal] = useState(false);
+  const [affiliateForm, setAffiliateForm] = useState({
+    name: '',
+    email: '',
+    password: '',
+    affiliate_code: '',
+    cpa: '',
+    commission_rate: ''
+  });
+  const [editingAffiliate, setEditingAffiliate] = useState(null);
+
   useEffect(() => {
     // Carregar dados do admin do localStorage se não estiver no contexto
     const storedUser = localStorage.getItem('user');
@@ -88,6 +125,9 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
 
   console.log('Admin verified, loading data');
   loadData();
+  loadLotteries();
+  loadAdmins();
+  loadAffiliates();
 
 }, [isAdmin, navigate, loading, currentUser]);
 
@@ -110,6 +150,36 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
       console.error('Error loading admin data:', error);
     } finally {
       setDataLoading(false);
+    }
+  };
+
+  const loadLotteries = () => {
+    try {
+      const savedLotteries = JSON.parse(localStorage.getItem('raspou_lotteries') || '[]');
+      setLotteries(savedLotteries);
+    } catch (error) {
+      console.error('Erro ao carregar sorteios:', error);
+      setLotteries([]);
+    }
+  };
+
+  const loadAdmins = () => {
+    try {
+      const savedAdmins = JSON.parse(localStorage.getItem('raspou_admins') || '[]');
+      setAdmins(savedAdmins);
+    } catch (error) {
+      console.error('Erro ao carregar admins:', error);
+      setAdmins([]);
+    }
+  };
+
+  const loadAffiliates = () => {
+    try {
+      const savedAffiliates = JSON.parse(localStorage.getItem('raspou_affiliates') || '[]');
+      setAffiliates(savedAffiliates);
+    } catch (error) {
+      console.error('Erro ao carregar afiliados:', error);
+      setAffiliates([]);
     }
   };
 
@@ -224,6 +294,245 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
     }
   };
 
+  // Funções para Sorteios
+  const handleCreateLottery = () => {
+    setEditingLottery(null);
+    setLotteryForm({
+      title: '',
+      description: '',
+      prize: '',
+      draw_date: '',
+      status: 'active'
+    });
+    setShowLotteryModal(true);
+  };
+
+  const handleEditLottery = (lottery) => {
+    setEditingLottery(lottery);
+    setLotteryForm({
+      title: lottery.title,
+      description: lottery.description || '',
+      prize: lottery.prize.toString(),
+      draw_date: lottery.draw_date.slice(0, 16), // Para datetime-local
+      status: lottery.status
+    });
+    setShowLotteryModal(true);
+  };
+
+  const handleSaveLottery = () => {
+    if (!lotteryForm.title || !lotteryForm.prize || !lotteryForm.draw_date) {
+      alert('Preencha todos os campos obrigatórios');
+      return;
+    }
+
+    const lotteryData = {
+      id: editingLottery ? editingLottery.id : Date.now().toString(),
+      title: lotteryForm.title,
+      description: lotteryForm.description,
+      prize: parseFloat(lotteryForm.prize),
+      draw_date: lotteryForm.draw_date,
+      status: lotteryForm.status,
+      created_by: currentUser.id,
+      created_at: editingLottery ? editingLottery.created_at : new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      total_participants: editingLottery ? editingLottery.total_participants : 0,
+      winner_id: editingLottery ? editingLottery.winner_id : null,
+      winning_number: editingLottery ? editingLottery.winning_number : null
+    };
+
+    const updatedLotteries = editingLottery
+      ? lotteries.map(l => l.id === editingLottery.id ? lotteryData : l)
+      : [...lotteries, lotteryData];
+
+    setLotteries(updatedLotteries);
+    localStorage.setItem('raspou_lotteries', JSON.stringify(updatedLotteries));
+    setShowLotteryModal(false);
+    alert(editingLottery ? 'Sorteio atualizado!' : 'Sorteio criado!');
+  };
+
+  const handleDeleteLottery = (lottery) => {
+    if (window.confirm(`Tem certeza que deseja excluir o sorteio "${lottery.title}"?`)) {
+      const updatedLotteries = lotteries.filter(l => l.id !== lottery.id);
+      setLotteries(updatedLotteries);
+      localStorage.setItem('raspou_lotteries', JSON.stringify(updatedLotteries));
+      alert('Sorteio excluído!');
+    }
+  };
+
+  // Funções para Admins
+  const handleCreateAdmin = () => {
+    setEditingAdmin(null);
+    setAdminForm({
+      name: '',
+      email: '',
+      password: '',
+      role: 'admin',
+      is_super_admin: false
+    });
+    setShowAdminModal(true);
+  };
+
+  const handleEditAdmin = (admin) => {
+    setEditingAdmin(admin);
+    setAdminForm({
+      name: admin.name,
+      email: admin.email,
+      password: '',
+      role: admin.role,
+      is_super_admin: admin.is_super_admin
+    });
+    setShowAdminModal(true);
+  };
+
+  const handleSaveAdmin = () => {
+    if (!adminForm.name || !adminForm.email || (!editingAdmin && !adminForm.password)) {
+      alert('Preencha todos os campos obrigatórios');
+      return;
+    }
+
+    // Verificar se email já existe
+    const emailExists = admins.some(a => 
+      a.email === adminForm.email && (!editingAdmin || a.id !== editingAdmin.id)
+    );
+
+    if (emailExists) {
+      alert('Este email já está em uso');
+      return;
+    }
+
+    const adminData = {
+      id: editingAdmin ? editingAdmin.id : Date.now().toString(),
+      name: adminForm.name,
+      email: adminForm.email,
+      password: adminForm.password || (editingAdmin ? editingAdmin.password : ''),
+      role: adminForm.role,
+      is_super_admin: adminForm.is_super_admin,
+      permissions: editingAdmin ? editingAdmin.permissions : [],
+      created_at: editingAdmin ? editingAdmin.created_at : new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    const updatedAdmins = editingAdmin
+      ? admins.map(a => a.id === editingAdmin.id ? adminData : a)
+      : [...admins, adminData];
+
+    setAdmins(updatedAdmins);
+    localStorage.setItem('raspou_admins', JSON.stringify(updatedAdmins));
+    setShowAdminModal(false);
+    alert(editingAdmin ? 'Admin atualizado!' : 'Admin criado!');
+  };
+
+  const handleDeleteAdmin = (admin) => {
+    if (admin.is_super_admin) {
+      alert('Não é possível excluir um Super Admin');
+      return;
+    }
+
+    if (window.confirm(`Tem certeza que deseja excluir o admin "${admin.name}"?`)) {
+      const updatedAdmins = admins.filter(a => a.id !== admin.id);
+      setAdmins(updatedAdmins);
+      localStorage.setItem('raspou_admins', JSON.stringify(updatedAdmins));
+      alert('Admin excluído!');
+    }
+  };
+
+  // Funções para Afiliados
+  const handleCreateAffiliate = () => {
+    setEditingAffiliate(null);
+    setAffiliateForm({
+      name: '',
+      email: '',
+      password: '',
+      affiliate_code: '',
+      cpa: '',
+      commission_rate: ''
+    });
+    setShowAffiliateModal(true);
+  };
+
+  const handleEditAffiliate = (affiliate) => {
+    setEditingAffiliate(affiliate);
+    setAffiliateForm({
+      name: affiliate.name,
+      email: affiliate.email,
+      password: '',
+      affiliate_code: affiliate.affiliate_code,
+      cpa: affiliate.cpa.toString(),
+      commission_rate: affiliate.commission_rate.toString()
+    });
+    setShowAffiliateModal(true);
+  };
+
+  const handleSaveAffiliate = () => {
+    if (!affiliateForm.name || !affiliateForm.email || !affiliateForm.affiliate_code || 
+        (!editingAffiliate && !affiliateForm.password)) {
+      alert('Preencha todos os campos obrigatórios');
+      return;
+    }
+
+    // Verificar se email ou código já existe
+    const emailExists = affiliates.some(a => 
+      a.email === affiliateForm.email && (!editingAffiliate || a.id !== editingAffiliate.id)
+    );
+    const codeExists = affiliates.some(a => 
+      a.affiliate_code === affiliateForm.affiliate_code && (!editingAffiliate || a.id !== editingAffiliate.id)
+    );
+
+    if (emailExists) {
+      alert('Este email já está em uso');
+      return;
+    }
+
+    if (codeExists) {
+      alert('Este código de afiliado já está em uso');
+      return;
+    }
+
+    const affiliateData = {
+      id: editingAffiliate ? editingAffiliate.id : Date.now().toString(),
+      name: affiliateForm.name,
+      email: affiliateForm.email,
+      password: affiliateForm.password || (editingAffiliate ? editingAffiliate.password : ''),
+      affiliate_code: affiliateForm.affiliate_code,
+      cpa: parseFloat(affiliateForm.cpa) || 0,
+      commission_rate: parseFloat(affiliateForm.commission_rate) || 0,
+      referrals: editingAffiliate ? editingAffiliate.referrals : 0,
+      volume_generated: editingAffiliate ? editingAffiliate.volume_generated : 0,
+      total_commission: editingAffiliate ? editingAffiliate.total_commission : 0,
+      conversion_rate: editingAffiliate ? editingAffiliate.conversion_rate : 0,
+      notifications: editingAffiliate ? editingAffiliate.notifications : {
+        frequency: 'realtime',
+        newDeposits: true,
+        newConversions: true,
+        commissionChanges: true
+      },
+      security: editingAffiliate ? editingAffiliate.security : {
+        twoFactor: false,
+        lastAccess: null
+      },
+      created_at: editingAffiliate ? editingAffiliate.created_at : new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    const updatedAffiliates = editingAffiliate
+      ? affiliates.map(a => a.id === editingAffiliate.id ? affiliateData : a)
+      : [...affiliates, affiliateData];
+
+    setAffiliates(updatedAffiliates);
+    localStorage.setItem('raspou_affiliates', JSON.stringify(updatedAffiliates));
+    setShowAffiliateModal(false);
+    alert(editingAffiliate ? 'Afiliado atualizado!' : 'Afiliado criado!');
+  };
+
+  const handleDeleteAffiliate = (affiliate) => {
+    if (window.confirm(`Tem certeza que deseja excluir o afiliado "${affiliate.name}"?`)) {
+      const updatedAffiliates = affiliates.filter(a => a.id !== affiliate.id);
+      setAffiliates(updatedAffiliates);
+      localStorage.setItem('raspou_affiliates', JSON.stringify(updatedAffiliates));
+      alert('Afiliado excluído!');
+    }
+  };
+
   // Dados para gráficos (simulados)
   const chartData = [
     { name: 'Jan', usuarios: 120, receita: 15000, jogos: 450 },
@@ -244,7 +553,9 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
     { id: 'users', label: 'Usuários', icon: Users },
     { id: 'transactions', label: 'Transações', icon: CreditCard },
-    { id: 'games', label: 'Jogos', icon: Trophy },
+    { id: 'lotteries', label: 'Sorteios', icon: Trophy },
+    { id: 'admins', label: 'Admins', icon: Shield },
+    { id: 'affiliates', label: 'Afiliados', icon: UserCheck },
     { id: 'settings', label: 'Configurações', icon: Settings }
   ];
 
@@ -829,6 +1140,298 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
             </div>
           )}
 
+          {/* Gerenciar Sorteios */}
+          {activeTab === 'lotteries' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-white">Gerenciar Sorteios</h2>
+                <button
+                  onClick={handleCreateLottery}
+                  className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors flex items-center space-x-2"
+                >
+                  <Plus className="w-5 h-5" />
+                  <span>Novo Sorteio</span>
+                </button>
+              </div>
+
+              <div className="bg-gray-800 rounded-xl overflow-hidden">
+                {lotteries.length === 0 ? (
+                  <div className="p-8 text-center">
+                    <Trophy className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                    <h3 className="text-xl font-bold text-gray-400 mb-2">Nenhum sorteio criado</h3>
+                    <p className="text-gray-500 mb-4">Crie seu primeiro sorteio para começar</p>
+                    <button
+                      onClick={handleCreateLottery}
+                      className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+                    >
+                      Criar Sorteio
+                    </button>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-700">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Título</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Prêmio</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Data do Sorteio</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Participantes</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-600">
+                        {lotteries.map((lottery) => (
+                          <tr key={lottery.id} className="hover:bg-gray-700">
+                            <td className="px-4 py-4 whitespace-nowrap">
+                              <div>
+                                <div className="text-sm font-medium text-white">{lottery.title}</div>
+                                <div className="text-sm text-gray-400">{lottery.description}</div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-green-400 font-bold">
+                              {formatCurrency(lottery.prize)}
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-300">
+                              {formatDate(lottery.draw_date)}
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap">
+                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                lottery.status === 'active' 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : lottery.status === 'finished'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}>
+                                {lottery.status === 'active' ? 'Ativo' : 
+                                 lottery.status === 'finished' ? 'Finalizado' : 'Cancelado'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-300">
+                              {lottery.total_participants || 0}
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => handleEditLottery(lottery)}
+                                  className="text-blue-400 hover:text-blue-300"
+                                  title="Editar"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteLottery(lottery)}
+                                  className="text-red-400 hover:text-red-300"
+                                  title="Excluir"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Gerenciar Admins */}
+          {activeTab === 'admins' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-white">Gerenciar Administradores</h2>
+                <button
+                  onClick={handleCreateAdmin}
+                  className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors flex items-center space-x-2"
+                >
+                  <Plus className="w-5 h-5" />
+                  <span>Novo Admin</span>
+                </button>
+              </div>
+
+              <div className="bg-gray-800 rounded-xl overflow-hidden">
+                {admins.length === 0 ? (
+                  <div className="p-8 text-center">
+                    <Shield className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                    <h3 className="text-xl font-bold text-gray-400 mb-2">Nenhum admin cadastrado</h3>
+                    <p className="text-gray-500 mb-4">Adicione administradores para gerenciar o sistema</p>
+                    <button
+                      onClick={handleCreateAdmin}
+                      className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+                    >
+                      Adicionar Admin
+                    </button>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-700">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Nome</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Email</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Tipo</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Criado em</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-600">
+                        {admins.map((admin) => (
+                          <tr key={admin.id} className="hover:bg-gray-700">
+                            <td className="px-4 py-4 whitespace-nowrap">
+                              <div className="flex items-center">
+                                <div className="w-10 h-10 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center mr-3">
+                                  <span className="text-white font-bold text-sm">
+                                    {admin.name.charAt(0).toUpperCase()}
+                                  </span>
+                                </div>
+                                <div className="text-sm font-medium text-white">{admin.name}</div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-300">
+                              {admin.email}
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap">
+                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                admin.is_super_admin 
+                                  ? 'bg-red-100 text-red-800' 
+                                  : 'bg-blue-100 text-blue-800'
+                              }`}>
+                                {admin.is_super_admin ? 'Super Admin' : 'Admin'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-300">
+                              {formatDate(admin.created_at)}
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => handleEditAdmin(admin)}
+                                  className="text-blue-400 hover:text-blue-300"
+                                  title="Editar"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </button>
+                                {!admin.is_super_admin && (
+                                  <button
+                                    onClick={() => handleDeleteAdmin(admin)}
+                                    className="text-red-400 hover:text-red-300"
+                                    title="Excluir"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Gerenciar Afiliados */}
+          {activeTab === 'affiliates' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-white">Gerenciar Afiliados</h2>
+                <button
+                  onClick={handleCreateAffiliate}
+                  className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors flex items-center space-x-2"
+                >
+                  <Plus className="w-5 h-5" />
+                  <span>Novo Afiliado</span>
+                </button>
+              </div>
+
+              <div className="bg-gray-800 rounded-xl overflow-hidden">
+                {affiliates.length === 0 ? (
+                  <div className="p-8 text-center">
+                    <UserCheck className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                    <h3 className="text-xl font-bold text-gray-400 mb-2">Nenhum afiliado cadastrado</h3>
+                    <p className="text-gray-500 mb-4">Adicione afiliados para expandir sua rede</p>
+                    <button
+                      onClick={handleCreateAffiliate}
+                      className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+                    >
+                      Adicionar Afiliado
+                    </button>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-700">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Nome</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Email</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Código</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">CPA</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Comissão</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Indicações</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-600">
+                        {affiliates.map((affiliate) => (
+                          <tr key={affiliate.id} className="hover:bg-gray-700">
+                            <td className="px-4 py-4 whitespace-nowrap">
+                              <div className="flex items-center">
+                                <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center mr-3">
+                                  <span className="text-white font-bold text-sm">
+                                    {affiliate.name.charAt(0).toUpperCase()}
+                                  </span>
+                                </div>
+                                <div className="text-sm font-medium text-white">{affiliate.name}</div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-300">
+                              {affiliate.email}
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-yellow-400 font-mono">
+                              {affiliate.affiliate_code}
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-green-400">
+                              {formatCurrency(affiliate.cpa)}
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-blue-400">
+                              {affiliate.commission_rate}%
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-300">
+                              {affiliate.referrals || 0}
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => handleEditAffiliate(affiliate)}
+                                  className="text-blue-400 hover:text-blue-300"
+                                  title="Editar"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteAffiliate(affiliate)}
+                                  className="text-red-400 hover:text-red-300"
+                                  title="Excluir"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Jogos */}
           {activeTab === 'games' && (
             <div className="space-y-6">
@@ -918,188 +1521,448 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
               </div>
             </div>
           )}
-
-          {/* Modal de Visualização de Usuário */}
-          {showUserModal && selectedUser && (
-            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-              <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-bold text-white">Detalhes do Usuário</h3>
-                  <button
-                    onClick={() => setShowUserModal(false)}
-                    className="p-2 rounded-lg bg-gray-700 text-gray-400 hover:text-white transition-colors"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-4 mb-6">
-                    <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center">
-                      <span className="text-white font-bold text-xl">
-                        {selectedUser.nome?.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <div>
-                      <h4 className="text-white font-bold text-lg">{selectedUser.nome}</h4>
-                      <p className="text-gray-400">{selectedUser.email}</p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-gray-400 text-sm">CPF</p>
-                      <p className="text-white font-medium">{selectedUser.cpf}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-400 text-sm">Telefone</p>
-                      <p className="text-white font-medium">{selectedUser.telefone || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-400 text-sm">Saldo Real</p>
-                      <p className="text-green-400 font-bold">{formatCurrency(selectedUser.saldo_real || 0)}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-400 text-sm">Saldo Bônus</p>
-                      <p className="text-blue-400 font-bold">{formatCurrency(selectedUser.saldo_bonus || 0)}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-400 text-sm">Pontos Sorteio</p>
-                      <p className="text-purple-400 font-bold">{selectedUser.pontos_sorteio || 0} pts</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-400 text-sm">Jogos Realizados</p>
-                      <p className="text-yellow-400 font-bold">{selectedUser.jogos_realizados || 0}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-400 text-sm">Total Ganho</p>
-                      <p className="text-green-400 font-bold">{formatCurrency(selectedUser.total_ganho || 0)}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-400 text-sm">Nível VIP</p>
-                      <p className="text-yellow-400 font-bold">{selectedUser.nivel_vip || 'Bronze'}</p>
-                    </div>
-                  </div>
-
-                  <div>
-                    <p className="text-gray-400 text-sm">Data de Cadastro</p>
-                    <p className="text-white font-medium">
-                      {selectedUser.created_at ? formatDate(selectedUser.created_at) : 'N/A'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex space-x-3 mt-6">
-                  <button
-                    onClick={() => {
-                      setShowUserModal(false);
-                      handleEditUser(selectedUser);
-                    }}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    onClick={() => setShowUserModal(false)}
-                    className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
-                  >
-                    Fechar
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Modal de Edição de Usuário */}
-          {showEditModal && selectedUser && (
-            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-              <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-bold text-white">Editar Usuário</h3>
-                  <button
-                    onClick={() => setShowEditModal(false)}
-                    className="p-2 rounded-lg bg-gray-700 text-gray-400 hover:text-white transition-colors"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Nome</label>
-                    <input
-                      type="text"
-                      value={editForm.nome}
-                      onChange={(e) => setEditForm({...editForm, nome: e.target.value})}
-                      className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-400"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
-                    <input
-                      type="email"
-                      value={editForm.email}
-                      onChange={(e) => setEditForm({...editForm, email: e.target.value})}
-                      className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-400"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Telefone</label>
-                    <input
-                      type="tel"
-                      value={editForm.telefone}
-                      onChange={(e) => setEditForm({...editForm, telefone: e.target.value})}
-                      className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-400"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Saldo Real</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={editForm.saldo_real}
-                        onChange={(e) => setEditForm({...editForm, saldo_real: parseFloat(e.target.value) || 0})}
-                        className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-400"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Saldo Bônus</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={editForm.saldo_bonus}
-                        onChange={(e) => setEditForm({...editForm, saldo_bonus: parseFloat(e.target.value) || 0})}
-                        className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-400"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex space-x-3 mt-6">
-                  <button
-                    onClick={handleSaveUser}
-                    disabled={isLoading}
-                    className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-colors"
-                  >
-                    {isLoading ? 'Salvando...' : 'Salvar'}
-                  </button>
-                  <button
-                    onClick={() => setShowEditModal(false)}
-                    className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
+
+      {/* Modal de Sorteio */}
+      {showLotteryModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold text-white mb-4">
+              {editingLottery ? 'Editar Sorteio' : 'Novo Sorteio'}
+            </h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Título</label>
+                <input
+                  type="text"
+                  value={lotteryForm.title}
+                  onChange={(e) => setLotteryForm({...lotteryForm, title: e.target.value})}
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white"
+                  placeholder="Ex: Sorteio Diário"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Descrição</label>
+                <textarea
+                  value={lotteryForm.description}
+                  onChange={(e) => setLotteryForm({...lotteryForm, description: e.target.value})}
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white"
+                  placeholder="Descrição do sorteio"
+                  rows="3"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Prêmio (R$)</label>
+                <input
+                  type="number"
+                  value={lotteryForm.prize}
+                  onChange={(e) => setLotteryForm({...lotteryForm, prize: e.target.value})}
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white"
+                  placeholder="1000.00"
+                  step="0.01"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Data do Sorteio</label>
+                <input
+                  type="datetime-local"
+                  value={lotteryForm.draw_date}
+                  onChange={(e) => setLotteryForm({...lotteryForm, draw_date: e.target.value})}
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Status</label>
+                <select
+                  value={lotteryForm.status}
+                  onChange={(e) => setLotteryForm({...lotteryForm, status: e.target.value})}
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white"
+                >
+                  <option value="active">Ativo</option>
+                  <option value="finished">Finalizado</option>
+                  <option value="cancelled">Cancelado</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="flex space-x-4 mt-6">
+              <button
+                onClick={handleSaveLottery}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+              >
+                {editingLottery ? 'Atualizar' : 'Criar'}
+              </button>
+              <button
+                onClick={() => setShowLotteryModal(false)}
+                className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Admin */}
+      {showAdminModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold text-white mb-4">
+              {editingAdmin ? 'Editar Admin' : 'Novo Admin'}
+            </h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Nome</label>
+                <input
+                  type="text"
+                  value={adminForm.name}
+                  onChange={(e) => setAdminForm({...adminForm, name: e.target.value})}
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white"
+                  placeholder="Nome completo"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                <input
+                  type="email"
+                  value={adminForm.email}
+                  onChange={(e) => setAdminForm({...adminForm, email: e.target.value})}
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white"
+                  placeholder="admin@exemplo.com"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  {editingAdmin ? 'Nova Senha (deixe vazio para manter)' : 'Senha'}
+                </label>
+                <input
+                  type="password"
+                  value={adminForm.password}
+                  onChange={(e) => setAdminForm({...adminForm, password: e.target.value})}
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white"
+                  placeholder={editingAdmin ? "Nova senha (opcional)" : "Senha"}
+                />
+              </div>
+              
+              <div>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={adminForm.is_super_admin}
+                    onChange={(e) => setAdminForm({...adminForm, is_super_admin: e.target.checked})}
+                    className="w-4 h-4"
+                  />
+                  <span className="text-gray-300">Super Administrador</span>
+                </label>
+              </div>
+            </div>
+            
+            <div className="flex space-x-4 mt-6">
+              <button
+                onClick={handleSaveAdmin}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+              >
+                {editingAdmin ? 'Atualizar' : 'Criar'}
+              </button>
+              <button
+                onClick={() => setShowAdminModal(false)}
+                className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Afiliado */}
+      {showAffiliateModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold text-white mb-4">
+              {editingAffiliate ? 'Editar Afiliado' : 'Novo Afiliado'}
+            </h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Nome</label>
+                <input
+                  type="text"
+                  value={affiliateForm.name}
+                  onChange={(e) => setAffiliateForm({...affiliateForm, name: e.target.value})}
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white"
+                  placeholder="Nome completo"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                <input
+                  type="email"
+                  value={affiliateForm.email}
+                  onChange={(e) => setAffiliateForm({...affiliateForm, email: e.target.value})}
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white"
+                  placeholder="afiliado@exemplo.com"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  {editingAffiliate ? 'Nova Senha (deixe vazio para manter)' : 'Senha'}
+                </label>
+                <input
+                  type="password"
+                  value={affiliateForm.password}
+                  onChange={(e) => setAffiliateForm({...affiliateForm, password: e.target.value})}
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white"
+                  placeholder={editingAffiliate ? "Nova senha (opcional)" : "Senha"}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Código de Afiliado</label>
+                <input
+                  type="text"
+                  value={affiliateForm.affiliate_code}
+                  onChange={(e) => setAffiliateForm({...affiliateForm, affiliate_code: e.target.value})}
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white"
+                  placeholder="AFILIADO123"
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">CPA (R$)</label>
+                  <input
+                    type="number"
+                    value={affiliateForm.cpa}
+                    onChange={(e) => setAffiliateForm({...affiliateForm, cpa: e.target.value})}
+                    className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white"
+                    placeholder="50.00"
+                    step="0.01"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Comissão (%)</label>
+                  <input
+                    type="number"
+                    value={affiliateForm.commission_rate}
+                    onChange={(e) => setAffiliateForm({...affiliateForm, commission_rate: e.target.value})}
+                    className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white"
+                    placeholder="10.00"
+                    step="0.01"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex space-x-4 mt-6">
+              <button
+                onClick={handleSaveAffiliate}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+              >
+                {editingAffiliate ? 'Atualizar' : 'Criar'}
+              </button>
+              <button
+                onClick={() => setShowAffiliateModal(false)}
+                className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Visualização de Usuário */}
+      {showUserModal && selectedUser && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-white">Detalhes do Usuário</h3>
+              <button
+                onClick={() => setShowUserModal(false)}
+                className="p-2 rounded-lg bg-gray-700 text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center space-x-4 mb-6">
+                <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold text-xl">
+                    {selectedUser.nome?.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <div>
+                  <h4 className="text-white font-bold text-lg">{selectedUser.nome}</h4>
+                  <p className="text-gray-400">{selectedUser.email}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-gray-400 text-sm">CPF</p>
+                  <p className="text-white font-medium">{selectedUser.cpf}</p>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-sm">Telefone</p>
+                  <p className="text-white font-medium">{selectedUser.telefone || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-sm">Saldo Real</p>
+                  <p className="text-green-400 font-bold">{formatCurrency(selectedUser.saldo_real || 0)}</p>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-sm">Saldo Bônus</p>
+                  <p className="text-blue-400 font-bold">{formatCurrency(selectedUser.saldo_bonus || 0)}</p>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-sm">Pontos Sorteio</p>
+                  <p className="text-purple-400 font-bold">{selectedUser.pontos_sorteio || 0} pts</p>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-sm">Jogos Realizados</p>
+                  <p className="text-yellow-400 font-bold">{selectedUser.jogos_realizados || 0}</p>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-sm">Total Ganho</p>
+                  <p className="text-green-400 font-bold">{formatCurrency(selectedUser.total_ganho || 0)}</p>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-sm">Nível VIP</p>
+                  <p className="text-yellow-400 font-bold">{selectedUser.nivel_vip || 'Bronze'}</p>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-gray-400 text-sm">Data de Cadastro</p>
+                <p className="text-white font-medium">
+                  {selectedUser.created_at ? formatDate(selectedUser.created_at) : 'N/A'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowUserModal(false);
+                  handleEditUser(selectedUser);
+                }}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+              >
+                Editar
+              </button>
+              <button
+                onClick={() => setShowUserModal(false)}
+                className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Edição de Usuário */}
+      {showEditModal && selectedUser && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-white">Editar Usuário</h3>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="p-2 rounded-lg bg-gray-700 text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Nome</label>
+                <input
+                  type="text"
+                  value={editForm.nome}
+                  onChange={(e) => setEditForm({...editForm, nome: e.target.value})}
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                <input
+                  type="email"
+                  value={editForm.email}
+                  onChange={(e) => setEditForm({...editForm, email: e.target.value})}
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Telefone</label>
+                <input
+                  type="tel"
+                  value={editForm.telefone}
+                  onChange={(e) => setEditForm({...editForm, telefone: e.target.value})}
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-400"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Saldo Real</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={editForm.saldo_real}
+                    onChange={(e) => setEditForm({...editForm, saldo_real: parseFloat(e.target.value) || 0})}
+                    className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-400"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Saldo Bônus</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={editForm.saldo_bonus}
+                    onChange={(e) => setEditForm({...editForm, saldo_bonus: parseFloat(e.target.value) || 0})}
+                    className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-400"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={handleSaveUser}
+                disabled={isLoading}
+                className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+              >
+                {isLoading ? 'Salvando...' : 'Salvar'}
+              </button>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

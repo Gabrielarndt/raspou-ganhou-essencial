@@ -128,7 +128,7 @@ console.log({
     jogos_realizados: newJogosRealizados,
     total_ganho: newTotalGanho
   })
-   .eq('id', userId)
+   .eq('id', userId);
   .select()
   .single();
 

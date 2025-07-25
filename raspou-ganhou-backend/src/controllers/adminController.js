@@ -536,7 +536,6 @@ export const deleteAdmin = async (req, res) => {
   try {
     const { admin_id } = req.query;
 
-
     if (!admin_id) {
       return res.status(400).json({ error: 'ID do admin é obrigatório' });
     }
@@ -572,6 +571,7 @@ export const deleteAdmin = async (req, res) => {
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 };
+
 
 export const getAdmins = async (req, res) => {
   try {

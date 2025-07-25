@@ -36,6 +36,7 @@ const SuperAdminLogin = () => {
 
     apiClient.adminLogin(formData.email, formData.senha).then(result => {
       if (result.success) {
+        console.log("Sucesso")
         navigate('/admin');
       } else {
         setError(result.error || 'Credenciais inválidas');

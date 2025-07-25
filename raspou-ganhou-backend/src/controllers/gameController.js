@@ -128,7 +128,7 @@ console.log({
     jogos_realizados: newJogosRealizados,
     total_ganho: newTotalGanho
   })
-  console.log('[userId recebido]', userId);
+   .eq('id', userId)
   .select()
   .single();
 
@@ -161,7 +161,7 @@ console.log({
       pontos_sorteio: newPontosSorteio,
       jogos_realizados: newJogosRealizados
     })
-    console.log('[userId recebido]', userId);;
+     .eq('id', userId)
 
 if (updateError) {
   console.error('Erro ao atualizar usuário (perdeu):', updateError);

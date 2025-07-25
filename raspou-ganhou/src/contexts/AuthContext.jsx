@@ -27,14 +27,43 @@ export const AuthProvider = ({ children }) => {
       return;
     }
 
+    // Check if we have a stored user (for affiliates)
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        const userData = JSON.parse(storedUser);
+        // If it's an affiliate, don't try to refresh profile
+        if (userData.role === 'affiliate') {
+          setUser(userData);
+          setLoading(false);
+          return;
+        }
+      } catch (error) {
+        console.warn('Error parsing stored user:', error);
+      }
+    }
     try {
       const userData = await apiClient.getProfile();
       setUser(userData.user);
     } catch (error) {
       console.warn('Error loading user profile:', error);
-      apiClient.logout();
-      setUser(null);
-      return;
+      // Only logout if it's not an affiliate
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        try {
+          const userData = JSON.parse(storedUser);
+          if (userData.role !== 'affiliate') {
+            apiClient.logout();
+            setUser(null);
+          }
+        } catch (e) {
+          apiClient.logout();
+          setUser(null);
+        }
+      } else {
+        apiClient.logout();
+        setUser(null);
+      }
     } finally {
       setLoading(false);
     }
@@ -68,6 +97,7 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     console.log('🚪 AuthContext: Logging out user:', user?.email);
     apiClient.logout();
+    localStorage.removeItem('user');
     setUser(null);
   };
 
@@ -86,6 +116,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   const refreshUser = async () => {
+    // Don't refresh profile for affiliates
+    if (user?.role === 'affiliate') {
+      return;
+    }
+    
     try {
       const userData = await apiClient.getProfile();
       setUser(userData.user);

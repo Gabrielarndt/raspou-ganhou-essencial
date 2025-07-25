@@ -86,6 +86,10 @@ class ApiClient {
     
     if (data.success && data.token) {
       this.setToken(data.token);
+      // Store affiliate user data for AuthContext
+      if (data.user) {
+        localStorage.setItem('user', JSON.stringify(data.user));
+      }
     }
     
     return data;

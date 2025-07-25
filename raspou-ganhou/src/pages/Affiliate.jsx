@@ -180,8 +180,10 @@ const Affiliate = () => {
 
   const handleLogout = () => {
     if (window.confirm('Tem certeza que deseja sair?')) {
-      localStorage.removeItem('raspou_user');
-      window.dispatchEvent(new CustomEvent('userLogout'));
+      // Limpar dados do afiliado
+      localStorage.removeItem('user');
+      localStorage.removeItem('auth_token');
+      apiClient.logout();
       navigate('/affiliate-login');
     }
   };

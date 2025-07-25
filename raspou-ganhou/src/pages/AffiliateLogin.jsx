@@ -34,9 +34,13 @@ const AffiliateLogin = () => {
 
     apiClient.affiliateLogin(formData.email, formData.senha).then(result => {
       if (result.success) {
-        // Store user data and token
+        // Limpar qualquer sessão de usuário normal existente
+        localStorage.removeItem('auth_token');
+        
+        // Armazenar dados do afiliado
         localStorage.setItem('user', JSON.stringify(result.user));
-        localStorage.setItem('auth_token', result.token);
+        apiClient.setToken(result.token);
+        
         navigate('/affiliate');
       } else {
         setError(result.error || 'Credenciais inválidas');

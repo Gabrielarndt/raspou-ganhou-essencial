@@ -22,19 +22,14 @@ export const AuthProvider = ({ children }) => {
 
   const loadUserFromToken = async () => {
     const token = localStorage.getItem('auth_token');
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-
-    // Check if we have a stored user (for affiliates)
     const storedUser = localStorage.getItem('user');
+    
+    // Se há um usuário armazenado que é afiliado, não carregar perfil de usuário normal
     if (storedUser) {
       try {
         const userData = JSON.parse(storedUser);
-        // If it's an affiliate, don't try to refresh profile
-        if (userData.role === 'affiliate') {
-          setUser(userData);
+        if (userData.role === 'affiliate' || userData.affiliate_code) {
+          console.log('🔒 AuthContext: Affiliate session detected, not loading user profile');
           setLoading(false);
           return;
         }
@@ -42,28 +37,19 @@ export const AuthProvider = ({ children }) => {
         console.warn('Error parsing stored user:', error);
       }
     }
+    
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
     try {
       const userData = await apiClient.getProfile();
       setUser(userData.user);
     } catch (error) {
       console.warn('Error loading user profile:', error);
-      // Only logout if it's not an affiliate
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        try {
-          const userData = JSON.parse(storedUser);
-          if (userData.role !== 'affiliate') {
-            apiClient.logout();
-            setUser(null);
-          }
-        } catch (e) {
-          apiClient.logout();
-          setUser(null);
-        }
-      } else {
-        apiClient.logout();
-        setUser(null);
-      }
+      apiClient.logout();
+      setUser(null);
     } finally {
       setLoading(false);
     }

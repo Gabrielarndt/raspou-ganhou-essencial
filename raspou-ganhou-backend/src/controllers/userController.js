@@ -38,23 +38,33 @@ export const updateProfile = async (req, res) => {
       return res.status(400).json({ error: 'Nenhum campo para atualizar' });
     }
 
-    const { error } = await supabaseAdmin
+    const { data: updatedUser, error } = await supabaseAdmin
       .from('users')
       .update(updateData)
-      .eq('id', userId);
+      .eq('id', userId)
+      .select()  // isso retorna os dados atualizados
+      .single(); // garante que é um único usuário
 
-    if (error) {
+    if (error || !updatedUser) {
       console.error('Update profile error:', error);
       return res.status(500).json({ error: 'Erro ao atualizar perfil' });
     }
 
-    res.json({ success: true, message: 'Perfil atualizado com sucesso' });
+    // Remover a senha antes de enviar pro front
+    const { senha, ...userWithoutPassword } = updatedUser;
+
+    res.json({
+      success: true,
+      message: 'Perfil atualizado com sucesso',
+      user: userWithoutPassword,
+    });
 
   } catch (error) {
     console.error('Update profile error:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 };
+
 
 export const getBalanceMovements = async (req, res) => {
   try {

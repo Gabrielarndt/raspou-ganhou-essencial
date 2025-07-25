@@ -535,14 +535,13 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
     }
 
     try {
-      const response = await fetch(`${API_URL}/admin/delete-admin`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/admin/delete-admin?admin_id=${adminId}`, {
   method: 'DELETE',
   headers: {
-    'Content-Type': 'application/json',
     'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-  },
-  body: JSON.stringify({ admin_id: adminId })
+  }
 });
+
 
 
 
@@ -586,19 +585,6 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
     }
   };
 
-  const handleDeleteAdmin = (admin) => {
-    if (admin.is_super_admin) {
-      alert('Não é possível excluir um Super Admin');
-      return;
-    }
-
-    if (window.confirm(`Tem certeza que deseja excluir o admin "${admin.name}"?`)) {
-      const updatedAdmins = admins.filter(a => a.id !== admin.id);
-      setAdmins(updatedAdmins);
-      localStorage.setItem('raspou_admins', JSON.stringify(updatedAdmins));
-      alert('Admin excluído!');
-    }
-  };
 
   // Funções para Afiliados
   const handleCreateAffiliate = () => {

@@ -169,6 +169,32 @@ class ApiClient {
     });
   }
 
+  // Affiliate management endpoints
+  async getAffiliates() {
+    return this.request('/admin/affiliates');
+  }
+
+  async createAffiliate(affiliateData) {
+    return this.request('/admin/create-affiliate', {
+      method: 'POST',
+      body: JSON.stringify(affiliateData),
+    });
+  }
+
+  async updateAffiliate(affiliateId, affiliateData) {
+    return this.request('/admin/update-affiliate', {
+      method: 'PUT',
+      body: JSON.stringify({ affiliate_id: affiliateId, ...affiliateData }),
+    });
+  }
+
+  async deleteAffiliate(affiliateId) {
+    return this.request('/admin/delete-affiliate', {
+      method: 'DELETE',
+      body: JSON.stringify({ affiliate_id: affiliateId }),
+    });
+  }
+
   logout() {
     this.setToken(null);
   }

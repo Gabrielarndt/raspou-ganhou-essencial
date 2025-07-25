@@ -25,7 +25,7 @@ export const playGame = async (req, res) => {
   try {
     const { game_id } = req.body;
     const userId = req.user.user_id;
-console.log('ID do usuário que está jogando:', userId);
+    console.log('ID do usuário que está jogando:', userId);
 
     if (!game_id) {
       return res.status(400).json({ error: 'ID do jogo é obrigatório' });

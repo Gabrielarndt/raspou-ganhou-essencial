@@ -557,7 +557,7 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
     }
   };
 
-  const oldHandleSaveAdmin = () => {
+  const oldHandleSaveAdmin = async () => {
     try {
       const admins = JSON.parse(localStorage.getItem('raspou_admins') || '[]');
       

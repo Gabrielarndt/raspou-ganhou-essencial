@@ -153,6 +153,25 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
     }
   };
 
+  const handleViewUser = (user) => {
+    alert(`Visualizar usuário: ${user.nome}\nEmail: ${user.email}\nSaldo: ${formatCurrency((user.saldo_real || 0) + (user.saldo_bonus || 0))}`);
+  };
+
+  const handleEditUser = (user) => {
+    const newName = prompt('Novo nome:', user.nome);
+    if (newName && newName !== user.nome) {
+      // Aqui você pode implementar a atualização via API
+      alert('Funcionalidade de edição será implementada em breve');
+    }
+  };
+
+  const handleDeleteUser = (user) => {
+    if (window.confirm(`Tem certeza que deseja excluir o usuário ${user.nome}?`)) {
+      // Aqui você pode implementar a exclusão via API
+      alert('Funcionalidade de exclusão será implementada em breve');
+    }
+  };
+
   // Dados para gráficos (simulados)
   const chartData = [
     { name: 'Jan', usuarios: 120, receita: 15000, jogos: 450 },
@@ -629,13 +648,25 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div className="flex space-x-2">
-                              <button className="text-blue-400 hover:text-blue-300">
+                              <button 
+                                onClick={() => handleViewUser(user)}
+                                className="text-blue-400 hover:text-blue-300"
+                                title="Visualizar usuário"
+                              >
                                 <Eye className="w-4 h-4" />
                               </button>
-                              <button className="text-yellow-400 hover:text-yellow-300">
+                              <button 
+                                onClick={() => handleEditUser(user)}
+                                className="text-yellow-400 hover:text-yellow-300"
+                                title="Editar usuário"
+                              >
                                 <Edit className="w-4 h-4" />
                               </button>
-                              <button className="text-red-400 hover:text-red-300">
+                              <button 
+                                onClick={() => handleDeleteUser(user)}
+                                className="text-red-400 hover:text-red-300"
+                                title="Excluir usuário"
+                              >
                                 <Trash2 className="w-4 h-4" />
                               </button>
                             </div>

@@ -244,6 +244,19 @@ if (movements.length > 0) {
 }
 
 // Resposta final para o cliente
+// Buscar dados atualizados do usuário para garantir saldo correto
+const { data: refreshedUser, error: refreshError } = await supabaseAdmin
+  .from('users')
+  .select('saldo_real, saldo_bonus, pontos_sorteio')
+  .eq('id', userId)
+  .single();
+
+if (refreshError) {
+  console.error('Erro ao buscar dados atualizados do usuário:', refreshError);
+  return res.status(500).json({ error: 'Erro ao atualizar saldo do usuário' });
+}
+
+    
 res.json({
   success: true,
   result: {

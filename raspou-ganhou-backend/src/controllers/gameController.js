@@ -47,7 +47,7 @@ export const playGame = async (req, res) => {
     const { data: user, error: userError } = await supabaseAdmin
       .from('users')
       .select('*')
-      .eq('id', userId)
+      console.log('[userId recebido]', userId);
       .single();
 
     if (userError || !user) {
@@ -128,7 +128,7 @@ console.log({
     jogos_realizados: newJogosRealizados,
     total_ganho: newTotalGanho
   })
-  .eq('id', userId)
+  console.log('[userId recebido]', userId);
   .select()
   .single();
 
@@ -161,7 +161,7 @@ console.log({
       pontos_sorteio: newPontosSorteio,
       jogos_realizados: newJogosRealizados
     })
-    .eq('id', userId);
+    console.log('[userId recebido]', userId);;
 
 if (updateError) {
   console.error('Erro ao atualizar usuário (perdeu):', updateError);

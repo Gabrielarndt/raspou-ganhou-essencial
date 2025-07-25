@@ -1,6 +1,3 @@
-Looking at your script, I can see several missing closing brackets. Here's the corrected version:
-
-```javascript
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -2051,4 +2048,3 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
 };
 
 export default Admin;
-```

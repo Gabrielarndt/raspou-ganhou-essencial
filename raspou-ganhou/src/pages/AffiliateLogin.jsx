@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, Users, TrendingUp } from 'lucide-react';
+import { apiClient } from '../lib/api';
 
 const AffiliateLogin = () => {
   const navigate = useNavigate();

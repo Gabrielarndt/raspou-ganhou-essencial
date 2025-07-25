@@ -32,26 +32,47 @@ import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, Cartesia
 
 const Admin = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [users, setUsers] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [stats, setStats] = useState({});
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [dateFilter, setDateFilter] = useState('30d');
-  const [loading, setLoading] = useState(true);
-
-  // Verificar se é admin
-  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin' || user?.is_super_admin;
+  const [dataLoading, setDataLoading] = useState(true);
+  const [adminUser, setAdminUser] = useState(null);
 
   useEffect(() => {
+    // Carregar dados do admin do localStorage se não estiver no contexto
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setAdminUser(parsedUser);
+      } catch (error) {
+        console.error('Error parsing stored user:', error);
+      }
+    }
+  }, []);
+
+  // Verificar se é admin usando dados do contexto ou localStorage
+  const currentUser = user || adminUser;
+  const isAdmin = currentUser?.role === 'admin' || 
+                  currentUser?.role === 'super_admin' || 
+                  currentUser?.is_super_admin;
+
+  useEffect(() => {
+    if (loading) return; // Aguardar carregamento do contexto
+    
     if (!isAdmin) {
+      console.log('Not admin, redirecting to login');
       navigate('/super-admin-login');
       return;
     }
 
+    console.log('Admin verified, loading data');
     loadData();
-  }, [isAdmin, navigate]);
+  }, [isAdmin, navigate, loading]);
 
   const loadData = async () => {
     try {
@@ -70,16 +91,16 @@ const Admin = () => {
     } catch (error) {
       console.error('Error loading admin data:', error);
     } finally {
-      setLoading(false);
+      setDataLoading(false);
     }
   };
 
   // Recarregar dados quando mudar de aba
   useEffect(() => {
-    if (isAdmin) {
+    if (isAdmin && !loading) {
       loadData();
     }
-  }, [activeTab, isAdmin]);
+  }, [activeTab, isAdmin, loading]);
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('pt-BR', {

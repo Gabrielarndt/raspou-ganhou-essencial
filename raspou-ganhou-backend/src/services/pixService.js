@@ -47,7 +47,7 @@ class PixService {
   async getTransactionStatus(transactionId) {
     try {
       const response = await axios.get(
-        `${this.apiUrl}/v1/transactions/${transactionId}`,
+        `${this.apiUrl}/api/transactions/${transactionId}`,
         { headers: this.getHeaders() }
       );
 

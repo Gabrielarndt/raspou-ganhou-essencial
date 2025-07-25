@@ -196,10 +196,14 @@ export const affiliateLogin = async (req, res) => {
     const { password: _, ...affiliateWithoutPassword } = affiliate;
 
     res.json({
-      success: true,
-      token,
-      user: affiliateWithoutPassword
-    });
+  success: true,
+  token,
+  user: {
+    ...affiliateWithoutPassword,
+    role: 'affiliate'
+  }
+});
+
 
   } catch (error) {
     console.error('Affiliate login error:', error);

@@ -586,7 +586,7 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
     }
   };
 
-  const handleDeleteAdmin2 = (admin) => {
+  const handleDeleteAdmin = (admin) => {
     if (admin.is_super_admin) {
       alert('Não é possível excluir um Super Admin');
       return;

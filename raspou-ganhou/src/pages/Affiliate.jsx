@@ -91,6 +91,7 @@ const Affiliate = () => {
     }
 
     loadAffiliateData();
+  }, [isAffiliate, currentUser, navigate]);
 
   const loadAffiliateData = () => {
     // Carregar dados do afiliado

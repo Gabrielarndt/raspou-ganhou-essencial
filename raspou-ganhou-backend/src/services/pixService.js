@@ -5,6 +5,13 @@ class PixService {
     this.apiUrl = process.env.FASTSOFT_API_URL;
     this.apiKey = process.env.FASTSOFT_API_KEY;
     this.webhookSecret = process.env.FASTSOFT_WEBHOOK_SECRET;
+
+    if (!this.apiUrl) {
+      throw new Error('FASTSOFT_API_URL environment variable is required');
+    }
+    if (!this.apiKey) {
+      throw new Error('FASTSOFT_API_KEY environment variable is required');
+    }
   }
 
   // Headers padrão para autenticação

@@ -46,7 +46,7 @@ export const playGame = async (req, res) => {
     // Buscar usuário atual
     const { data: user, error: userError } = await supabaseAdmin
       .from('users')
-      .select('*')
+      .select('*');
       .eq('id', userId);
       .single();
 
@@ -161,7 +161,7 @@ console.log({
       pontos_sorteio: newPontosSorteio,
       jogos_realizados: newJogosRealizados
     })
-     .eq('id', userId)
+     .eq('id', userId);
 
 if (updateError) {
   console.error('Erro ao atualizar usuário (perdeu):', updateError);

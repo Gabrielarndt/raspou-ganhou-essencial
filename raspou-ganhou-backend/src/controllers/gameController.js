@@ -46,8 +46,8 @@ export const playGame = async (req, res) => {
     // Buscar usuário atual
     const { data: user, error: userError } = await supabaseAdmin
       .from('users')
-      .select('*');
-      .eq('id', userId);
+      .select('*')
+      .eq('id', userId)
       .single();
 
     if (userError || !user) {
@@ -128,8 +128,8 @@ console.log({
     jogos_realizados: newJogosRealizados,
     total_ganho: newTotalGanho
   })
-   .eq('id', userId);
-  .select();
+   .eq('id', userId)
+  .select()
   .single();
 
 if (updateError) {

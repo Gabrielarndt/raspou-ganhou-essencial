@@ -153,20 +153,23 @@ console.log({
 });
 
 
-  const { error: updateError } = await supabaseAdmin
-    .from('users')
-    .update({
-      saldo_real: newRealBalance,
-      saldo_bonus: newBonusBalance,
-      pontos_sorteio: newPontosSorteio,
-      jogos_realizados: newJogosRealizados
-    })
-     .eq('id', userId);
+  const { data: updatedUser, error: updateError } = await supabaseAdmin
+  .from('users')
+  .update({
+    saldo_real: newRealBalance,
+    saldo_bonus: newBonusBalance,
+    pontos_sorteio: newPontosSorteio,
+    jogos_realizados: newJogosRealizados
+  })
+  .eq('id', userId)
+  .select()
+  .single();
 
 if (updateError) {
   console.error('Erro ao atualizar usuário (perdeu):', updateError);
   return res.status(500).json({ error: 'Erro ao atualizar usuário', details: updateError.message });
 }
+
 
 }
 

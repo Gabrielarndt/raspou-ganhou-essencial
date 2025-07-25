@@ -129,7 +129,7 @@ console.log({
     total_ganho: newTotalGanho
   })
    .eq('id', userId);
-  .select()
+  .select();
   .single();
 
 if (updateError) {

@@ -1,3 +1,4 @@
+import bcrypt from 'bcryptjs';
 import { supabaseAdmin } from '../config/database.js';
 
 export const getDashboard = async (req, res) => {

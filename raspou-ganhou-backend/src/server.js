@@ -756,6 +756,9 @@ export const deleteAffiliate = async (req, res) => {
 
     if (error) {
       console.error('Delete affiliate error:', error);
+    }
+  }
+}
 export const getActiveLotteries = async (req, res) => {
   try {
     const now = new Date().toISOString();

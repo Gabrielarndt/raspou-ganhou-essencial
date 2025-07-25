@@ -622,20 +622,20 @@ export const getAffiliates = async (req, res) => {
 
 export const createAffiliate = async (req, res) => {
   try {
-    const { name, email, password, cpa, commission_rate } = req.body;
+    const { name, email, password, affiliate_code, cpa, commission_rate } = req.body;
 
-    if (!name || !email || !password || !affiliate_code) {
+    if (!name || !email || !password) {
       return res.status(400).json({ error: 'Nome, email e senha são obrigatórios' });
     }
 
     // Gerar código de afiliado único
-    const affiliate_code = `AFF${Date.now()}${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+    const generatedAffiliateCode = affiliate_code || `AFF${Date.now()}${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
 
     // Verificar se email ou código já existe
     const { data: existingAffiliate } = await supabaseAdmin
       .from('affiliates')
       .select('id')
-      .or(`email.eq.${email},affiliate_code.eq.${affiliate_code}`)
+      .or(`email.eq.${email},affiliate_code.eq.${generatedAffiliateCode}`)
       .single();
 
     if (existingAffiliate) {
@@ -651,7 +651,7 @@ export const createAffiliate = async (req, res) => {
         name,
         email,
         password: hashedPassword,
-        affiliate_code,
+        affiliate_code: generatedAffiliateCode,
         cpa: parseFloat(cpa || 0),
         commission_rate: parseFloat(commission_rate || 0),
         referrals: 0,

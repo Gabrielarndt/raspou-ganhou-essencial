@@ -549,9 +549,7 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
   }
 });
 
-
-
-
+      if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Erro ao excluir admin');
       }
@@ -569,7 +567,7 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
       const admins = JSON.parse(localStorage.getItem('raspou_admins') || '[]');
       
       if (editingAdmin) {
-      const result = await apiClient.deleteAdmin(adminId);
+        const adminIndex = admins.findIndex(a => a.id === editingAdmin.id);
         if (adminIndex !== -1) {
           admins[adminIndex] = { ...editingAdmin, ...adminForm };
         }

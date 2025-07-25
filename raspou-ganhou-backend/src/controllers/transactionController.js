@@ -47,21 +47,23 @@ export const deposit = async (req, res) => {
     const newRealBalance = parseFloat(user.saldo_real || 0) + depositAmount;
     const newBonusBalance = parseFloat(user.saldo_bonus || 0) + bonus;
 
-    const { error: updateError } = await supabaseAdmin
+    const { data: updatedUser, error: updateError } = await supabaseAdmin
       .from('users')
       .update({
         saldo_real: newRealBalance,
         saldo_bonus: newBonusBalance
       })
-      .eq('id', userId);
+      .eq('id', userId)
+      .select()
+      .single();
 
     if (updateError) {
       console.error('Update user error:', updateError);
-      return res.status(500).json({ error: 'Erro ao atualizar saldo' });
+      return res.status(500).json({ error: 'Erro ao atualizar saldo: ' + updateError.message });
     }
 
     // Registrar movimentações de saldo
-    await supabaseAdmin
+    const { error: movementError1 } = await supabaseAdmin
       .from('balance_movements')
       .insert({
         user_id: userId,
@@ -73,8 +75,12 @@ export const deposit = async (req, res) => {
         description: `Depósito via ${method}`
       });
 
+    if (movementError1) {
+      console.error('Movement error 1:', movementError1);
+    }
+
     if (bonus > 0) {
-      await supabaseAdmin
+      const { error: movementError2 } = await supabaseAdmin
         .from('balance_movements')
         .insert({
           user_id: userId,
@@ -85,6 +91,10 @@ export const deposit = async (req, res) => {
           new_balance: newBonusBalance,
           description: 'Bônus de depósito'
         });
+
+      if (movementError2) {
+        console.error('Movement error 2:', movementError2);
+      }
     }
 
     res.json({
@@ -134,7 +144,7 @@ export const withdraw = async (req, res) => {
     const netAmount = withdrawAmount - fee;
 
     // Criar transação
-    const { error: transactionError } = await supabaseAdmin
+    const { data: newTransaction, error: transactionError } = await supabaseAdmin
       .from('transactions')
       .insert({
         user_id: userId,
@@ -145,30 +155,34 @@ export const withdraw = async (req, res) => {
         net_amount: netAmount,
         status: 'processing',
         metadata: details
-      });
+      })
+      .select()
+      .single();
 
     if (transactionError) {
       console.error('Transaction error:', transactionError);
-      return res.status(500).json({ error: 'Erro ao criar transação' });
+      return res.status(500).json({ error: 'Erro ao criar transação: ' + transactionError.message });
     }
 
     // Atualizar saldo do usuário
     const newRealBalance = parseFloat(user.saldo_real || 0) - withdrawAmount;
 
-    const { error: updateError } = await supabaseAdmin
+    const { data: updatedUser, error: updateError } = await supabaseAdmin
       .from('users')
       .update({
         saldo_real: newRealBalance
       })
-      .eq('id', userId);
+      .eq('id', userId)
+      .select()
+      .single();
 
     if (updateError) {
       console.error('Update user error:', updateError);
-      return res.status(500).json({ error: 'Erro ao atualizar saldo' });
+      return res.status(500).json({ error: 'Erro ao atualizar saldo: ' + updateError.message });
     }
 
     // Registrar movimentação de saldo
-    await supabaseAdmin
+    const { error: movementError } = await supabaseAdmin
       .from('balance_movements')
       .insert({
         user_id: userId,
@@ -180,12 +194,15 @@ export const withdraw = async (req, res) => {
         description: `Saque via ${method}`
       });
 
+    if (movementError) {
+      console.error('Movement error:', movementError);
+    }
+
     res.json({
       success: true,
       message: 'Saque solicitado com sucesso',
       new_balance: {
         saldo_real: newRealBalance,
-        saldo_bonus: parseFloat(user.saldo_bonus)
         saldo_bonus: parseFloat(user.saldo_bonus || 0)
       }
     });

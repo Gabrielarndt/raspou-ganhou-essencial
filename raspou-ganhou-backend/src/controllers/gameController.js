@@ -110,11 +110,11 @@ export const playGame = async (req, res) => {
   const { error: updateError } = await supabaseAdmin
     .from('users')
     .update({
-      saldo_real: finalRealBalance.toFixed(2),
-      saldo_bonus: finalBonusBalance.toFixed(2),
+      saldo_real: finalRealBalance,
+      saldo_bonus: finalBonusBalance,
       pontos_sorteio: newPontosSorteio,
       jogos_realizados: newJogosRealizados,
-      total_ganho: newTotalGanho.toFixed(2)
+      total_ganho: newTotalGanho
     })
     .eq('id', userId);
 
@@ -131,8 +131,8 @@ export const playGame = async (req, res) => {
   const { error: updateError } = await supabaseAdmin
     .from('users')
     .update({
-      saldo_real: newRealBalance.toFixed(2),
-      saldo_bonus: newBonusBalance.toFixed(2),
+      saldo_real: newRealBalance,
+      saldo_bonus: newBonusBalance,
       pontos_sorteio: newPontosSorteio,
       jogos_realizados: newJogosRealizados
     })

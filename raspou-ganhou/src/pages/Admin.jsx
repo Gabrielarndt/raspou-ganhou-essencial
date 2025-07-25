@@ -292,20 +292,6 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
       // Aqui você pode implementar a exclusão via API
       alert('Funcionalidade de exclusão será implementada em breve');
     }
-  };
-
-  // Funções para Sorteios
-  const handleCreateLottery = () => {
-    setEditingLottery(null);
-    setLotteryForm({
-      title: '',
-      description: '',
-      prize: '',
-      draw_date: '',
-      status: 'active'
-    });
-    setShowLotteryModal(true);
-  };
 
   const handleEditLottery = (lottery) => {
     setEditingLottery(lottery);
@@ -325,23 +311,86 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
       return;
     }
 
-    const lotteryData = {
-      id: editingLottery ? editingLottery.id : Date.now().toString(),
-      title: lotteryForm.title,
-      description: lotteryForm.description,
-      prize: parseFloat(lotteryForm.prize),
-      draw_date: lotteryForm.draw_date,
-      status: lotteryForm.status,
-      created_by: currentUser.id,
-      created_at: editingLottery ? editingLottery.created_at : new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      total_participants: editingLottery ? editingLottery.total_participants : 0,
-      winner_id: editingLottery ? editingLottery.winner_id : null,
-      winning_number: editingLottery ? editingLottery.winning_number : null
+    const saveLottery = async () => {
+      try {
+        const lotteryData = {
+          title: lotteryForm.title,
+          description: lotteryForm.description || null,
+          prize: parseFloat(lotteryForm.prize),
+          draw_date: new Date(lotteryForm.draw_date).toISOString(),
+          status: lotteryForm.status || 'active',
+          created_by: adminData.id
+        };
+
+        let response;
+        if (editingLottery) {
+          response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/admin/update-lottery`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+            },
+            body: JSON.stringify({
+              lottery_id: editingLottery.id,
+              ...lotteryData
+            })
+          });
+        } else {
+          response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/admin/create-lottery`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+            },
+            body: JSON.stringify(lotteryData)
+          });
+        }
+
+        const result = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(result.error || 'Erro ao salvar sorteio');
+        }
+
+        alert(editingLottery ? 'Sorteio atualizado com sucesso!' : 'Sorteio criado com sucesso!');
+        loadLotteries();
+        setShowLotteryModal(false);
+        setEditingLottery(null);
+        setLotteryForm({
+          title: '',
+          description: '',
+          prize: '',
+          draw_date: '',
+          status: 'active'
+        });
+        
+      } catch (error) {
+        console.error('Erro ao salvar sorteio:', error);
+        alert('Erro ao salvar sorteio: ' + error.message);
+      }
     };
 
-    const updatedLotteries = editingLottery
-      ? lotteries.map(l => l.id === editingLottery.id ? lotteryData : l)
+    saveLottery();
+  };
+
+  const loadLotteries = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/admin/lotteries`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setLotteries(data.lotteries || []);
+      } else {
+        console.error('Erro ao carregar sorteios');
+        setLotteries([]);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar sorteios:', error);
+      setLotteries([]);
       : [...lotteries, lotteryData];
 
     setLotteries(updatedLotteries);
@@ -352,11 +401,33 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
 
   const handleDeleteLottery = (lottery) => {
     if (window.confirm(`Tem certeza que deseja excluir o sorteio "${lottery.title}"?`)) {
-      const updatedLotteries = lotteries.filter(l => l.id !== lottery.id);
-      setLotteries(updatedLotteries);
-      localStorage.setItem('raspou_lotteries', JSON.stringify(updatedLotteries));
-      alert('Sorteio excluído!');
-    }
+      const deleteLottery = async () => {
+        try {
+          const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/admin/delete-lottery`, {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+            },
+            body: JSON.stringify({ lottery_id: lottery.id })
+          });
+
+          const result = await response.json();
+          
+          if (!response.ok) {
+            throw new Error(result.error || 'Erro ao excluir sorteio');
+          }
+
+          alert('Sorteio excluído com sucesso!');
+          loadLotteries();
+          
+        } catch (error) {
+          console.error('Erro ao excluir sorteio:', error);
+          alert('Erro ao excluir sorteio: ' + error.message);
+        }
+      };
+
+      deleteLottery();
   };
 
   // Funções para Admins

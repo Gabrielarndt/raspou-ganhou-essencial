@@ -421,3 +421,172 @@ export const getActiveLotteries = async (req, res) => {
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 };
+
+export const createAdmin = async (req, res) => {
+  try {
+    const { name, email, password, is_super_admin } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: 'Nome, email e senha são obrigatórios' });
+    }
+
+    // Verificar se email já existe
+    const { data: existingAdmin } = await supabaseAdmin
+      .from('admins')
+      .select('id')
+      .eq('email', email)
+      .single();
+
+    if (existingAdmin) {
+      return res.status(409).json({ error: 'Email já está em uso' });
+    }
+
+    // Hash da senha
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    const { data: admin, error } = await supabaseAdmin
+      .from('admins')
+      .insert({
+        name,
+        email,
+        password: hashedPassword,
+        is_super_admin: is_super_admin || false
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Create admin error:', error);
+      return res.status(500).json({ error: 'Erro ao criar admin: ' + error.message });
+    }
+
+    res.json({
+      success: true,
+      message: 'Admin criado com sucesso',
+      admin
+    });
+
+  } catch (error) {
+    console.error('Create admin error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+};
+
+export const updateAdmin = async (req, res) => {
+  try {
+    const { admin_id, name, email, password, is_super_admin } = req.body;
+
+    if (!admin_id) {
+      return res.status(400).json({ error: 'ID do admin é obrigatório' });
+    }
+
+    const updateData = {};
+    if (name !== undefined) updateData.name = name;
+    if (email !== undefined) updateData.email = email;
+    if (is_super_admin !== undefined) updateData.is_super_admin = is_super_admin;
+    
+    if (password) {
+      updateData.password = await bcrypt.hash(password, 12);
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ error: 'Nenhum campo para atualizar' });
+    }
+
+    // Verificar se email já existe (se estiver sendo alterado)
+    if (email) {
+      const { data: existingAdmin } = await supabaseAdmin
+        .from('admins')
+        .select('id')
+        .eq('email', email)
+        .neq('id', admin_id)
+        .single();
+
+      if (existingAdmin) {
+        return res.status(409).json({ error: 'Email já está em uso por outro admin' });
+      }
+    }
+
+    const { data: admin, error } = await supabaseAdmin
+      .from('admins')
+      .update(updateData)
+      .eq('id', admin_id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Update admin error:', error);
+      return res.status(500).json({ error: 'Erro ao atualizar admin: ' + error.message });
+    }
+
+    res.json({
+      success: true,
+      message: 'Admin atualizado com sucesso',
+      admin
+    });
+
+  } catch (error) {
+    console.error('Update admin error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+};
+
+export const deleteAdmin = async (req, res) => {
+  try {
+    const { admin_id } = req.body;
+
+    if (!admin_id) {
+      return res.status(400).json({ error: 'ID do admin é obrigatório' });
+    }
+
+    // Verificar se é super admin (não pode ser excluído)
+    const { data: admin } = await supabaseAdmin
+      .from('admins')
+      .select('is_super_admin')
+      .eq('id', admin_id)
+      .single();
+
+    if (admin?.is_super_admin) {
+      return res.status(403).json({ error: 'Super admins não podem ser excluídos' });
+    }
+
+    const { error } = await supabaseAdmin
+      .from('admins')
+      .delete()
+      .eq('id', admin_id);
+
+    if (error) {
+      console.error('Delete admin error:', error);
+      return res.status(500).json({ error: 'Erro ao excluir admin: ' + error.message });
+    }
+
+    res.json({
+      success: true,
+      message: 'Admin excluído com sucesso'
+    });
+
+  } catch (error) {
+    console.error('Delete admin error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+};
+
+export const getAdmins = async (req, res) => {
+  try {
+    const { data: admins, error } = await supabaseAdmin
+      .from('admins')
+      .select('id, name, email, is_super_admin, created_at')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Get admins error:', error);
+      return res.status(500).json({ error: 'Erro ao carregar admins' });
+    }
+
+    res.json({ admins });
+
+  } catch (error) {
+    console.error('Get admins error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+};

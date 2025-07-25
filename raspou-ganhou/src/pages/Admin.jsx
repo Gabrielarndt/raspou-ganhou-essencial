@@ -49,6 +49,7 @@ const Admin = () => {
 
   // Estados para Sorteios
   const [lotteries, setLotteries] = useState([]);
+  const [adminsList, setAdminsList] = useState([]);
   const [showLotteryModal, setShowLotteryModal] = useState(false);
   const [lotteryForm, setLotteryForm] = useState({
     title: '',
@@ -153,15 +154,24 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
     }
   };
 
-  
-
-  const loadAdmins = () => {
+  const loadAdmins = async () => {
     try {
-      const savedAdmins = JSON.parse(localStorage.getItem('raspou_admins') || '[]');
-      setAdmins(savedAdmins);
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/admin/admins`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setAdminsList(data.admins || []);
+      } else {
+        console.error('Erro ao carregar admins');
+        setAdminsList([]);
+      }
     } catch (error) {
       console.error('Erro ao carregar admins:', error);
-      setAdmins([]);
+      setAdminsList([]);
     }
   };
 
@@ -440,7 +450,6 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
       name: '',
       email: '',
       password: '',
-      role: 'admin',
       is_super_admin: false
     });
     setShowAdminModal(true);
@@ -452,51 +461,128 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
       name: admin.name,
       email: admin.email,
       password: '',
-      role: admin.role,
-      is_super_admin: admin.is_super_admin
+      is_super_admin: admin.is_super_admin || false
     });
     setShowAdminModal(true);
   };
 
-  const handleSaveAdmin = () => {
-    if (!adminForm.name || !adminForm.email || (!editingAdmin && !adminForm.password)) {
-      alert('Preencha todos os campos obrigatórios');
-      return;
+  const handleSaveAdmin = async () => {
+    try {
+      const saveAdmin = async () => {
+        const adminData = {
+          name: adminForm.name,
+          email: adminForm.email,
+          password: adminForm.password,
+          is_super_admin: adminForm.is_super_admin || false
+        };
+
+        if (editingAdmin) {
+          adminData.admin_id = editingAdmin.id;
+          const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/admin/update-admin`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+            },
+            body: JSON.stringify(adminData)
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Erro ao atualizar admin');
+          }
+        } else {
+          const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/admin/create-admin`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+            },
+            body: JSON.stringify(adminData)
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Erro ao criar admin');
+          }
+        }
+      };
+
+      await saveAdmin();
+      await loadAdmins();
+      
+      setShowAdminModal(false);
+      setEditingAdmin(null);
+      setAdminForm({
+        name: '',
+        email: '',
+        password: '',
+        is_super_admin: false
+      });
+      
+      alert(editingAdmin ? 'Admin atualizado com sucesso!' : 'Admin criado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao salvar admin:', error);
+      alert('Erro ao salvar admin: ' + error.message);
     }
-
-    // Verificar se email já existe
-    const emailExists = admins.some(a => 
-      a.email === adminForm.email && (!editingAdmin || a.id !== editingAdmin.id)
-    );
-
-    if (emailExists) {
-      alert('Este email já está em uso');
-      return;
-    }
-
-    const adminData = {
-      id: editingAdmin ? editingAdmin.id : Date.now().toString(),
-      name: adminForm.name,
-      email: adminForm.email,
-      password: adminForm.password || (editingAdmin ? editingAdmin.password : ''),
-      role: adminForm.role,
-      is_super_admin: adminForm.is_super_admin,
-      permissions: editingAdmin ? editingAdmin.permissions : [],
-      created_at: editingAdmin ? editingAdmin.created_at : new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-
-    const updatedAdmins = editingAdmin
-      ? admins.map(a => a.id === editingAdmin.id ? adminData : a)
-      : [...admins, adminData];
-
-    setAdmins(updatedAdmins);
-    localStorage.setItem('raspou_admins', JSON.stringify(updatedAdmins));
-    setShowAdminModal(false);
-    alert(editingAdmin ? 'Admin atualizado!' : 'Admin criado!');
   };
 
-  const handleDeleteAdmin = (admin) => {
+  const handleDeleteAdmin = async (adminId) => {
+    if (!window.confirm('Tem certeza que deseja excluir este admin?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/admin/delete-admin`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify({ admin_id: adminId })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro ao excluir admin');
+      }
+
+      await loadAdmins();
+      alert('Admin excluído com sucesso!');
+    } catch (error) {
+      console.error('Erro ao excluir admin:', error);
+      alert('Erro ao excluir admin: ' + error.message);
+    }
+  };
+
+  const oldHandleSaveAdmin = () => {
+    try {
+      const admins = JSON.parse(localStorage.getItem('raspou_admins') || '[]');
+      
+      if (editingAdmin) {
+        const adminIndex = admins.findIndex(a => a.id === editingAdmin.id);
+        if (adminIndex !== -1) {
+          admins[adminIndex] = { ...editingAdmin, ...adminForm };
+        }
+      } else {
+        const newAdmin = {
+          id: Date.now().toString(),
+          ...adminForm,
+          created_at: new Date().toISOString()
+        };
+        admins.push(newAdmin);
+      }
+      
+      localStorage.setItem('raspou_admins', JSON.stringify(admins));
+      setShowAdminModal(false);
+      alert(editingAdmin ? 'Admin atualizado!' : 'Admin criado!');
+    } catch (error) {
+      console.error('Erro ao salvar admin:', error);
+      alert('Erro ao salvar admin');
+    }
+  };
+
+  const handleDeleteAdmin2 = (admin) => {
     if (admin.is_super_admin) {
       alert('Não é possível excluir um Super Admin');
       return;
@@ -1327,7 +1413,7 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
               </div>
 
               <div className="bg-gray-800 rounded-xl overflow-hidden">
-                {admins.length === 0 ? (
+                {adminsList.length === 0 ? (
                   <div className="p-8 text-center">
                     <Shield className="w-16 h-16 text-gray-600 mx-auto mb-4" />
                     <h3 className="text-xl font-bold text-gray-400 mb-2">Nenhum admin cadastrado</h3>
@@ -1344,57 +1430,42 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
                     <table className="w-full">
                       <thead className="bg-gray-700">
                         <tr>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Nome</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Email</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Tipo</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Criado em</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Ações</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Nome</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Email</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Tipo</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Criado em</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Ações</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-600">
-                        {admins.map((admin) => (
+                        {adminsList.map((admin) => (
                           <tr key={admin.id} className="hover:bg-gray-700">
-                            <td className="px-4 py-4 whitespace-nowrap">
-                              <div className="flex items-center">
-                                <div className="w-10 h-10 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center mr-3">
-                                  <span className="text-white font-bold text-sm">
-                                    {admin.name.charAt(0).toUpperCase()}
-                                  </span>
-                                </div>
-                                <div className="text-sm font-medium text-white">{admin.name}</div>
-                              </div>
-                            </td>
-                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-300">
-                              {admin.email}
-                            </td>
-                            <td className="px-4 py-4 whitespace-nowrap">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-white">{admin.name}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{admin.email}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">
                               <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                admin.is_super_admin 
-                                  ? 'bg-red-100 text-red-800' 
-                                  : 'bg-blue-100 text-blue-800'
+                                admin.is_super_admin ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
                               }`}>
                                 {admin.is_super_admin ? 'Super Admin' : 'Admin'}
                               </span>
                             </td>
-                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-300">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                               {formatDate(admin.created_at)}
                             </td>
-                            <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                               <div className="flex space-x-2">
                                 <button
                                   onClick={() => handleEditAdmin(admin)}
-                                  className="text-blue-400 hover:text-blue-300"
-                                  title="Editar"
+                                  className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs"
                                 >
-                                  <Edit className="w-4 h-4" />
+                                  Editar
                                 </button>
                                 {!admin.is_super_admin && (
                                   <button
-                                    onClick={() => handleDeleteAdmin(admin)}
-                                    className="text-red-400 hover:text-red-300"
-                                    title="Excluir"
+                                    onClick={() => handleDeleteAdmin(admin.id)}
+                                    className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs"
                                   >
-                                    <Trash2 className="w-4 h-4" />
+                                    Excluir
                                   </button>
                                 )}
                               </div>

@@ -535,15 +535,15 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
     }
 
     try {
-      const response = await fetch(
-  `${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/admin/delete-admin?admin_id=${adminId}`,
-  {
-    method: 'DELETE',
-    headers: {
-      'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-    }
-  }
-);
+      const response = await fetch(`${API_URL}/admin/delete-admin`, {
+  method: 'DELETE',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+  },
+  body: JSON.stringify({ admin_id: adminId })
+});
+
 
 
       if (!response.ok) {

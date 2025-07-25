@@ -47,7 +47,7 @@ export const playGame = async (req, res) => {
     const { data: user, error: userError } = await supabaseAdmin
       .from('users')
       .select('*')
-      console.log('[userId recebido]', userId);
+      .eq('id', userId);
       .single();
 
     if (userError || !user) {

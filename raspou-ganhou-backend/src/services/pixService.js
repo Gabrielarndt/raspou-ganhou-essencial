@@ -24,43 +24,24 @@ class PixService {
 
   // Criar transação PIX
   async createPixTransaction(amount, customerData, orderId) {
-    try {
-      const payload = {
-        amount: parseFloat(amount),
-        currency: 'BRL',
-        payment_method: 'pix',
-        customer: {
-          name: customerData.name,
-          email: customerData.email,
-          document: customerData.cpf,
-          phone: customerData.phone
-        },
-        order_id: orderId,
-        description: `Depósito RaspouGanhou - ${amount}`,
-        expires_in: 900, // 15 minutos
-        notification_url: `${process.env.PUBLIC_BASE_URL}/api/webhook/pix`,
-        return_url: `${process.env.PUBLIC_BASE_URL}/deposito/sucesso`
-      };
+  console.log('PIX Service – API URL:', this.apiUrl);
+  console.log('PAYLOAD PIX:', JSON.stringify({
+    amount, payment_method: 'pix', customer: customerData,
+    order_id: orderId, description: `...`, notification_url: ..., return_url: ...
+  }, null, 2));
 
-      const response = await axios.post(
-        `${this.apiUrl}/transactions`,
-        payload,
-        { headers: this.getHeaders() }
-      );
-
-      return {
-        success: true,
-        data: response.data
-      };
-
-    } catch (error) {
-      console.error('PIX Service - Create transaction error:', error.response?.data || error.message);
-      return {
-        success: false,
-        error: error.response?.data?.message || 'Erro ao criar transação PIX'
-      };
-    }
+  try {
+    const response = await axios.post(
+      `${this.apiUrl}/api/user/transactions`,
+      payload,
+      { headers: this.getHeaders() }
+    );
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.error('PIX Service error:', error.response?.data || error.message);
+    return { success: false, error: error.response?.data?.message || error.message };
   }
+}
 
   // Consultar status da transação
   async getTransactionStatus(transactionId) {

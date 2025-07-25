@@ -103,21 +103,18 @@ export const playGame = async (req, res) => {
   // Atualizar saldos com prêmio
   const finalRealBalance = realUsed > 0 ? newRealBalance + prize : newRealBalance;
   const finalBonusBalance = realUsed === 0 ? newBonusBalance + prize : newBonusBalance;
+  const newPontosSorteio = (user.pontos_sorteio || 0) + 10;
+  const newJogosRealizados = (user.jogos_realizados || 0) + 1;
+  const newTotalGanho = parseFloat(user.total_ganho || 0) + prize;
 
   const { error: updateError } = await supabaseAdmin
     .from('users')
     .update({
       saldo_real: finalRealBalance.toFixed(2),
       saldo_bonus: finalBonusBalance.toFixed(2),
-      pontos_sorteio: supabaseAdmin.rpc('increment_column', {
-        column_name: 'pontos_sorteio',
-        increment_value: 10
-      }),
-      jogos_realizados: supabaseAdmin.rpc('increment_column', {
-        column_name: 'jogos_realizados',
-        increment_value: 1
-      }),
-      total_ganho: supabaseAdmin.raw(`total_ganho + ${prize.toFixed(2)}`)
+      pontos_sorteio: newPontosSorteio,
+      jogos_realizados: newJogosRealizados,
+      total_ganho: newTotalGanho.toFixed(2)
     })
     .eq('id', userId);
 
@@ -128,19 +125,16 @@ export const playGame = async (req, res) => {
 
 } else {
   // Jogador perdeu - apenas atualiza estatísticas
+  const newPontosSorteio = (user.pontos_sorteio || 0) + 10;
+  const newJogosRealizados = (user.jogos_realizados || 0) + 1;
+
   const { error: updateError } = await supabaseAdmin
     .from('users')
     .update({
       saldo_real: newRealBalance.toFixed(2),
       saldo_bonus: newBonusBalance.toFixed(2),
-      pontos_sorteio: supabaseAdmin.rpc('increment_column', {
-        column_name: 'pontos_sorteio',
-        increment_value: 10
-      }),
-      jogos_realizados: supabaseAdmin.rpc('increment_column', {
-        column_name: 'jogos_realizados',
-        increment_value: 1
-      })
+      pontos_sorteio: newPontosSorteio,
+      jogos_realizados: newJogosRealizados
     })
     .eq('id', userId);
 

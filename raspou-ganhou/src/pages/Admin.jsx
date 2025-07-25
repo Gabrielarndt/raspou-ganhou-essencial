@@ -527,36 +527,15 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
     }
   };
 
-  const handleDeleteAdmin = async (adminId) => {
-  console.log('Deleting admin with ID:', adminId);
-
-  if (!window.confirm('Tem certeza que deseja excluir este admin?')) {
-    return;
-  }
-
-  try {
-    const response = await fetch(
-      `${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/admin/delete-admin?admin_id=${adminId}`,
-      {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        }
-      }
-    );
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Erro ao excluir admin');
+  const response = await fetch(
+  `${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/admin/delete-admin?admin_id=${adminId}`,
+  {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
     }
-
-    await loadAdmins();
-    alert('Admin excluído com sucesso!');
-  } catch (error) {
-    console.error('Erro ao excluir admin:', error);
-    alert('Erro ao excluir admin: ' + error.message);
   }
-};
+);
 
 
   const oldHandleSaveAdmin = async () => {

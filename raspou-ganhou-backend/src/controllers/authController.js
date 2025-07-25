@@ -146,10 +146,13 @@ export const adminLogin = async (req, res) => {
     const { password: _, ...adminWithoutPassword } = admin;
 
     res.json({
-      success: true,
-      token,
-      user: adminWithoutPassword
-    });
+  success: true,
+  token,
+  user: {
+    ...adminWithoutPassword,
+    role: admin.is_super_admin ? 'super_admin' : 'admin'  // Adiciona role aqui
+  }
+});
 
   } catch (error) {
     console.error('Admin login error:', error);

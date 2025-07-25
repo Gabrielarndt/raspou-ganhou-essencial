@@ -256,7 +256,16 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
 
       const result = await response.json();
 
-      if (!response.ok) {
+      const lotteryData = {
+        title: lotteryForm.title,
+        description: lotteryForm.description,
+        prize: parseFloat(lotteryForm.prize),
+        draw_date: lotteryForm.draw_date,
+        status: lotteryForm.status,
+        created_by: user?.id
+      };
+
+      const result = await apiClient.request(
         throw new Error(result.error || 'Erro ao atualizar usuário');
       }
 

@@ -51,11 +51,14 @@ const Affiliate = () => {
         console.log('📦 Affiliate: Stored user data:', userData);
         setStoredUser(userData);
         
-        if (userData.role === 'affiliate') {
+        // Check if user is affiliate - either by role property or by having affiliate_code
+        if (userData.role === 'affiliate' || userData.affiliate_code) {
           setIsAffiliate(true);
           setCurrentUser(userData);
           console.log('✅ Affiliate: Found affiliate in localStorage');
           return;
+        } else {
+          console.log('❌ Affiliate: User data found but not an affiliate:', userData);
         }
       }
     } catch (error) {
@@ -63,14 +66,14 @@ const Affiliate = () => {
     }
     
     // Verificar user do context
-    if (user?.role === 'affiliate') {
+    if (user?.role === 'affiliate' || user?.affiliate_code) {
       setIsAffiliate(true);
       setCurrentUser(user);
       console.log('✅ Affiliate: Found affiliate in context');
     } else {
       setIsAffiliate(false);
       setCurrentUser(null);
-      console.log('❌ Affiliate: No affiliate found');
+      console.log('❌ Affiliate: No affiliate found in context, user:', user);
     }
   }, [user]);
 

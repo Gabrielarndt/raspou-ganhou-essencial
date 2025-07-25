@@ -551,15 +551,21 @@ export const deleteAdmin = async (req, res) => {
       return res.status(403).json({ error: 'Super admins não podem ser excluídos' });
     }
 
-    const { error } = await supabaseAdmin
-      .from('admins')
-      .delete()
-      .eq('id', admin_id);
+    const { data, error } = await supabaseAdmin
+  .from('admins')
+  .delete()
+  .eq('id', admin_id)
+  .select();
 
-    if (error) {
-      console.error('Delete admin error:', error);
-      return res.status(500).json({ error: 'Erro ao excluir admin: ' + error.message });
-    }
+if (error) {
+  console.error('Delete admin error:', error);
+  return res.status(500).json({ error: 'Erro ao excluir admin: ' + error.message });
+}
+
+if (!data || data.length === 0) {
+  return res.status(404).json({ error: 'Admin não encontrado ou já excluído' });
+}
+
 
     res.json({
       success: true,

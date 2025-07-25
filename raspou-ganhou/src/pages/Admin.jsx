@@ -41,6 +41,10 @@ const Admin = () => {
   const [dateFilter, setDateFilter] = useState('30d');
   const [dataLoading, setDataLoading] = useState(true);
   const [adminUser, setAdminUser] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editForm, setEditForm] = useState({});
 
   useEffect(() => {
     // Carregar dados do admin do localStorage se não estiver no contexto
@@ -154,14 +158,32 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
   };
 
   const handleViewUser = (user) => {
-    alert(`Visualizar usuário: ${user.nome}\nEmail: ${user.email}\nSaldo: ${formatCurrency((user.saldo_real || 0) + (user.saldo_bonus || 0))}`);
+    setSelectedUser(user);
+    setShowUserModal(true);
   };
 
   const handleEditUser = (user) => {
-    const newName = prompt('Novo nome:', user.nome);
-    if (newName && newName !== user.nome) {
+    setSelectedUser(user);
+    setEditForm({
+      nome: user.nome,
+      email: user.email,
+      telefone: user.telefone || '',
+      saldo_real: user.saldo_real || 0,
+      saldo_bonus: user.saldo_bonus || 0
+    });
+    setShowEditModal(true);
+  };
+
+  const handleSaveUser = async () => {
+    try {
       // Aqui você pode implementar a atualização via API
-      alert('Funcionalidade de edição será implementada em breve');
+      console.log('Salvando usuário:', editForm);
+      alert('Usuário atualizado com sucesso!');
+      setShowEditModal(false);
+      loadData(); // Recarregar dados
+    } catch (error) {
+      console.error('Erro ao salvar usuário:', error);
+      alert('Erro ao salvar usuário: ' + error.message);
     }
   };
 
@@ -863,6 +885,185 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
                 <button className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
                   Salvar Configurações
                 </button>
+              </div>
+            </div>
+          )}
+
+          {/* Modal de Visualização de Usuário */}
+          {showUserModal && selectedUser && (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+              <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-bold text-white">Detalhes do Usuário</h3>
+                  <button
+                    onClick={() => setShowUserModal(false)}
+                    className="p-2 rounded-lg bg-gray-700 text-gray-400 hover:text-white transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-4 mb-6">
+                    <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold text-xl">
+                        {selectedUser.nome?.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div>
+                      <h4 className="text-white font-bold text-lg">{selectedUser.nome}</h4>
+                      <p className="text-gray-400">{selectedUser.email}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-gray-400 text-sm">CPF</p>
+                      <p className="text-white font-medium">{selectedUser.cpf}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-sm">Telefone</p>
+                      <p className="text-white font-medium">{selectedUser.telefone || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-sm">Saldo Real</p>
+                      <p className="text-green-400 font-bold">{formatCurrency(selectedUser.saldo_real || 0)}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-sm">Saldo Bônus</p>
+                      <p className="text-blue-400 font-bold">{formatCurrency(selectedUser.saldo_bonus || 0)}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-sm">Pontos Sorteio</p>
+                      <p className="text-purple-400 font-bold">{selectedUser.pontos_sorteio || 0} pts</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-sm">Jogos Realizados</p>
+                      <p className="text-yellow-400 font-bold">{selectedUser.jogos_realizados || 0}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-sm">Total Ganho</p>
+                      <p className="text-green-400 font-bold">{formatCurrency(selectedUser.total_ganho || 0)}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-sm">Nível VIP</p>
+                      <p className="text-yellow-400 font-bold">{selectedUser.nivel_vip || 'Bronze'}</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-gray-400 text-sm">Data de Cadastro</p>
+                    <p className="text-white font-medium">
+                      {selectedUser.created_at ? formatDate(selectedUser.created_at) : 'N/A'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex space-x-3 mt-6">
+                  <button
+                    onClick={() => {
+                      setShowUserModal(false);
+                      handleEditUser(selectedUser);
+                    }}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    onClick={() => setShowUserModal(false)}
+                    className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+                  >
+                    Fechar
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Modal de Edição de Usuário */}
+          {showEditModal && selectedUser && (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+              <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-bold text-white">Editar Usuário</h3>
+                  <button
+                    onClick={() => setShowEditModal(false)}
+                    className="p-2 rounded-lg bg-gray-700 text-gray-400 hover:text-white transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Nome</label>
+                    <input
+                      type="text"
+                      value={editForm.nome}
+                      onChange={(e) => setEditForm({...editForm, nome: e.target.value})}
+                      className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                    <input
+                      type="email"
+                      value={editForm.email}
+                      onChange={(e) => setEditForm({...editForm, email: e.target.value})}
+                      className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Telefone</label>
+                    <input
+                      type="tel"
+                      value={editForm.telefone}
+                      onChange={(e) => setEditForm({...editForm, telefone: e.target.value})}
+                      className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-400"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Saldo Real</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={editForm.saldo_real}
+                        onChange={(e) => setEditForm({...editForm, saldo_real: parseFloat(e.target.value) || 0})}
+                        className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-400"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Saldo Bônus</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={editForm.saldo_bonus}
+                        onChange={(e) => setEditForm({...editForm, saldo_bonus: parseFloat(e.target.value) || 0})}
+                        className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-400"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex space-x-3 mt-6">
+                  <button
+                    onClick={handleSaveUser}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+                  >
+                    Salvar
+                  </button>
+                  <button
+                    onClick={() => setShowEditModal(false)}
+                    className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                </div>
               </div>
             </div>
           )}

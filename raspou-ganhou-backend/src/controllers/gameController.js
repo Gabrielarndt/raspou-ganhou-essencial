@@ -98,7 +98,7 @@ export const playGame = async (req, res) => {
     '🏆': 4, '💰': 3, '🎲': 2, '🔥': 1.5
   };
   const multiplier = multipliers[winningSymbol] || 2;
-  prize = Math.min(gamePrice * multiplier, parseFloat(game.max_prize));
+  prize = Math.min(gamePrice * multiplier, parseFloat(game.max_prize || 0));
 
   // Atualizar saldos com prêmio
   const finalRealBalance = realUsed > 0 ? newRealBalance + prize : newRealBalance;
@@ -123,7 +123,7 @@ export const playGame = async (req, res) => {
     return res.status(500).json({ error: 'Erro ao atualizar usuário' });
   }
 
-} else {
+  const gamePrice = parseFloat(game.price || 0);
   // Jogador perdeu - apenas atualiza estatísticas
   const newPontosSorteio = (user.pontos_sorteio || 0) + 10;
   const newJogosRealizados = (user.jogos_realizados || 0) + 1;

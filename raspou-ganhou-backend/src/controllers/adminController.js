@@ -644,7 +644,7 @@ export const createAffiliate = async (req, res) => {
     // Hash da senha
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    const { data: affiliate, error } = await supabaseAdmin
+    const { data: newAffiliate, error } = await supabaseAdmin
       .from('affiliates')
       .insert({
         name,
@@ -666,8 +666,12 @@ export const createAffiliate = async (req, res) => {
       return res.status(500).json({ error: 'Erro ao criar afiliado: ' + error.message });
     }
 
+    if (!newAffiliate) {
+      return res.status(500).json({ error: 'Erro ao criar afiliado - dados não retornados' });
+    }
+
     // Remover senha dos dados retornados
-    const { password: _, ...affiliateWithoutPassword } = affiliate;
+    const { password: _, ...affiliateWithoutPassword } = newAffiliate;
 
     res.json({
       success: true,

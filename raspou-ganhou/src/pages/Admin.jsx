@@ -45,6 +45,7 @@ const Admin = () => {
   const [showUserModal, setShowUserModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editForm, setEditForm] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     // Carregar dados do admin do localStorage se não estiver no contexto
@@ -176,14 +177,43 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
 
   const handleSaveUser = async () => {
     try {
-      // Aqui você pode implementar a atualização via API
-      console.log('Salvando usuário:', editForm);
-      alert('Usuário atualizado com sucesso!');
+      setIsLoading(true);
+      
+      // Fazer chamada à API para atualizar usuário
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/admin/update-user`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify({
+          user_id: selectedUser.id,
+          ...editForm
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Erro ao atualizar usuário');
+      }
+
+      // Atualizar lista local de usuários
+      const updatedUsers = users.map(user => 
+        user.id === selectedUser.id 
+          ? { ...user, ...editForm }
+          : user
+      );
+      setUsers(updatedUsers);
+      setSelectedUser({ ...selectedUser, ...editForm });
       setShowEditModal(false);
-      loadData(); // Recarregar dados
+      alert('Usuário atualizado com sucesso!');
+      
     } catch (error) {
-      console.error('Erro ao salvar usuário:', error);
-      alert('Erro ao salvar usuário: ' + error.message);
+      console.error('Erro ao atualizar usuário:', error);
+      alert('Erro ao atualizar usuário: ' + error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -1053,9 +1083,10 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
                 <div className="flex space-x-3 mt-6">
                   <button
                     onClick={handleSaveUser}
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+                    disabled={isLoading}
+                    className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-colors"
                   >
-                    Salvar
+                    {isLoading ? 'Salvando...' : 'Salvar'}
                   </button>
                   <button
                     onClick={() => setShowEditModal(false)}

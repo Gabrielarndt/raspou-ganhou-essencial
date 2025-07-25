@@ -74,6 +74,7 @@ app.get('/api/transactions/history', authenticateToken, transactionController.ge
 app.get('/api/admin/dashboard', authenticateAdmin, adminController.getDashboard);
 app.get('/api/admin/users', authenticateAdmin, adminController.getUsers);
 app.get('/api/admin/transactions', authenticateAdmin, adminController.getTransactions);
+app.put('/api/admin/update-user', authenticateAdmin, adminController.updateUser);
 app.post('/api/admin/approve-withdraw', authenticateAdmin, adminController.approveWithdraw);
 app.post('/api/admin/reject-withdraw', authenticateAdmin, adminController.rejectWithdraw);
 

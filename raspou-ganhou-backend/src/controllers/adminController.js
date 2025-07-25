@@ -190,3 +190,65 @@ export const rejectWithdraw = async (req, res) => {
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 };
+
+export const updateUser = async (req, res) => {
+  try {
+    const { user_id, nome, email, telefone, saldo_real, saldo_bonus } = req.body;
+
+    if (!user_id) {
+      return res.status(400).json({ error: 'ID do usuário é obrigatório' });
+    }
+
+    // Preparar dados para atualização
+    const updateData = {};
+    if (nome !== undefined) updateData.nome = nome;
+    if (email !== undefined) updateData.email = email;
+    if (telefone !== undefined) updateData.telefone = telefone;
+    if (saldo_real !== undefined) updateData.saldo_real = parseFloat(saldo_real);
+    if (saldo_bonus !== undefined) updateData.saldo_bonus = parseFloat(saldo_bonus);
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ error: 'Nenhum campo para atualizar' });
+    }
+
+    // Verificar se email já existe (se estiver sendo alterado)
+    if (email) {
+      const { data: existingUser } = await supabaseAdmin
+        .from('users')
+        .select('id')
+        .eq('email', email)
+        .neq('id', user_id)
+        .single();
+
+      if (existingUser) {
+        return res.status(409).json({ error: 'Email já está em uso por outro usuário' });
+      }
+    }
+
+    // Atualizar usuário
+    const { data: updatedUser, error } = await supabaseAdmin
+      .from('users')
+      .update(updateData)
+      .eq('id', user_id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Update user error:', error);
+      return res.status(500).json({ error: 'Erro ao atualizar usuário: ' + error.message });
+    }
+
+    // Remover senha dos dados retornados
+    const { senha, ...userWithoutPassword } = updatedUser;
+
+    res.json({
+      success: true,
+      message: 'Usuário atualizado com sucesso',
+      user: userWithoutPassword
+    });
+
+  } catch (error) {
+    console.error('Update user error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+};

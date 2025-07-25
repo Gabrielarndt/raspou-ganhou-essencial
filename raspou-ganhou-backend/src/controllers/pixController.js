@@ -5,17 +5,26 @@ import { v4 as uuidv4 } from 'uuid';
 export const createPixDeposit = async (req, res) => {
   try {
     const { amount } = req.body;
-    const userId = req.user.user_id;
+    const userId = req.user?.user_id;
 
-    // Validações
-    if (!amount || amount < 20) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Valor mínimo para depósito é R$ 20,00' 
+    console.log('🟡 Iniciando criação de depósito PIX...');
+    console.log('🔢 Valor recebido:', amount);
+    console.log('👤 ID do usuário autenticado:', userId);
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Usuário não autenticado'
       });
     }
 
-    // Buscar dados do usuário
+    if (!amount || isNaN(amount) || parseFloat(amount) < 20) {
+      return res.status(400).json({
+        success: false,
+        error: 'Valor mínimo para depósito é R$ 20,00'
+      });
+    }
+
     const { data: user, error: userError } = await supabaseAdmin
       .from('users')
       .select('*')
@@ -23,16 +32,15 @@ export const createPixDeposit = async (req, res) => {
       .single();
 
     if (userError || !user) {
-      return res.status(404).json({ 
-        success: false, 
-        error: 'Usuário não encontrado' 
+      console.error('❌ Usuário não encontrado:', userError);
+      return res.status(404).json({
+        success: false,
+        error: 'Usuário não encontrado'
       });
     }
 
-    // Gerar ID único para a transação
-    const orderId = `DEP_${Date.now()}_${uuidv4().substr(0, 8)}`;
+    const orderId = `DEP_${Date.now()}_${uuidv4().slice(0, 8)}`;
 
-    // Criar transação no banco (status pending)
     const { data: transaction, error: transactionError } = await supabaseAdmin
       .from('transactions')
       .insert({
@@ -46,32 +54,31 @@ export const createPixDeposit = async (req, res) => {
         external_id: orderId,
         metadata: {
           order_id: orderId,
-          expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString() // 15 minutos
+          expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString()
         }
       })
       .select()
       .single();
 
     if (transactionError) {
-      console.error('Transaction creation error:', transactionError);
-      return res.status(500).json({ 
-        success: false, 
-        error: 'Erro ao criar transação no banco de dados' 
+      console.error('❌ Erro ao inserir transação:', transactionError);
+      return res.status(500).json({
+        success: false,
+        error: 'Erro ao criar transação no banco de dados'
       });
     }
 
-    // Criar transação PIX na FastSoft
     const customerData = {
       name: user.nome,
       email: user.email,
-      cpf: user.cpf.replace(/\D/g, ''), // Remove formatação
+      cpf: user.cpf?.replace(/\D/g, '') || '',
       phone: user.telefone?.replace(/\D/g, '') || ''
     };
 
     const pixResult = await pixService.createPixTransaction(amount, customerData, orderId);
 
     if (!pixResult.success) {
-      // Atualizar transação como falha
+      console.error('❌ Erro na API da FastSoft:', pixResult.error);
       await supabaseAdmin
         .from('transactions')
         .update({ status: 'failed' })
@@ -83,7 +90,6 @@ export const createPixDeposit = async (req, res) => {
       });
     }
 
-    // Atualizar transação com dados do PIX
     await supabaseAdmin
       .from('transactions')
       .update({
@@ -98,6 +104,7 @@ export const createPixDeposit = async (req, res) => {
       })
       .eq('id', transaction.id);
 
+    console.log('✅ PIX gerado com sucesso!');
     res.json({
       success: true,
       data: {
@@ -112,13 +119,14 @@ export const createPixDeposit = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Create PIX deposit error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Erro interno do servidor' 
+    console.error('❌ Erro geral ao criar depósito PIX:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Erro interno do servidor'
     });
   }
 };
+
 
 export const checkPixStatus = async (req, res) => {
   try {

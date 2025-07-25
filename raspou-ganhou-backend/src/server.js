@@ -84,6 +84,12 @@ app.post('/api/admin/create-admin', authenticateAdmin, adminController.createAdm
 app.put('/api/admin/update-admin', authenticateAdmin, adminController.updateAdmin);
 app.delete('/api/admin/delete-admin', authenticateAdmin, adminController.deleteAdmin);
 
+// Rotas de gerenciamento de afiliados (apenas admins)
+app.get('/api/admin/affiliates', authenticateAdmin, adminController.getAffiliates);
+app.post('/api/admin/create-affiliate', authenticateAdmin, adminController.createAffiliate);
+app.put('/api/admin/update-affiliate', authenticateAdmin, adminController.updateAffiliate);
+app.delete('/api/admin/delete-affiliate', authenticateAdmin, adminController.deleteAffiliate);
+
 app.post('/api/admin/approve-withdraw', authenticateAdmin, adminController.approveWithdraw);
 app.post('/api/admin/reject-withdraw', authenticateAdmin, adminController.rejectWithdraw);
 

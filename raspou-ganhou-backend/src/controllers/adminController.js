@@ -599,3 +599,179 @@ export const getAdmins = async (req, res) => {
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 };
+
+export const getAffiliates = async (req, res) => {
+  try {
+    const { data: affiliates, error } = await supabaseAdmin
+      .from('affiliates')
+      .select('id, name, email, affiliate_code, cpa, commission_rate, referrals, volume_generated, total_commission, conversion_rate, created_at')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Get affiliates error:', error);
+      return res.status(500).json({ error: 'Erro ao carregar afiliados' });
+    }
+
+    res.json({ affiliates });
+
+  } catch (error) {
+    console.error('Get affiliates error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+};
+
+export const createAffiliate = async (req, res) => {
+  try {
+    const { name, email, password, affiliate_code, cpa, commission_rate } = req.body;
+
+    if (!name || !email || !password || !affiliate_code) {
+      return res.status(400).json({ error: 'Nome, email, senha e código de afiliado são obrigatórios' });
+    }
+
+    // Verificar se email ou código já existe
+    const { data: existingAffiliate } = await supabaseAdmin
+      .from('affiliates')
+      .select('id')
+      .or(`email.eq.${email},affiliate_code.eq.${affiliate_code}`)
+      .single();
+
+    if (existingAffiliate) {
+      return res.status(409).json({ error: 'Email ou código de afiliado já está em uso' });
+    }
+
+    // Hash da senha
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    const { data: affiliate, error } = await supabaseAdmin
+      .from('affiliates')
+      .insert({
+        name,
+        email,
+        password: hashedPassword,
+        affiliate_code,
+        cpa: parseFloat(cpa || 0),
+        commission_rate: parseFloat(commission_rate || 0),
+        referrals: 0,
+        volume_generated: 0,
+        total_commission: 0,
+        conversion_rate: 0
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Create affiliate error:', error);
+      return res.status(500).json({ error: 'Erro ao criar afiliado: ' + error.message });
+    }
+
+    // Remover senha dos dados retornados
+    const { password: _, ...affiliateWithoutPassword } = affiliate;
+
+    res.json({
+      success: true,
+      message: 'Afiliado criado com sucesso',
+      affiliate: affiliateWithoutPassword
+    });
+
+  } catch (error) {
+    console.error('Create affiliate error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+};
+
+export const updateAffiliate = async (req, res) => {
+  try {
+    const { affiliate_id, name, email, password, affiliate_code, cpa, commission_rate } = req.body;
+
+    if (!affiliate_id) {
+      return res.status(400).json({ error: 'ID do afiliado é obrigatório' });
+    }
+
+    const updateData = {};
+    if (name !== undefined) updateData.name = name;
+    if (email !== undefined) updateData.email = email;
+    if (affiliate_code !== undefined) updateData.affiliate_code = affiliate_code;
+    if (cpa !== undefined) updateData.cpa = parseFloat(cpa);
+    if (commission_rate !== undefined) updateData.commission_rate = parseFloat(commission_rate);
+    
+    if (password) {
+      updateData.password = await bcrypt.hash(password, 12);
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ error: 'Nenhum campo para atualizar' });
+    }
+
+    // Verificar se email ou código já existe (se estiver sendo alterado)
+    if (email || affiliate_code) {
+      const conditions = [];
+      if (email) conditions.push(`email.eq.${email}`);
+      if (affiliate_code) conditions.push(`affiliate_code.eq.${affiliate_code}`);
+      
+      const { data: existingAffiliate } = await supabaseAdmin
+        .from('affiliates')
+        .select('id')
+        .or(conditions.join(','))
+        .neq('id', affiliate_id)
+        .single();
+
+      if (existingAffiliate) {
+        return res.status(409).json({ error: 'Email ou código de afiliado já está em uso por outro afiliado' });
+      }
+    }
+
+    const { data: affiliate, error } = await supabaseAdmin
+      .from('affiliates')
+      .update(updateData)
+      .eq('id', affiliate_id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Update affiliate error:', error);
+      return res.status(500).json({ error: 'Erro ao atualizar afiliado: ' + error.message });
+    }
+
+    // Remover senha dos dados retornados
+    const { password: _, ...affiliateWithoutPassword } = affiliate;
+
+    res.json({
+      success: true,
+      message: 'Afiliado atualizado com sucesso',
+      affiliate: affiliateWithoutPassword
+    });
+
+  } catch (error) {
+    console.error('Update affiliate error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+};
+
+export const deleteAffiliate = async (req, res) => {
+  try {
+    const { affiliate_id } = req.body;
+
+    if (!affiliate_id) {
+      return res.status(400).json({ error: 'ID do afiliado é obrigatório' });
+    }
+
+    const { error } = await supabaseAdmin
+      .from('affiliates')
+      .delete()
+      .eq('id', affiliate_id);
+
+    if (error) {
+      console.error('Delete affiliate error:', error);
+      return res.status(500).json({ error: 'Erro ao excluir afiliado: ' + error.message });
+    }
+
+    res.json({
+      success: true,
+      message: 'Afiliado excluído com sucesso'
+    });
+
+  } catch (error) {
+    console.error('Delete affiliate error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+};

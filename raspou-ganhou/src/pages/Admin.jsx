@@ -175,10 +175,10 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
     }
   };
 
-  const loadAffiliates = () => {
+  const loadAffiliates = async () => {
     try {
-      const savedAffiliates = JSON.parse(localStorage.getItem('raspou_affiliates') || '[]');
-      setAffiliates(savedAffiliates);
+      const data = await apiClient.getAffiliates();
+      setAffiliates(data.affiliates || []);
     } catch (error) {
       console.error('Erro ao carregar afiliados:', error);
       setAffiliates([]);
@@ -678,12 +678,25 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
     alert(editingAffiliate ? 'Afiliado atualizado!' : 'Afiliado criado!');
   };
 
-  const handleDeleteAffiliate = (affiliate) => {
-    if (window.confirm(`Tem certeza que deseja excluir o afiliado "${affiliate.name}"?`)) {
-      const updatedAffiliates = affiliates.filter(a => a.id !== affiliate.id);
-      setAffiliates(updatedAffiliates);
-      localStorage.setItem('raspou_affiliates', JSON.stringify(updatedAffiliates));
-      alert('Afiliado excluído!');
+  const handleDeleteAffiliate = async (affiliateId) => {
+    if (!affiliateId) {
+      alert('ID do afiliado é obrigatório');
+      return;
+    }
+
+    if (!window.confirm('Tem certeza que deseja excluir este afiliado?')) {
+      return;
+    }
+
+    try {
+      const result = await apiClient.deleteAffiliate(affiliateId);
+      if (result.success) {
+        await loadAffiliates();
+        alert('Afiliado excluído com sucesso!');
+      }
+    } catch (error) {
+      console.error('Erro ao excluir afiliado:', error);
+      alert('Erro ao excluir afiliado: ' + error.message);
     }
   };
 
@@ -1553,7 +1566,7 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
                                   <Edit className="w-4 h-4" />
                                 </button>
                                 <button
-                                  onClick={() => handleDeleteAffiliate(affiliate)}
+                                  onClick={() => handleDeleteAffiliate(affiliate.id)}
                                   className="text-red-400 hover:text-red-300"
                                   title="Excluir"
                                 >

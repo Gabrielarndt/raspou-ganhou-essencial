@@ -122,8 +122,7 @@ export const playGame = async (req, res) => {
     console.error('Erro ao atualizar usuário (ganhou):', updateError);
     return res.status(500).json({ error: 'Erro ao atualizar usuário' });
   }
-
-  const gamePrice = parseFloat(game.price || 0);
+} else {
   // Jogador perdeu - apenas atualiza estatísticas
   const newPontosSorteio = (user.pontos_sorteio || 0) + 10;
   const newJogosRealizados = (user.jogos_realizados || 0) + 1;

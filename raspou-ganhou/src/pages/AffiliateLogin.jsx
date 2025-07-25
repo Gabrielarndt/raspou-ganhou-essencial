@@ -34,6 +34,9 @@ const AffiliateLogin = () => {
 
     apiClient.affiliateLogin(formData.email, formData.senha).then(result => {
       if (result.success) {
+        // Store user data and token
+        localStorage.setItem('user', JSON.stringify(result.user));
+        localStorage.setItem('auth_token', result.token);
         navigate('/affiliate');
       } else {
         setError(result.error || 'Credenciais inválidas');

@@ -37,11 +37,16 @@ const Affiliate = () => {
   const [notifications, setNotifications] = useState({});
   const [security, setSecurity] = useState({});
 
-  // Verificar se é afiliado
-  const isAffiliate = user?.is_affiliate === true || user?.role === 'affiliate';
+  // Verificar se é afiliado - primeiro verifica localStorage, depois user do context
+  const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+  const isAffiliate = storedUser?.role === 'affiliate' || user?.role === 'affiliate';
+  const currentUser = storedUser?.role === 'affiliate' ? storedUser : user;
 
   useEffect(() => {
+    console.log('🔍 Affiliate: Checking auth - isAffiliate:', isAffiliate, 'currentUser:', !!currentUser);
+    
     if (!isAffiliate) {
+      console.log('❌ Affiliate: Not an affiliate, redirecting to login');
       navigate('/affiliate-login');
       return;
     }
@@ -52,7 +57,7 @@ const Affiliate = () => {
   const loadAffiliateData = () => {
     // Carregar dados do afiliado
     const affiliates = JSON.parse(localStorage.getItem('raspou_affiliates') || '[]');
-    const currentAffiliate = affiliates.find(a => a.email === user?.email);
+    const currentAffiliate = affiliates.find(a => a.email === currentUser?.email);
     
     if (currentAffiliate) {
       setAffiliateData(currentAffiliate);

@@ -39,7 +39,7 @@ const SuperAdminLogin = () => {
         localStorage.setItem('token', result.token);
     localStorage.setItem('user', JSON.stringify(result.user));
     
-    navigate('/api/admin/dashboard');
+    navigate('/admin');
       } else {
         setError(result.error || 'Credenciais inválidas');
       }

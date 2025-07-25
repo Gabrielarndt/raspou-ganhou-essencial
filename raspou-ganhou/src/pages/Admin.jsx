@@ -153,15 +153,7 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
     }
   };
 
-  const loadLotteries = () => {
-    try {
-      const savedLotteries = JSON.parse(localStorage.getItem('raspou_lotteries') || '[]');
-      setLotteries(savedLotteries);
-    } catch (error) {
-      console.error('Erro ao carregar sorteios:', error);
-      setLotteries([]);
-    }
-  };
+  
 
   const loadAdmins = () => {
     try {

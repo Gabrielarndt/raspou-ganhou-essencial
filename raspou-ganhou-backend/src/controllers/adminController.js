@@ -134,7 +134,7 @@ export const approveWithdraw = async (req, res) => {
     }
 
     if (transaction.status !== 'pending') {
-      return res.status(400).json({ error: 'Transação já foi processada' });
+      return res.status(400).json({ error: `Transação já foi processada. Status atual: ${transaction.status}` });
     }
 
     // Se for PIX, processar via FastSoft

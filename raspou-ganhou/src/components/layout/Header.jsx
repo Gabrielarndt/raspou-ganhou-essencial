@@ -203,6 +203,18 @@ const Header = () => {
                         </Link>
                       ))}
                     </div>
+                    <div className="flex items-center justify-between py-2 px-4 bg-gray-800 rounded mt-4">
+                      <span className="text-gray-300">Saldo Total:</span>
+                      <span className="text-yellow-400 font-bold">
+                        {formatCurrency((currentUser.saldo_real || 0) + (currentUser.saldo_bonus || 0))}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between py-2 px-4 bg-blue-800 rounded">
+                      <span className="text-gray-300">Pontos Sorteio:</span>
+                      <span className="text-blue-400 font-bold">
+                        {currentUser.pontos_sorteio || 0} pts
+                      </span>
+                    </div>
                   </>
                 )}
                 
@@ -249,60 +261,23 @@ const Header = () => {
                         Admin
                       </Link>
                     </div>
-                  </>
-                )}
-              </nav>
-            </div>
-          )}
-        </div>
-      </header>
-
-      {/* Drawers */}
-      <WalletDrawer 
-        isOpen={showWalletDrawer} 
-        onClose={() => setShowWalletDrawer(false)} 
-      />
-      <ProfileDrawer 
-        isOpen={showProfileDrawer} 
-        onClose={() => setShowProfileDrawer(false)} 
-      />
-    </>
-  );
-};
-
-export default Header;
-                    <div className="flex items-center justify-between py-2 px-4 bg-gray-800 rounded mt-4">
-                      <span className="text-gray-300">Saldo Total:</span>
-                      <span className="text-yellow-400 font-bold">
-                        {formatCurrency((currentUser.saldo_real || 0) + (currentUser.saldo_bonus || 0))}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between py-2 px-4 bg-blue-800 rounded">
-                      <span className="text-gray-300">Pontos Sorteio:</span>
-                      <span className="text-blue-400 font-bold">
-                        {currentUser.pontos_sorteio || 0} pts
-                      </span>
+                    <div className="flex flex-col space-y-2 mt-4">
+                      <Link
+                        to="/login"
+                        onClick={() => setShowMobileMenu(false)}
+                        className="text-center py-2 px-4 border border-gray-600 text-gray-300 hover:text-white rounded transition-colors"
+                      >
+                        Entrar
+                      </Link>
+                      <Link
+                        to="/registro"
+                        onClick={() => setShowMobileMenu(false)}
+                        className="text-center py-2 px-4 bg-yellow-600 hover:bg-yellow-700 text-black font-bold rounded transition-colors"
+                      >
+                        Criar Conta
+                      </Link>
                     </div>
                   </>
-                )}
-                
-                {!currentUser && (
-                  <div className="flex flex-col space-y-2 mt-4">
-                    <Link
-                      to="/login"
-                      onClick={() => setShowMobileMenu(false)}
-                      className="text-center py-2 px-4 border border-gray-600 text-gray-300 hover:text-white rounded transition-colors"
-                    >
-                      Entrar
-                    </Link>
-                    <Link
-                      to="/registro"
-                      onClick={() => setShowMobileMenu(false)}
-                      className="text-center py-2 px-4 bg-yellow-600 hover:bg-yellow-700 text-black font-bold rounded transition-colors"
-                    >
-                      Criar Conta
-                    </Link>
-                  </div>
                 )}
               </nav>
             </div>

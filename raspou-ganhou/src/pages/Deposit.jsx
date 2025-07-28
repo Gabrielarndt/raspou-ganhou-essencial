@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { apiClient } from '../lib/api';
-import { 
-  ArrowLeft, 
+import {
+  ArrowLeft,
   QrCode,
   DollarSign,
   Check,
@@ -13,6 +13,11 @@ import {
   Copy,
   RefreshCw
 } from 'lucide-react';
+
+const getCookie = (name) => {
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  return match ? decodeURIComponent(match[2]) : null;
+};
 
 const Deposit = () => {
   const navigate = useNavigate();
@@ -26,7 +31,6 @@ const Deposit = () => {
 
   const quickAmounts = [20, 50, 100, 200, 500, 1000];
 
-  // Timer para expiração do PIX
   React.useEffect(() => {
     if (pixData && timeRemaining > 0) {
       const timer = setInterval(() => {
@@ -38,18 +42,15 @@ const Deposit = () => {
           return prev - 1;
         });
       }, 1000);
-      
       return () => clearInterval(timer);
     }
   }, [pixData, timeRemaining]);
 
-  // Verificar status do pagamento periodicamente
   React.useEffect(() => {
     if (pixData && !checkingStatus) {
       const statusTimer = setInterval(async () => {
         await checkPaymentStatus();
-      }, 5000); // Verifica a cada 5 segundos
-      
+      }, 5000);
       return () => clearInterval(statusTimer);
     }
   }, [pixData, checkingStatus]);
@@ -68,7 +69,7 @@ const Deposit = () => {
   };
 
   const numericAmount = parseFloat(amount) || 0;
-  const bonusAmount = numericAmount >= 100 ? numericAmount * 0.1 : 0; // 10% bônus para depósitos acima de R$ 100
+  const bonusAmount = numericAmount >= 100 ? numericAmount * 0.1 : 0;
 
   const handleAmountChange = (value) => {
     const numValue = parseFloat(value);
@@ -93,10 +94,13 @@ const Deposit = () => {
 
     try {
       const result = await apiClient.createPixDeposit(numericAmount);
-      
+      console.log('🚀 PIX result:', result);
       if (result.success) {
-        setPixData(result.data);
-        setTimeRemaining(15 * 60); // 15 minutos
+        const data = result.data;
+        document.cookie = `pix_qr_code=${data.qr_code}; path=/; max-age=900`;
+        document.cookie = `pix_qr_text=${data.qr_code_text}; path=/; max-age=900`;
+        setPixData(data);
+        setTimeRemaining(15 * 60);
       } else {
         alert('Erro ao gerar PIX: ' + (result.error || 'Erro desconhecido'));
       }
@@ -110,18 +114,15 @@ const Deposit = () => {
 
   const checkPaymentStatus = async () => {
     if (!pixData || checkingStatus) return;
-    
     setCheckingStatus(true);
-    
+
     try {
-      const result = await apiClient.checkPixStatus(pixData.transaction_id);
-      
+      const result = await apiClient.checkPixStatus(pixData.fastsoft_transaction_id);
       if (result.success && result.data.status === 'completed') {
         await refreshUser();
         setPixData(null);
         setShowSuccess(true);
         setAmount('');
-        
         setTimeout(() => {
           setShowSuccess(false);
           navigate('/minha-conta');
@@ -135,8 +136,9 @@ const Deposit = () => {
   };
 
   const copyPixCode = () => {
-    if (pixData?.qr_code_text) {
-      navigator.clipboard.writeText(pixData.qr_code_text);
+    const qrCodeText = pixData?.qr_code_text || getCookie('pix_qr_text');
+    if (qrCodeText) {
+      navigator.clipboard.writeText(qrCodeText);
       alert('Código PIX copiado para a área de transferência!');
     }
   };
@@ -154,10 +156,13 @@ const Deposit = () => {
     return null;
   }
 
+  const qrCode = pixData?.qr_code || getCookie('pix_qr_code');
+  const qrText = pixData?.qr_code_text || getCookie('pix_qr_text');
+
   return (
     <div className="min-h-screen bg-black text-white pt-20 pb-20 lg:pb-8">
       <div className="container mx-auto px-4 lg:px-8 max-w-4xl">
-        
+
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <button
@@ -187,15 +192,15 @@ const Deposit = () => {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8">
-          
+
           {/* Formulário de Depósito */}
-          <div className="space-y-6">            
+          <div className="space-y-6">
             {!pixData ? (
               <>
                 {/* Método PIX */}
                 <div className="bg-gray-800 rounded-xl p-6">
                   <h3 className="text-white font-bold text-lg mb-4">Método de Pagamento</h3>
-                  
+
                   <div className="p-4 rounded-lg border-2 border-green-400 bg-green-400/10">
                     <div className="flex items-center space-x-4">
                       <QrCode className="w-6 h-6 text-green-400" />
@@ -214,7 +219,7 @@ const Deposit = () => {
                 {/* Valor do Depósito */}
                 <div className="bg-gray-800 rounded-xl p-6">
                   <h3 className="text-white font-bold text-lg mb-4">Valor do Depósito</h3>
-                  
+
                   {/* Valores Rápidos */}
                   <div className="grid grid-cols-3 gap-3 mb-4">
                     {quickAmounts.map((value) => (
@@ -254,14 +259,14 @@ const Deposit = () => {
                         <span className="text-gray-300">Valor do depósito:</span>
                         <span className="text-white">{formatCurrency(numericAmount)}</span>
                       </div>
-                      
+
                       {bonusAmount > 0 && (
                         <div className="flex justify-between">
                           <span className="text-green-400">Bônus (10%):</span>
                           <span className="text-green-400">+{formatCurrency(bonusAmount)}</span>
                         </div>
                       )}
-                      
+
                       <div className="border-t border-gray-600 pt-2">
                         <div className="flex justify-between font-bold">
                           <span className="text-white">Você receberá:</span>
@@ -302,20 +307,24 @@ const Deposit = () => {
                       <span className="font-mono text-sm">{formatTime(timeRemaining)}</span>
                     </div>
                   </div>
-                  
+
                   {/* QR Code */}
-                  <div className="bg-white p-4 rounded-lg mb-4 inline-block">
-                    <img 
-                      src={pixData.qr_code} 
-                      alt="QR Code PIX" 
-                      className="w-48 h-48 mx-auto"
-                    />
-                  </div>
-                  
+                   {qrText && (
+  <div className="bg-white p-4 rounded-lg mb-4 inline-block">
+    <img
+      src={`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qrText)}&size=192x192`}
+      alt="QR Code PIX"
+      className="w-48 h-48 mx-auto"
+    />
+  </div>
+)}
+
+
+
                   <p className="text-gray-400 text-sm mb-4">
                     Escaneie o QR Code ou copie o código PIX
                   </p>
-                  
+
                   {/* Código PIX */}
                   <div className="bg-gray-700 rounded-lg p-3 mb-4">
                     <p className="text-xs text-gray-400 mb-1">Código PIX:</p>
@@ -323,7 +332,7 @@ const Deposit = () => {
                       {pixData.qr_code_text}
                     </p>
                   </div>
-                  
+
                   {/* Botões */}
                   <div className="flex space-x-3">
                     <button
@@ -333,7 +342,7 @@ const Deposit = () => {
                       <Copy className="w-4 h-4" />
                       <span>Copiar Código</span>
                     </button>
-                    
+
                     <button
                       onClick={checkPaymentStatus}
                       disabled={checkingStatus}
@@ -343,7 +352,7 @@ const Deposit = () => {
                       <span>Verificar</span>
                     </button>
                   </div>
-                  
+
                   <button
                     onClick={handleNewDeposit}
                     className="w-full mt-3 bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 rounded-lg transition-colors"
@@ -355,19 +364,19 @@ const Deposit = () => {
                 {/* Informações do Pagamento */}
                 <div className="bg-gray-800 rounded-xl p-6">
                   <h3 className="text-white font-bold text-lg mb-4">Detalhes do Pagamento</h3>
-                  
+
                   <div className="flex justify-between">
                     <span className="text-gray-400">Valor:</span>
                     <span className="text-white font-bold">{formatCurrency(pixData.amount)}</span>
                   </div>
-                  
+
                   {bonusAmount > 0 && (
                     <div className="flex justify-between">
                       <span className="text-gray-400">Bônus:</span>
                       <span className="text-green-400 font-bold">+{formatCurrency(bonusAmount)}</span>
                     </div>
                   )}
-                  
+
                   <div className="border-t border-gray-600 pt-2 mt-2">
                     <div className="flex justify-between">
                       <span className="text-gray-400">Total a receber:</span>
@@ -381,7 +390,7 @@ const Deposit = () => {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            
+
             {/* Promoção Bônus */}
             <div className="bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl p-6 text-center">
               <Gift className="w-12 h-12 text-white mx-auto mb-4" />
@@ -399,7 +408,7 @@ const Deposit = () => {
             {/* Informações de Segurança */}
             <div className="bg-gray-800 rounded-xl p-6">
               <h3 className="text-white font-bold text-lg mb-4">🔒 Segurança</h3>
-              
+
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-green-400 rounded-full"></div>
@@ -423,18 +432,18 @@ const Deposit = () => {
             {/* Dúvidas Frequentes */}
             <div className="bg-gray-800 rounded-xl p-6">
               <h3 className="text-white font-bold text-lg mb-4">❓ Dúvidas Frequentes</h3>
-              
+
               <div className="space-y-4">
                 <div>
                   <p className="text-yellow-400 text-sm font-medium mb-1">Quanto tempo demora?</p>
                   <p className="text-gray-300 text-xs">PIX é processado instantaneamente após o pagamento.</p>
                 </div>
-                
+
                 <div>
                   <p className="text-yellow-400 text-sm font-medium mb-1">O PIX expira?</p>
                   <p className="text-gray-300 text-xs">Sim, você tem 15 minutos para efetuar o pagamento.</p>
                 </div>
-                
+
                 <div>
                   <p className="text-yellow-400 text-sm font-medium mb-1">É seguro?</p>
                   <p className="text-gray-300 text-xs">Totalmente seguro, processado pelo Banco Central.</p>

@@ -58,6 +58,28 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
     drawScratchLayer(scratchCanvas.getContext('2d'));
   };
 
+  // Função para verificar padrões vencedores
+  const checkWinningPatterns = (symbols) => {
+    const winningPatterns = [
+      [0, 1, 2], // Linha superior
+      [3, 4, 5], // Linha meio
+      [6, 7, 8], // Linha inferior
+      [0, 3, 6], // Coluna esquerda
+      [1, 4, 7], // Coluna meio
+      [2, 5, 8], // Coluna direita
+      [0, 4, 8], // Diagonal principal
+      [2, 4, 6]  // Diagonal secundária
+    ];
+
+    for (const pattern of winningPatterns) {
+      const [a, b, c] = pattern;
+      if (symbols[a] && symbols[a] === symbols[b] && symbols[b] === symbols[c]) {
+        return pattern;
+      }
+    }
+    return [];
+  };
+
   const drawGameBoard = (ctx) => {
     // Fundo escuro
     ctx.fillStyle = '#1a1a1a';

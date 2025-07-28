@@ -194,67 +194,67 @@ const Home = () => {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 lg:gap-8">
             {features.map((feature, index) => (
-              <div key={index} className="bg-gray-800 rounded-xl p-6 text-center hover:bg-gray-700 transition-all duration-200 transform hover:scale-105">
-                <div className={`w-16 h-16 ${feature.color.replace('text-', 'bg-').replace('-400', '-500/20')} rounded-full flex items-center justify-center mx-auto mb-4`}>
-                  <feature.icon className={`w-8 h-8 ${feature.color}`} />
+              <div key={index} className="bg-gray-800 rounded-xl p-3 md:p-6 text-center hover:bg-gray-700 transition-all duration-200 transform hover:scale-105">
+                <div className={`w-10 h-10 md:w-16 md:h-16 ${feature.color.replace('text-', 'bg-').replace('-400', '-500/20')} rounded-full flex items-center justify-center mx-auto mb-2 md:mb-4`}>
+                  <feature.icon className={`w-5 h-5 md:w-8 md:h-8 ${feature.color}`} />
                 </div>
-                <h3 className="text-white font-bold text-lg mb-2">{feature.title}</h3>
-                <p className="text-gray-400 text-sm">{feature.description}</p>
+                <h3 className="text-white font-bold text-sm md:text-lg mb-1 md:mb-2">{feature.title}</h3>
+                <p className="text-gray-400 text-xs md:text-sm leading-tight">{feature.description}</p>
               </div>
             ))}
           </div>
         </section>
 
         {/* Ganhadores e Estatísticas */}
-        <section className="grid lg:grid-cols-2 gap-8 lg:gap-12 mb-12 lg:mb-16">
+        <section className="grid lg:grid-cols-2 gap-6 lg:gap-12 mb-12 lg:mb-16">
           
           {/* Ganhadores Recentes */}
-          <div className="bg-gray-800 rounded-xl p-6 lg:p-8">
+          <div className="bg-gray-800 rounded-xl p-4 lg:p-8">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center">
-                  <Trophy className="w-6 h-6 text-white" />
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center">
+                  <Trophy className="w-5 h-5 md:w-6 md:h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-green-400 font-bold text-xl">Ganhadores Recentes</h3>
-                  <p className="text-gray-400 text-sm">Prêmios pagos em tempo real</p>
+                  <h3 className="text-green-400 font-bold text-lg md:text-xl">Ganhadores Recentes</h3>
+                  <p className="text-gray-400 text-xs md:text-sm">Prêmios pagos em tempo real</p>
                 </div>
               </div>
               <div className="flex items-center space-x-1">
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                <span className="text-green-400 text-xs font-medium">AO VIVO</span>
+                <span className="text-green-400 text-xs font-medium hidden md:inline">AO VIVO</span>
               </div>
             </div>
             
-            <div className="space-y-3">
+            <div className="space-y-2 md:space-y-3">
               {ganhadores.map((ganhador, index) => (
-                <div key={index} className="flex items-center justify-between p-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
+                <div key={index} className="flex items-center justify-between p-3 md:p-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center">
-                      <span className="text-black font-bold text-sm">{ganhador.avatar}</span>
+                    <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center">
+                      <span className="text-black font-bold text-xs md:text-sm">{ganhador.avatar}</span>
                     </div>
                     <div>
-                      <p className="text-white font-medium">{ganhador.nome}</p>
-                      <p className="text-gray-400 text-sm">{ganhador.jogo}</p>
+                      <p className="text-white font-medium text-sm md:text-base">{ganhador.nome}</p>
+                      <p className="text-gray-400 text-xs md:text-sm">{ganhador.jogo}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-green-400 font-bold">{ganhador.premio}</p>
-                    <p className="text-gray-400 text-xs">{ganhador.tempo}</p>
+                    <p className="text-green-400 font-bold text-sm md:text-base">{ganhador.premio}</p>
+                    <p className="text-gray-400 text-xs hidden md:block">{ganhador.tempo}</p>
                   </div>
                 </div>
               ))}
             </div>
             
-            <div className="mt-6 pt-6 border-t border-gray-600">
+            <div className="mt-4 md:mt-6 pt-4 md:pt-6 border-t border-gray-600">
               <button
                 onClick={() => navigate('/numeros')}
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition-colors flex items-center justify-center space-x-2"
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 md:py-3 rounded-lg transition-colors flex items-center justify-center space-x-2"
               >
-                <Trophy className="w-5 h-5" />
-                <span>Ver Todos os Ganhadores</span>
+                <Trophy className="w-4 h-4 md:w-5 md:h-5" />
+                <span className="text-sm md:text-base">Ver Todos os Ganhadores</span>
               </button>
             </div>
           </div>
@@ -262,65 +262,65 @@ const Home = () => {
           {/* Estatísticas e CTA */}
           <div className="space-y-6">
             {/* Estatísticas */}
-            <div className="bg-gradient-to-br from-yellow-500/20 to-yellow-600/20 border border-yellow-500/30 rounded-xl p-6">
-              <h3 className="text-yellow-400 font-bold text-xl mb-6 flex items-center space-x-2">
-                <Sparkles className="w-6 h-6" />
+            <div className="bg-gradient-to-br from-yellow-500/20 to-yellow-600/20 border border-yellow-500/30 rounded-xl p-4 md:p-6">
+              <h3 className="text-yellow-400 font-bold text-lg md:text-xl mb-4 md:mb-6 flex items-center space-x-2">
+                <Sparkles className="w-5 h-5 md:w-6 md:h-6" />
                 <span>Estatísticas em Tempo Real</span>
               </h3>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3 md:gap-4">
                 <div className="text-center">
-                  <p className="text-3xl font-bold text-white mb-1">R$ 50K+</p>
-                  <p className="text-yellow-400 text-sm">Prêmios Pagos</p>
+                  <p className="text-xl md:text-3xl font-bold text-white mb-1">R$ 50K+</p>
+                  <p className="text-yellow-400 text-xs md:text-sm">Prêmios Pagos</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-3xl font-bold text-white mb-1">10K+</p>
-                  <p className="text-yellow-400 text-sm">Jogadores</p>
+                  <p className="text-xl md:text-3xl font-bold text-white mb-1">10K+</p>
+                  <p className="text-yellow-400 text-xs md:text-sm">Jogadores</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-3xl font-bold text-white mb-1">4.9</p>
-                  <p className="text-yellow-400 text-sm">Avaliação</p>
+                  <p className="text-xl md:text-3xl font-bold text-white mb-1">4.9</p>
+                  <p className="text-yellow-400 text-xs md:text-sm">Avaliação</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-3xl font-bold text-white mb-1">24/7</p>
-                  <p className="text-yellow-400 text-sm">Suporte</p>
+                  <p className="text-xl md:text-3xl font-bold text-white mb-1">24/7</p>
+                  <p className="text-yellow-400 text-xs md:text-sm">Suporte</p>
                 </div>
               </div>
             </div>
 
             {/* CTA Principal */}
-            <div className="bg-gray-800 rounded-xl p-6 text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Target className="w-8 h-8 text-black" />
+            <div className="bg-gray-800 rounded-xl p-4 md:p-6 text-center">
+              <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4">
+                <Target className="w-6 h-6 md:w-8 md:h-8 text-black" />
               </div>
-              <h3 className="text-white font-bold text-xl mb-2">Pronto para Ganhar?</h3>
-              <p className="text-gray-400 mb-6">
+              <h3 className="text-white font-bold text-lg md:text-xl mb-2">Pronto para Ganhar?</h3>
+              <p className="text-gray-400 text-sm md:text-base mb-4 md:mb-6">
                 Milhares de jogadores já ganharam prêmios incríveis. Sua vez pode ser agora!
               </p>
               
               {user ? (
-                <div className="space-y-3">
+                <div className="space-y-2 md:space-y-3">
                   <button
                     onClick={() => navigate('/raspadinhas')}
-                    className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-105"
+                    className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold py-3 md:py-4 px-4 md:px-6 rounded-xl transition-all duration-200 transform hover:scale-105"
                   >
                     Jogar Raspadinhas
                   </button>
-                  <p className="text-gray-400 text-sm">
+                  <p className="text-gray-400 text-xs md:text-sm">
                     Saldo: R$ {((user.saldo_real || 0) + (user.saldo_bonus || 0)).toFixed(2)}
                   </p>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-2 md:space-y-3">
                   <button
                     onClick={() => navigate('/registro')}
-                    className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-105"
+                    className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold py-3 md:py-4 px-4 md:px-6 rounded-xl transition-all duration-200 transform hover:scale-105"
                   >
                     Criar Conta Grátis
                   </button>
                   <button
                     onClick={() => navigate('/login')}
-                    className="w-full bg-transparent border-2 border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black font-bold py-3 px-6 rounded-xl transition-all duration-200"
+                    className="w-full bg-transparent border-2 border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black font-bold py-2 md:py-3 px-4 md:px-6 rounded-xl transition-all duration-200"
                   >
                     Já Tenho Conta
                   </button>
@@ -341,42 +341,42 @@ const Home = () => {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-            <div className="bg-gray-800 rounded-xl p-6 text-center relative">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
+            <div className="bg-gray-800 rounded-xl p-4 md:p-6 text-center relative">
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-yellow-400 text-black rounded-full flex items-center justify-center font-bold">
                 1
               </div>
-              <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4 mt-4">
-                <User className="w-8 h-8 text-blue-400" />
+              <div className="w-12 h-12 md:w-16 md:h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4 mt-4">
+                <User className="w-6 h-6 md:w-8 md:h-8 text-blue-400" />
               </div>
-              <h3 className="text-white font-bold text-lg mb-2">Crie sua Conta</h3>
-              <p className="text-gray-400 text-sm">
+              <h3 className="text-white font-bold text-base md:text-lg mb-2">Crie sua Conta</h3>
+              <p className="text-gray-400 text-xs md:text-sm">
                 Cadastro rápido e seguro em menos de 2 minutos
               </p>
             </div>
 
-            <div className="bg-gray-800 rounded-xl p-6 text-center relative">
+            <div className="bg-gray-800 rounded-xl p-4 md:p-6 text-center relative">
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-yellow-400 text-black rounded-full flex items-center justify-center font-bold">
                 2
               </div>
-              <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4 mt-4">
-                <Gift className="w-8 h-8 text-green-400" />
+              <div className="w-12 h-12 md:w-16 md:h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4 mt-4">
+                <Gift className="w-6 h-6 md:w-8 md:h-8 text-green-400" />
               </div>
-              <h3 className="text-white font-bold text-lg mb-2">Escolha sua Raspadinha</h3>
-              <p className="text-gray-400 text-sm">
+              <h3 className="text-white font-bold text-base md:text-lg mb-2">Escolha sua Raspadinha</h3>
+              <p className="text-gray-400 text-xs md:text-sm">
                 Diversos jogos com prêmios de até R$ 10.000
               </p>
             </div>
 
-            <div className="bg-gray-800 rounded-xl p-6 text-center relative">
+            <div className="bg-gray-800 rounded-xl p-4 md:p-6 text-center relative">
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-yellow-400 text-black rounded-full flex items-center justify-center font-bold">
                 3
               </div>
-              <div className="w-16 h-16 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-4 mt-4">
-                <Trophy className="w-8 h-8 text-yellow-400" />
+              <div className="w-12 h-12 md:w-16 md:h-16 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4 mt-4">
+                <Trophy className="w-6 h-6 md:w-8 md:h-8 text-yellow-400" />
               </div>
-              <h3 className="text-white font-bold text-lg mb-2">Raspe e Ganhe</h3>
-              <p className="text-gray-400 text-sm">
+              <h3 className="text-white font-bold text-base md:text-lg mb-2">Raspe e Ganhe</h3>
+              <p className="text-gray-400 text-xs md:text-sm">
                 Descubra se você ganhou e receba na hora!
               </p>
             </div>
@@ -394,19 +394,19 @@ const Home = () => {
             </p>
           </div>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
             {/* Bônus de Boas-vindas */}
-            <div className="bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl p-6 text-center relative overflow-hidden">
+            <div className="bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl p-4 md:p-6 text-center relative overflow-hidden">
               <div className="absolute inset-0 bg-black/10"></div>
               <div className="relative z-10">
-                <Gift className="w-12 h-12 text-white mx-auto mb-4" />
-                <h4 className="text-white font-bold text-lg mb-2">Bônus de Boas-vindas</h4>
-                <p className="text-white/90 text-sm mb-4">
+                <Gift className="w-10 h-10 md:w-12 md:h-12 text-white mx-auto mb-3 md:mb-4" />
+                <h4 className="text-white font-bold text-base md:text-lg mb-2">Bônus de Boas-vindas</h4>
+                <p className="text-white/90 text-xs md:text-sm mb-3 md:mb-4">
                   Ganhe R$ 10 grátis no seu primeiro cadastro!
                 </p>
                 <button 
                   onClick={() => navigate('/registro')}
-                  className="bg-white text-purple-600 font-bold py-2 px-6 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="bg-white text-purple-600 font-bold py-2 px-4 md:px-6 rounded-lg hover:bg-gray-100 transition-colors text-sm md:text-base"
                 >
                   Resgatar Agora
                 </button>
@@ -414,17 +414,17 @@ const Home = () => {
             </div>
 
             {/* Cashback VIP */}
-            <div className="bg-gradient-to-br from-blue-600 to-cyan-600 rounded-xl p-6 text-center relative overflow-hidden">
+            <div className="bg-gradient-to-br from-blue-600 to-cyan-600 rounded-xl p-4 md:p-6 text-center relative overflow-hidden">
               <div className="absolute inset-0 bg-black/10"></div>
               <div className="relative z-10">
-                <Star className="w-12 h-12 text-white mx-auto mb-4" />
-                <h4 className="text-white font-bold text-lg mb-2">Cashback VIP</h4>
-                <p className="text-white/90 text-sm mb-4">
+                <Star className="w-10 h-10 md:w-12 md:h-12 text-white mx-auto mb-3 md:mb-4" />
+                <h4 className="text-white font-bold text-base md:text-lg mb-2">Cashback VIP</h4>
+                <p className="text-white/90 text-xs md:text-sm mb-3 md:mb-4">
                   Receba 5% de volta em todas as suas jogadas!
                 </p>
                 <button 
                   onClick={() => navigate('/raspadinhas')}
-                  className="bg-white text-blue-600 font-bold py-2 px-6 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="bg-white text-blue-600 font-bold py-2 px-4 md:px-6 rounded-lg hover:bg-gray-100 transition-colors text-sm md:text-base"
                 >
                   Saiba Mais
                 </button>
@@ -432,17 +432,17 @@ const Home = () => {
             </div>
 
             {/* Sorteio Diário */}
-            <div className="bg-gradient-to-br from-green-600 to-emerald-600 rounded-xl p-6 text-center relative overflow-hidden md:col-span-2 lg:col-span-1">
+            <div className="bg-gradient-to-br from-green-600 to-emerald-600 rounded-xl p-4 md:p-6 text-center relative overflow-hidden md:col-span-2 lg:col-span-1">
               <div className="absolute inset-0 bg-black/10"></div>
               <div className="relative z-10">
-                <TrendingUp className="w-12 h-12 text-white mx-auto mb-4" />
-                <h4 className="text-white font-bold text-lg mb-2">Sorteio Diário</h4>
-                <p className="text-white/90 text-sm mb-4">
+                <TrendingUp className="w-10 h-10 md:w-12 md:h-12 text-white mx-auto mb-3 md:mb-4" />
+                <h4 className="text-white font-bold text-base md:text-lg mb-2">Sorteio Diário</h4>
+                <p className="text-white/90 text-xs md:text-sm mb-3 md:mb-4">
                   Concorra a R$ 5.000 todos os dias às 20h!
                 </p>
                 <button 
                   onClick={() => navigate('/numeros')}
-                  className="bg-white text-green-600 font-bold py-2 px-6 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="bg-white text-green-600 font-bold py-2 px-4 md:px-6 rounded-lg hover:bg-gray-100 transition-colors text-sm md:text-base"
                 >
                   Participar
                 </button>
@@ -452,37 +452,37 @@ const Home = () => {
         </section>
 
         {/* Call to Action Final */}
-        <section className="text-center py-12 lg:py-16 bg-gradient-to-r from-gray-800 to-gray-900 rounded-2xl">
-          <div className="max-w-3xl mx-auto px-6">
-            <Crown className="w-16 h-16 text-yellow-400 mx-auto mb-6" />
-            <h3 className="text-3xl lg:text-5xl font-bold mb-6">
+        <section className="text-center py-8 md:py-12 lg:py-16 bg-gradient-to-r from-gray-800 to-gray-900 rounded-2xl">
+          <div className="max-w-3xl mx-auto px-4 md:px-6">
+            <Crown className="w-12 h-12 md:w-16 md:h-16 text-yellow-400 mx-auto mb-4 md:mb-6" />
+            <h3 className="text-2xl md:text-3xl lg:text-5xl font-bold mb-4 md:mb-6">
               Sua <span className="text-yellow-400">Sorte</span> Está Esperando
             </h3>
-            <p className="text-gray-300 text-lg lg:text-xl mb-8">
+            <p className="text-gray-300 text-sm md:text-lg lg:text-xl mb-6 md:mb-8">
               Junte-se a milhares de jogadores que já transformaram suas vidas com o RaspouGanhou. 
               Comece agora e descubra o que a sorte preparou para você!
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center items-center">
               <button
                 onClick={() => navigate('/raspadinhas')}
-                className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold py-4 px-8 lg:px-12 rounded-xl transition-all duration-200 transform hover:scale-105 flex items-center space-x-2"
+                className="w-full sm:w-auto bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold py-3 md:py-4 px-6 md:px-8 lg:px-12 rounded-xl transition-all duration-200 transform hover:scale-105 flex items-center justify-center space-x-2"
               >
-                <Play className="w-6 h-6" />
+                <Play className="w-5 h-5 md:w-6 md:h-6" />
                 <span>Começar a Jogar</span>
               </button>
               
               {!user && (
                 <button
                   onClick={() => navigate('/registro')}
-                  className="bg-transparent border-2 border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black font-bold py-4 px-8 lg:px-12 rounded-xl transition-all duration-200"
+                  className="w-full sm:w-auto bg-transparent border-2 border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black font-bold py-3 md:py-4 px-6 md:px-8 lg:px-12 rounded-xl transition-all duration-200"
                 >
                   Criar Conta Grátis
                 </button>
               )}
             </div>
             
-            <div className="mt-8 flex justify-center space-x-8 text-sm text-gray-400">
+            <div className="mt-6 md:mt-8 flex flex-wrap justify-center gap-4 md:gap-8 text-xs md:text-sm text-gray-400">
               <div className="flex items-center space-x-2">
                 <Shield className="w-4 h-4 text-green-400" />
                 <span>100% Seguro</span>

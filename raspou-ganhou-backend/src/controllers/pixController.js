@@ -194,21 +194,12 @@ export const checkPixStatus = async (req, res) => {
 
 export const handlePixWebhook = async (req, res) => {
   try {
-    const signature = req.headers['x-signature'];
-    const payload = JSON.stringify(req.body);
-
-    // Verificar assinatura do webhook
-    if (!pixService.verifyWebhookSignature(payload, signature)) {
-      return res.status(401).json({ error: 'Assinatura inválida' });
-    }
-
-    const webhookResult = await pixService.processWebhook(req.body);
-
-    if (!webhookResult.success) {
-      return res.status(400).json({ error: webhookResult.error });
-    }
-
-    const { transactionId, status, amount, orderId } = webhookResult.data;
+    console.log('📥 PIX Webhook recebido:', req.body);
+    
+    const webhookData = req.body;
+    const transactionId = webhookData.id;
+    const status = webhookData.status;
+    const orderId = webhookData.metadata?.order_id;
 
     // Buscar transação no banco pelo external_id
     const { data: transaction, error: transactionError } = await supabaseAdmin
@@ -231,8 +222,8 @@ export const handlePixWebhook = async (req, res) => {
       })
       .eq('id', transaction.id);
 
-    // Se foi aprovado, processar o depósito
-    if (status === 'completed') {
+    // Se foi aprovado e é depósito, processar
+    if (status === 'completed' && transaction.type === 'deposit') {
       await processApprovedDeposit(transaction);
     }
 

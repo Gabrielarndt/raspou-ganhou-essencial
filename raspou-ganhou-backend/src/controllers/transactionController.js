@@ -121,6 +121,11 @@ export const withdraw = async (req, res) => {
       return res.status(400).json({ error: 'Dados inválidos' });
     }
 
+    // Validar chave PIX se o método for PIX
+    if (method === 'PIX' && !details.pix_key) {
+      return res.status(400).json({ error: 'Chave PIX é obrigatória' });
+    }
+
     // Buscar usuário atual
     const { data: user, error: userError } = await supabaseAdmin
       .from('users')
@@ -153,7 +158,7 @@ export const withdraw = async (req, res) => {
         amount: withdrawAmount,
         fee: fee,
         net_amount: netAmount,
-        status: 'processing',
+        status: 'pending',
         metadata: details
       })
       .select()
@@ -200,7 +205,7 @@ export const withdraw = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Saque solicitado com sucesso',
+      message: 'Saque solicitado com sucesso. Aguarde aprovação do administrador.',
       new_balance: {
         saldo_real: newRealBalance,
         saldo_bonus: parseFloat(user.saldo_bonus || 0)

@@ -78,6 +78,7 @@ app.get('/api/pix/status/:transaction_id', authenticateToken, pixController.chec
 
 // Webhook PIX (público)
 app.post('/api/webhook/pix', pixController.handlePixWebhook);
+app.post('/api/webhook/pix-withdrawal', pixController.handlePixWebhook);
 
 // Rotas administrativas (apenas admins)
 app.get('/api/admin/dashboard', authenticateAdmin, adminController.getDashboard);

@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import { supabaseAdmin } from '../config/database.js';
+import pixService from '../services/pixService.js';
 
 export const getDashboard = async (req, res) => {
   try {
@@ -117,21 +118,95 @@ export const approveWithdraw = async (req, res) => {
       return res.status(400).json({ error: 'ID da transação é obrigatório' });
     }
 
-    const { error } = await supabaseAdmin
+    // Buscar transação
+    const { data: transaction, error: transactionError } = await supabaseAdmin
       .from('transactions')
-      .update({
-        status: 'completed',
-        processed_at: new Date().toISOString()
-      })
+      .select(`
+        *,
+        users(nome, email, telefone, cpf)
+      `)
       .eq('id', transaction_id)
-      .eq('type', 'withdraw');
+      .eq('type', 'withdraw')
+      .single();
 
-    if (error) {
-      console.error('Approve withdraw error:', error);
-      return res.status(500).json({ error: 'Erro ao aprovar saque' });
+    if (transactionError || !transaction) {
+      return res.status(404).json({ error: 'Transação não encontrada' });
     }
 
-    res.json({ success: true, message: 'Saque aprovado com sucesso' });
+    if (transaction.status !== 'pending') {
+      return res.status(400).json({ error: 'Transação já foi processada' });
+    }
+
+    // Se for PIX, processar via FastSoft
+    if (transaction.method === 'PIX') {
+      const customerData = {
+        name: transaction.users.nome,
+        email: transaction.users.email,
+        phone: transaction.users.telefone,
+        cpf: transaction.users.cpf,
+        externalRef: transaction.user_id
+      };
+
+      const pixKey = transaction.metadata?.pix_key;
+      if (!pixKey) {
+        return res.status(400).json({ error: 'Chave PIX não encontrada na transação' });
+      }
+
+      // Criar saque via FastSoft
+      const pixResult = await pixService.createPixWithdrawal(
+        transaction.amount,
+        pixKey,
+        customerData,
+        transaction.id
+      );
+
+      if (!pixResult.success) {
+        console.error('Erro na API da FastSoft para saque:', pixResult.error);
+        return res.status(400).json({ error: 'Erro ao processar saque via PIX: ' + pixResult.error });
+      }
+
+      // Atualizar transação com dados da FastSoft
+      const { error: updateError } = await supabaseAdmin
+        .from('transactions')
+        .update({
+          status: 'processing',
+          external_id: pixResult.data.id,
+          processed_at: new Date().toISOString(),
+          metadata: {
+            ...transaction.metadata,
+            fastsoft_transaction_id: pixResult.data.id
+          }
+        })
+        .eq('id', transaction_id);
+
+      if (updateError) {
+        console.error('Erro ao atualizar transação:', updateError);
+        return res.status(500).json({ error: 'Erro ao atualizar transação' });
+      }
+
+      res.json({ 
+        success: true, 
+        message: 'Saque aprovado e enviado via PIX',
+        fastsoft_id: pixResult.data.id
+      });
+
+    } else {
+      // Para outros métodos, apenas marcar como aprovado
+      const { error } = await supabaseAdmin
+        .from('transactions')
+        .update({
+          status: 'completed',
+          processed_at: new Date().toISOString()
+        })
+        .eq('id', transaction_id);
+
+      if (error) {
+        console.error('Approve withdraw error:', error);
+        return res.status(500).json({ error: 'Erro ao aprovar saque' });
+      }
+
+      res.json({ success: true, message: 'Saque aprovado com sucesso' });
+    }
 
   } catch (error) {
     console.error('Approve withdraw error:', error);
@@ -158,11 +233,15 @@ export const rejectWithdraw = async (req, res) => {
       return res.status(404).json({ error: 'Transação não encontrada' });
     }
 
+    if (transaction.status !== 'pending') {
+      return res.status(400).json({ error: 'Transação já foi processada' });
+    }
+
     // Rejeitar saque
     const { error: updateError } = await supabaseAdmin
       .from('transactions')
       .update({
-        status: 'rejected',
+        status: 'cancelled',
         processed_at: new Date().toISOString()
       })
       .eq('id', transaction_id);
@@ -173,16 +252,44 @@ export const rejectWithdraw = async (req, res) => {
     }
 
     // Devolver valor ao usuário
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('users')
+      .select('saldo_real')
+      .eq('id', transaction.user_id)
+      .single();
+
+    if (userError || !user) {
+      console.error('User not found for refund:', userError);
+      return res.status(404).json({ error: 'Usuário não encontrado para estorno' });
+    }
+
+    const newBalance = parseFloat(user.saldo_real || 0) + parseFloat(transaction.amount);
+
     const { error: refundError } = await supabaseAdmin
       .from('users')
       .update({
-        saldo_real: supabaseAdmin.raw(`saldo_real + ${parseFloat(transaction.amount)}`)
+        saldo_real: newBalance
       })
       .eq('id', transaction.user_id);
 
     if (refundError) {
       console.error('Refund error:', refundError);
+      return res.status(500).json({ error: 'Erro ao devolver valor ao usuário' });
     }
+
+    // Registrar movimentação de estorno
+    await supabaseAdmin
+      .from('balance_movements')
+      .insert({
+        user_id: transaction.user_id,
+        transaction_id: transaction.id,
+        type: 'credit',
+        balance_type: 'real',
+        amount: parseFloat(transaction.amount),
+        previous_balance: parseFloat(user.saldo_real || 0),
+        new_balance: newBalance,
+        description: 'Estorno de saque rejeitado'
+      });
 
     res.json({ success: true, message: 'Saque rejeitado e valor devolvido' });
 

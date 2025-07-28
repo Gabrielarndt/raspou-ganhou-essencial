@@ -232,7 +232,6 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
         alert('Erro ao rejeitar saque: ' + error.message);
       }
     }
-    }
   };
 
   const handleLogout = () => {

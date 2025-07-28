@@ -188,14 +188,6 @@ const SuperAdminLogin = () => {
           </div>
         </div>
 
-        {/* Credenciais de Teste */}
-        <div className="mt-6 bg-yellow-600/10 border border-yellow-600/30 rounded-xl p-4">
-          <h4 className="text-yellow-400 font-bold mb-2">🔑 Credenciais de Teste</h4>
-          <div className="space-y-1 text-sm text-gray-300">
-            <p><strong>Super Admin:</strong> superadmin@raspouganhou.com / super123</p>
-            <p><strong>Gabriel:</strong> gabriel@gmail.com / admin123</p>
-          </div>
-        </div>
       </div>
     </div>
   );

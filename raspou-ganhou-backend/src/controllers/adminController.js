@@ -237,21 +237,7 @@ export const rejectWithdraw = async (req, res) => {
       return res.status(400).json({ error: 'Transação já foi processada' });
     }
 
-    // Rejeitar saque
-    const { error: updateError } = await supabaseAdmin
-      .from('transactions')
-      .update({
-        status: 'failed',
-        processed_at: new Date().toISOString()
-      })
-      .eq('id', transaction_id);
-
-    if (updateError) {
-      console.error('Reject withdraw error:', updateError);
-      return res.status(500).json({ error: 'Erro ao rejeitar saque' });
-    }
-
-    // Devolver valor ao usuário
+    // Buscar usuário antes de fazer qualquer alteração
     const { data: user, error: userError } = await supabaseAdmin
       .from('users')
       .select('saldo_real')
@@ -263,40 +249,91 @@ export const rejectWithdraw = async (req, res) => {
       return res.status(404).json({ error: 'Usuário não encontrado para estorno' });
     }
 
-    const newBalance = parseFloat(user.saldo_real || 0) + parseFloat(transaction.amount);
+    const previousBalance = parseFloat(user.saldo_real || 0);
+    const newBalance = previousBalance + parseFloat(transaction.amount);
 
-    const { error: refundError } = await supabaseAdmin
-      .from('users')
-      .update({
-        saldo_real: newBalance
-      })
-      .eq('id', transaction.user_id);
+    // Executar todas as operações em sequência, capturando erros individualmente
+    let updateSuccess = false;
+    let refundSuccess = false;
+    let movementSuccess = false;
 
-    if (refundError) {
-      console.error('Refund error:', refundError);
+    // 1. Rejeitar saque
+    try {
+      const { error: updateError } = await supabaseAdmin
+        .from('transactions')
+        .update({
+          status: 'failed',
+          processed_at: new Date().toISOString()
+        })
+        .eq('id', transaction_id);
+
+      if (updateError) {
+        console.error('Update transaction error:', updateError);
+        return res.status(500).json({ error: 'Erro ao rejeitar saque' });
+      }
+      updateSuccess = true;
+    } catch (error) {
+      console.error('Update transaction exception:', error);
+      return res.status(500).json({ error: 'Erro ao rejeitar saque' });
+    }
+
+    // 2. Devolver valor ao usuário
+    try {
+      const { error: refundError } = await supabaseAdmin
+        .from('users')
+        .update({
+          saldo_real: newBalance
+        })
+        .eq('id', transaction.user_id);
+
+      if (refundError) {
+        console.error('Refund error:', refundError);
+        return res.status(500).json({ error: 'Erro ao devolver valor ao usuário' });
+      }
+      refundSuccess = true;
+    } catch (error) {
+      console.error('Refund exception:', error);
       return res.status(500).json({ error: 'Erro ao devolver valor ao usuário' });
     }
 
-    // Registrar movimentação de estorno
-    const { error: movementError } = await supabaseAdmin
-      .from('balance_movements')
-      .insert({
-        user_id: transaction.user_id,
-        transaction_id: transaction.id,
-        type: 'credit',
-        balance_type: 'real',
-        amount: parseFloat(transaction.amount),
-        previous_balance: parseFloat(user.saldo_real || 0),
-        new_balance: newBalance,
-        description: 'Estorno de saque rejeitado'
-      });
+    // 3. Registrar movimentação de estorno (não crítico)
+    try {
+      const { error: movementError } = await supabaseAdmin
+        .from('balance_movements')
+        .insert({
+          user_id: transaction.user_id,
+          transaction_id: transaction.id,
+          type: 'credit',
+          balance_type: 'real',
+          amount: parseFloat(transaction.amount),
+          previous_balance: previousBalance,
+          new_balance: newBalance,
+          description: 'Estorno de saque rejeitado'
+        });
 
-    if (movementError) {
-      console.error('Movement error (non-critical):', movementError);
-      // Não interrompe a execução pois a transação principal já foi processada
+      if (!movementError) {
+        movementSuccess = true;
+      } else {
+        console.error('Movement error (non-critical):', movementError);
+      }
+    } catch (error) {
+      console.error('Movement exception (non-critical):', error);
     }
 
-    res.json({ success: true, message: 'Saque rejeitado e valor devolvido' });
+    // Retornar sucesso apenas se as operações críticas foram bem-sucedidas
+    if (updateSuccess && refundSuccess) {
+      res.json({ 
+        success: true, 
+        message: 'Saque rejeitado e valor devolvido',
+        details: {
+          transaction_updated: updateSuccess,
+          refund_processed: refundSuccess,
+          movement_logged: movementSuccess
+        }
+      });
+    } else {
+      res.status(500).json({ error: 'Erro parcial no processamento da rejeição' });
+    }
 
   } catch (error) {
     console.error('Reject withdraw error:', error);

@@ -140,12 +140,18 @@ class AdminController
 
             $transactionData = $transaction[0];
 
+            // Verificar se a transação pode ser rejeitada
+            if (!in_array($transactionData['status'], ['pending', 'processing'])) {
+                $response->getBody()->write(json_encode(['error' => 'Transação já foi processada']));
+                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+            }
+
             // Iniciar transação
             $this->db->getConnection()->beginTransaction();
 
             // Rejeitar saque
             $this->db->execute(
-                "UPDATE transactions SET status = 'rejected', processed_at = NOW() WHERE id = $1",
+                "UPDATE transactions SET status = 'cancelled', processed_at = NOW() WHERE id = $1",
                 [$transactionId]
             );
 

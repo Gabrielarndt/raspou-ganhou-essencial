@@ -24,12 +24,13 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem('auth_token');
     const storedUser = localStorage.getItem('user');
     
-    // Se há um usuário armazenado que é afiliado, não carregar perfil de usuário normal
+    // Se há um usuário armazenado que é admin/afiliado, usar os dados armazenados
     if (storedUser) {
       try {
         const userData = JSON.parse(storedUser);
         if (userData.role === 'affiliate' || userData.affiliate_code || userData.role === 'admin' || userData.role === 'super_admin') {
-          console.log('🔒 AuthContext: Admin/Affiliate session detected, not loading user profile');
+          console.log('🔒 AuthContext: Admin/Affiliate session detected, using stored data');
+          setUser(userData);
           setLoading(false);
           return;
         }

@@ -149,7 +149,7 @@ export const withdraw = async (req, res) => {
     const netAmount = withdrawAmount - fee;
 
     // Criar transação
-    const { data: newTransaction, error: transactionError } = await supabaseAdmin
+    const { error: transactionError } = await supabaseAdmin
       .from('transactions')
       .insert({
         user_id: userId,
@@ -158,11 +158,9 @@ export const withdraw = async (req, res) => {
         amount: withdrawAmount,
         fee: fee,
         net_amount: netAmount,
-        status: 'pending',
+        status: 'processing',
         metadata: details
-      })
-      .select()
-      .single();
+      });
 
     if (transactionError) {
       console.error('Transaction error:', transactionError);
@@ -190,7 +188,6 @@ export const withdraw = async (req, res) => {
     const { error: movementError } = await supabaseAdmin
       .from('balance_movements')
       .insert({
-        user_id: userId,
         type: 'debit',
         balance_type: 'real',
         amount: withdrawAmount,
@@ -205,7 +202,7 @@ export const withdraw = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Saque solicitado com sucesso. Aguarde aprovação do administrador.',
+      message: 'Saque solicitado com sucesso.',
       new_balance: {
         saldo_real: newRealBalance,
         saldo_bonus: parseFloat(user.saldo_bonus || 0)

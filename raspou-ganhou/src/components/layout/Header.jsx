@@ -261,22 +261,6 @@ const Header = () => {
                         Admin
                       </Link>
                     </div>
-                    <div className="flex flex-col space-y-2 mt-4">
-                      <Link
-                        to="/login"
-                        onClick={() => setShowMobileMenu(false)}
-                        className="text-center py-2 px-4 border border-gray-600 text-gray-300 hover:text-white rounded transition-colors"
-                      >
-                        Entrar
-                      </Link>
-                      <Link
-                        to="/registro"
-                        onClick={() => setShowMobileMenu(false)}
-                        className="text-center py-2 px-4 bg-yellow-600 hover:bg-yellow-700 text-black font-bold rounded transition-colors"
-                      >
-                        Criar Conta
-                      </Link>
-                    </div>
                   </>
                 )}
               </nav>

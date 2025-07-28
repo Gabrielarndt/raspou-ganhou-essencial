@@ -322,7 +322,7 @@ export const rejectWithdraw = async (req, res) => {
 
     // Retornar sucesso apenas se as operações críticas foram bem-sucedidas
     if (updateSuccess && refundSuccess) {
-      res.status(200).json({ 
+      res.json({ 
         success: true, 
         message: 'Saque rejeitado e valor devolvido',
         details: {

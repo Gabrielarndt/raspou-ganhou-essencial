@@ -49,7 +49,7 @@ const Home = () => {
       title: "Bônus de Boas-vindas",
       subtitle: "R$ 10 Grátis",
       description: "Para novos jogadores",
-      image: "https://images.pexels.com/photos/6963944/pexels-photo-6963944.jpeg?auto=compress&cs=tinysrgb&w=1200&h=600&fit=crop",
+      image: "https://images.pexels.com/photos/3279691/pexels-photo-3279691.jpeg?auto=compress&cs=tinysrgb&w=1200&h=600&fit=crop",
       cta: "Registrar",
       action: () => navigate('/registro')
     }

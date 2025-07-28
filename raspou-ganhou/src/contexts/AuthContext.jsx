@@ -28,8 +28,8 @@ export const AuthProvider = ({ children }) => {
     if (storedUser) {
       try {
         const userData = JSON.parse(storedUser);
-        if (userData.role === 'affiliate' || userData.affiliate_code) {
-          console.log('🔒 AuthContext: Affiliate session detected, not loading user profile');
+        if (userData.role === 'affiliate' || userData.affiliate_code || userData.role === 'admin' || userData.role === 'super_admin') {
+          console.log('🔒 AuthContext: Admin/Affiliate session detected, not loading user profile');
           setLoading(false);
           return;
         }

@@ -1,14 +1,13 @@
 import axios from 'axios';
 import dotenv from 'dotenv';
-
 dotenv.config();
 
 class PixService {
   constructor() {
     this.apiKey = process.env.FASTSOFT_API_KEY;
     this.baseUrl = process.env.FASTSOFT_API_URL;
-    this.publicBaseUrl = process.env.PUBLIC_BASE_URL || 'https://your-domain.com';
-    
+    this.publicBaseUrl = process.env.PUBLIC_BASE_URL || 'https://yourdomain.com';
+
     if (!this.apiKey || !this.baseUrl) {
       throw new Error('FastSoft API credentials not configured');
     }
@@ -17,31 +16,83 @@ class PixService {
   async createPixTransaction(amount, customerData, transactionId) {
     try {
       const payload = {
-        amount: amount,
-        description: `Depósito RaspouGanhou - ${transactionId}`,
-        external_id: transactionId,
+        amount,
+        paymentMethod: 'PIX',
         customer: {
-          name: customerData.name || customerData.nome,
+          name: customerData.name,
           email: customerData.email,
-          document: customerData.cpf,
-          phone: customerData.telefone || customerData.phone
+          phone: customerData.phone,
+          externalRef: customerData.externalRef,
+        document: {
+  number: (customerData.cpf || '').replace(/\D/g, ''),
+  type: 'CPF'
+},
+          address: {
+            street: 'Avenida Paulista',
+            streetNumber: '123',
+            complement: 'Apto 101',
+            zipCode: '01000-000',
+            neighborhood: 'Bela Vista',
+            city: 'São Paulo',
+            state: 'SP',
+            country: 'BR'
+          }
         },
-        webhook_url: `${this.publicBaseUrl}/api/webhook/pix`,
-        return_url: `${this.publicBaseUrl}/deposito?status=success`,
-        cancel_url: `${this.publicBaseUrl}/deposito?status=cancel`
+        items: [
+          {
+            title: 'Depósito RaspouGanhou',
+            unitPrice: amount,
+            quantity: 1,
+            tangible: false,
+            externalRef: transactionId
+          }
+        ],
+        traceable: true,
+        ip: '127.0.0.1',
+        postbackUrl: `${this.publicBaseUrl}/api/webhook/pix`,
+        metadata: {
+          order_id: transactionId
+        },
+        pix: {
+          expiresInDays: 1
+        }
       };
 
-      const response = await axios.post(`${this.baseUrl}/transactions`, payload, {
+      console.log('📤 Enviando requisição para:', `${this.baseUrl}/user/transactions`);
+      console.log('📦 FastSoft payload enviado:', payload);
+
+      const response = await axios.post(`${this.baseUrl}/user/transactions`, payload, {
         headers: {
-          'Authorization': this.apiKey,
-          'Content-Type': 'application/json'
+          'Authorization': `Basic ${Buffer.from(this.apiKey).toString('base64')}`,
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
         }
       });
 
-      return {
-        success: true,
-        data: response.data
-      };
+      console.log('📥 FastSoft resposta:', response.data);
+
+     
+
+// ✅ Aqui está o que estava faltando:
+const transactionData = Array.isArray(response.data.data)
+  ? response.data.data[0]
+  : response.data.data;
+
+console.log('🔍 PIX Data bruto:', transactionData);
+
+return {
+  success: true,
+  data: {
+    id: transactionData.id,
+    amount: transactionData.amount,
+    status: transactionData.status,
+    qr_code: transactionData.pix?.qrcode || null,
+    qr_code_text: transactionData.pix?.qrcode || null,
+    expires_at: transactionData.pix?.expirationDate || null
+  }
+};
+
+
     } catch (error) {
       console.error('FastSoft API Error:', error.response?.data || error.message);
       return {
@@ -51,14 +102,17 @@ class PixService {
     }
   }
 
-  async checkTransactionStatus(transactionId) {
+  async getTransactionStatus(fastsoftTransactionId) {
     try {
-      const response = await axios.get(`${this.baseUrl}/transactions/${transactionId}`, {
+      const response = await axios.get(`${this.baseUrl}/user/transactions/${fastsoftTransactionId}`, {
         headers: {
-          'Authorization': this.apiKey,
-          'Content-Type': 'application/json'
+          'Authorization': `Basic ${Buffer.from(this.apiKey).toString('base64')}`,
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
         }
       });
+
+      console.log('✅ PIX status resposta:', response.data);
 
       return {
         success: true,

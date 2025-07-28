@@ -73,10 +73,10 @@ const Header = () => {
             <div className="flex items-center space-x-4">
               {currentUser ? (
                 <>
-                  {/* Saldo Total */}
-                  <div className="hidden md:flex items-center space-x-2 bg-gray-800 px-3 py-2 rounded-lg">
+                  {/* Saldo Total - Visível no mobile */}
+                  <div className="flex items-center space-x-2 bg-gray-800 px-2 py-1 md:px-3 md:py-2 rounded-lg">
                     <Coins className="w-4 h-4 text-yellow-400" />
-                    <span className="text-white font-medium">
+                    <span className="text-white font-medium text-sm md:text-base">
                       R$ {((currentUser.saldo_real || 0) + (currentUser.saldo_bonus || 0)).toFixed(2)}
                     </span>
                   </div>
@@ -89,54 +89,60 @@ const Header = () => {
                     </span>
                   </div>
 
-                  {/* Botão Carteira */}
-                  <button
-                    onClick={() => setShowWalletDrawer(true)}
-                    className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
-                  >
-                    <Wallet className="w-4 h-4" />
-                    <span className="hidden lg:inline">Carteira</span>
-                  </button>
+                  {/* Botões Desktop */}
+                  <div className="hidden md:flex items-center space-x-4">
+                    {/* Botão Carteira */}
+                    <button
+                      onClick={() => setShowWalletDrawer(true)}
+                      className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+                    >
+                      <Wallet className="w-4 h-4" />
+                      <span className="hidden lg:inline">Carteira</span>
+                    </button>
 
-                  {/* Botão Perfil */}
-                  <button
-                    onClick={() => setShowProfileDrawer(true)}
-                    className="flex items-center space-x-2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
-                  >
-                    <User className="w-4 h-4" />
-                    <span className="hidden lg:inline">Perfil</span>
-                  </button>
+                    {/* Botão Perfil */}
+                    <button
+                      onClick={() => setShowProfileDrawer(true)}
+                      className="flex items-center space-x-2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+                    >
+                      <User className="w-4 h-4" />
+                      <span className="hidden lg:inline">Perfil</span>
+                    </button>
+                  </div>
                 </>
               ) : (
                 <>
-                  <Link
-                    to="/login"
-                    className="text-gray-300 hover:text-white font-medium transition-colors"
-                  >
-                    Entrar
-                  </Link>
-                  <Link
-                    to="/registro"
-                    className="bg-yellow-600 hover:bg-yellow-700 text-black font-bold py-2 px-4 rounded-lg transition-colors"
-                  >
-                    Criar Conta
-                  </Link>
-                  
-                  {/* Link Super Admin (apenas para desenvolvimento) */}
-                  <Link
-                    to="/super-admin-login"
-                    className="bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-xs transition-colors"
-                    title="Acesso Administrativo"
-                  >
-                    Admin
-                  </Link>
+                  {/* Botões Desktop para usuários não logados */}
+                  <div className="hidden md:flex items-center space-x-4">
+                    <Link
+                      to="/login"
+                      className="text-gray-300 hover:text-white font-medium transition-colors"
+                    >
+                      Entrar
+                    </Link>
+                    <Link
+                      to="/registro"
+                      className="bg-yellow-600 hover:bg-yellow-700 text-black font-bold py-2 px-4 rounded-lg transition-colors"
+                    >
+                      Criar Conta
+                    </Link>
+                    
+                    {/* Link Super Admin (apenas para desenvolvimento) */}
+                    <Link
+                      to="/super-admin-login"
+                      className="bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-xs transition-colors"
+                      title="Acesso Administrativo"
+                    >
+                      Admin
+                    </Link>
+                  </div>
                 </>
               )}
 
               {/* Mobile Menu Button */}
               <button
                 onClick={() => setShowMobileMenu(!showMobileMenu)}
-                className="lg:hidden p-2 text-gray-400 hover:text-white"
+                className="md:hidden p-2 text-gray-400 hover:text-white"
               >
                 {showMobileMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </button>
@@ -145,25 +151,126 @@ const Header = () => {
 
           {/* Mobile Menu */}
           {showMobileMenu && (
-            <div className="lg:hidden mt-4 pb-4 border-t border-gray-700">
+            <div className="md:hidden mt-4 pb-4 border-t border-gray-700">
               <nav className="flex flex-col space-y-2 mt-4">
-                {navItems.map((item) => (
-                  <Link
-                    key={item.id}
-                    to={item.path}
-                    onClick={() => setShowMobileMenu(false)}
-                    className={`font-medium py-2 px-4 rounded transition-colors ${
-                      isActive(item.path)
-                        ? 'text-yellow-400 bg-gray-800'
-                        : 'text-gray-300 hover:text-white hover:bg-gray-800'
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-                
                 {currentUser && (
                   <>
+                    {/* Pontos de Sorteio no Mobile */}
+                    <div className="flex items-center justify-between py-2 px-4 bg-blue-800 rounded">
+                      <span className="text-gray-300">Pontos Sorteio:</span>
+                      <span className="text-blue-400 font-bold">
+                        {currentUser.pontos_sorteio || 0} pts
+                      </span>
+                    </div>
+                    
+                    {/* Botões de Ação */}
+                    <button
+                      onClick={() => {
+                        setShowWalletDrawer(true);
+                        setShowMobileMenu(false);
+                      }}
+                      className="w-full flex items-center space-x-3 px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg transition-colors"
+                    >
+                      <Wallet className="w-5 h-5" />
+                      <span>Carteira</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        setShowProfileDrawer(true);
+                        setShowMobileMenu(false);
+                      }}
+                      className="w-full flex items-center space-x-3 px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg transition-colors"
+                    >
+                      <User className="w-5 h-5" />
+                      <span>Meu Perfil</span>
+                    </button>
+                    
+                    {/* Navegação */}
+                    <div className="border-t border-gray-600 pt-4 mt-4">
+                      {navItems.map((item) => (
+                        <Link
+                          key={item.id}
+                          to={item.path}
+                          onClick={() => setShowMobileMenu(false)}
+                          className={`block font-medium py-2 px-4 rounded transition-colors ${
+                            isActive(item.path)
+                              ? 'text-yellow-400 bg-gray-800'
+                              : 'text-gray-300 hover:text-white hover:bg-gray-800'
+                          }`}
+                        >
+                          {item.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </>
+                )}
+                
+                {!currentUser && (
+                  <>
+                    {/* Navegação para usuários não logados */}
+                    {navItems.map((item) => (
+                      <Link
+                        key={item.id}
+                        to={item.path}
+                        onClick={() => setShowMobileMenu(false)}
+                        className={`block font-medium py-2 px-4 rounded transition-colors ${
+                          isActive(item.path)
+                            ? 'text-yellow-400 bg-gray-800'
+                            : 'text-gray-300 hover:text-white hover:bg-gray-800'
+                        }`}
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                    
+                    <div className="flex flex-col space-y-2 mt-4 pt-4 border-t border-gray-600">
+                      <Link
+                        to="/login"
+                        onClick={() => setShowMobileMenu(false)}
+                        className="text-center py-2 px-4 border border-gray-600 text-gray-300 hover:text-white rounded transition-colors"
+                      >
+                        Entrar
+                      </Link>
+                      <Link
+                        to="/registro"
+                        onClick={() => setShowMobileMenu(false)}
+                        className="text-center py-2 px-4 bg-yellow-600 hover:bg-yellow-700 text-black font-bold rounded transition-colors"
+                      >
+                        Criar Conta
+                      </Link>
+                      
+                      {/* Link Super Admin */}
+                      <Link
+                        to="/super-admin-login"
+                        onClick={() => setShowMobileMenu(false)}
+                        className="text-center py-1 px-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded text-xs transition-colors"
+                      >
+                        Admin
+                      </Link>
+                    </div>
+                  </>
+                )}
+              </nav>
+            </div>
+          )}
+        </div>
+      </header>
+
+      {/* Drawers */}
+      <WalletDrawer 
+        isOpen={showWalletDrawer} 
+        onClose={() => setShowWalletDrawer(false)} 
+      />
+      <ProfileDrawer 
+        isOpen={showProfileDrawer} 
+        onClose={() => setShowProfileDrawer(false)} 
+      />
+    </>
+  );
+};
+
+export default Header;
                     <div className="flex items-center justify-between py-2 px-4 bg-gray-800 rounded mt-4">
                       <span className="text-gray-300">Saldo Total:</span>
                       <span className="text-yellow-400 font-bold">

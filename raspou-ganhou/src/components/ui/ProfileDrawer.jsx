@@ -79,11 +79,11 @@ const ProfileDrawer = ({ isOpen, onClose }) => {
           <div className="flex items-center space-x-4">
             <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center">
               <span className="text-black font-bold text-xl">
-                {(user.nome || '').charAt(0).toUpperCase()}
+                {user.nome.charAt(0).toUpperCase()}
               </span>
             </div>
             <div>
-              <h3 className="text-white font-bold text-lg">{user.nome || 'Usuário'}</h3>
+              <h3 className="text-white font-bold text-lg">{user.nome}</h3>
               <p className="text-gray-400 text-sm">{user.email}</p>
             </div>
           </div>

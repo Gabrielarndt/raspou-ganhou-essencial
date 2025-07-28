@@ -3,6 +3,8 @@ import pixService from '../services/pixService.js';
 import { v4 as uuidv4 } from 'uuid';
 
 export const createPixDeposit = async (req, res) => {
+  console.log('🟢 Entrou em createPixDeposit no controller');
+
   try {
     const { amount } = req.body;
     const userId = req.user?.user_id;
@@ -12,17 +14,11 @@ export const createPixDeposit = async (req, res) => {
     console.log('👤 ID do usuário autenticado:', userId);
 
     if (!userId) {
-      return res.status(401).json({
-        success: false,
-        error: 'Usuário não autenticado'
-      });
+      return res.status(401).json({ success: false, error: 'Usuário não autenticado' });
     }
 
     if (!amount || isNaN(amount) || parseFloat(amount) < 20) {
-      return res.status(400).json({
-        success: false,
-        error: 'Valor mínimo para depósito é R$ 20,00'
-      });
+      return res.status(400).json({ success: false, error: 'Valor mínimo para depósito é R$ 20,00' });
     }
 
     const { data: user, error: userError } = await supabaseAdmin
@@ -33,10 +29,7 @@ export const createPixDeposit = async (req, res) => {
 
     if (userError || !user) {
       console.error('❌ Usuário não encontrado:', userError);
-      return res.status(404).json({
-        success: false,
-        error: 'Usuário não encontrado'
-      });
+      return res.status(404).json({ success: false, error: 'Usuário não encontrado' });
     }
 
     const orderId = `DEP_${Date.now()}_${uuidv4().slice(0, 8)}`;
@@ -62,32 +55,24 @@ export const createPixDeposit = async (req, res) => {
 
     if (transactionError) {
       console.error('❌ Erro ao inserir transação:', transactionError);
-      return res.status(500).json({
-        success: false,
-        error: 'Erro ao criar transação no banco de dados'
-      });
+      return res.status(500).json({ success: false, error: 'Erro ao criar transação no banco de dados' });
     }
 
     const customerData = {
-      name: user.nome,
-      email: user.email,
-      cpf: user.cpf?.replace(/\D/g, '') || '',
-      phone: user.telefone?.replace(/\D/g, '') || ''
-    };
+  name: user.nome,
+  email: user.email,
+  phone: user.telefone,
+  cpf: user.cpf,
+  externalRef: user.id
+};
+
 
     const pixResult = await pixService.createPixTransaction(amount, customerData, orderId);
 
     if (!pixResult.success) {
       console.error('❌ Erro na API da FastSoft:', pixResult.error);
-      await supabaseAdmin
-        .from('transactions')
-        .update({ status: 'failed' })
-        .eq('id', transaction.id);
-
-      return res.status(400).json({
-        success: false,
-        error: pixResult.error
-      });
+      await supabaseAdmin.from('transactions').update({ status: 'failed' }).eq('id', transaction.id);
+      return res.status(400).json({ success: false, error: pixResult.error });
     }
 
     await supabaseAdmin
@@ -120,10 +105,7 @@ export const createPixDeposit = async (req, res) => {
 
   } catch (error) {
     console.error('❌ Erro geral ao criar depósito PIX:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Erro interno do servidor'
-    });
+    res.status(500).json({ success: false, error: 'Erro interno do servidor' });
   }
 };
 

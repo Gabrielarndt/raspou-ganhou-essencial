@@ -155,7 +155,7 @@ const Footer = () => {
           </div>
 
           {/* Links em Grid */}
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-6 text-center">
             <div>
               <h4 className="text-white font-bold mb-3">Links</h4>
               <ul className="space-y-2">

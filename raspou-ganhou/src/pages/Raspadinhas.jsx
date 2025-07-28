@@ -195,22 +195,6 @@ const Raspadinhas = () => {
                     </div>
                   </div>
 
-                  {/* Probabilidade de Ganhar */}
-                  <div className="mb-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-gray-400 text-sm">Chance de Ganhar</span>
-                      <span className="text-yellow-400 font-bold text-sm">
-                        {((game.win_probability || 0.30) * 100).toFixed(0)}%
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-700 rounded-full h-2">
-                      <div 
-                        className="bg-gradient-to-r from-yellow-400 to-yellow-600 h-2 rounded-full transition-all duration-500"
-                        style={{ width: `${(game.win_probability || 0.30) * 100}%` }}
-                      ></div>
-                    </div>
-                  </div>
-
                   {/* Botão de Jogar */}
                   <button
                     onClick={() => handlePlay(game)}

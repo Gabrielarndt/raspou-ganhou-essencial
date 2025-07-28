@@ -15,7 +15,8 @@ import {
   ArrowRight,
   Sparkles,
   Target,
-  Shield
+  Shield,
+  User
 } from 'lucide-react';
 
 const Home = () => {

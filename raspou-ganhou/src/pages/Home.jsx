@@ -32,7 +32,6 @@ const Home = () => {
       subtitle: "Ganhe até R$ 10.000",
       description: "Prêmios instantâneos todos os dias",
       image: "https://images.pexels.com/photos/3279691/pexels-photo-3279691.jpeg?auto=compress&cs=tinysrgb&w=1200&h=600&fit=crop",
-      gradient: "from-yellow-500/90 to-orange-600/90",
       cta: "Jogar Agora",
       action: () => navigate('/raspadinhas')
     },
@@ -42,7 +41,6 @@ const Home = () => {
       subtitle: "R$ 5.000 todos os dias",
       description: "Participe automaticamente jogando",
       image: "https://images.pexels.com/photos/1111597/pexels-photo-1111597.jpeg?auto=compress&cs=tinysrgb&w=1200&h=600&fit=crop",
-      gradient: "from-blue-500/90 to-purple-600/90",
       cta: "Ver Sorteios",
       action: () => navigate('/numeros')
     },
@@ -51,8 +49,7 @@ const Home = () => {
       title: "Bônus de Boas-vindas",
       subtitle: "R$ 10 Grátis",
       description: "Para novos jogadores",
-      image: "https://images.pexels.com/photos/1629236/pexels-photo-1629236.jpeg?auto=compress&cs=tinysrgb&w=1200&h=600&fit=crop",
-      gradient: "from-green-500/90 to-emerald-600/90",
+      image: "https://images.pexels.com/photos/3279667/pexels-photo-3279667.jpeg?auto=compress&cs=tinysrgb&w=1200&h=600&fit=crop",
       cta: "Registrar",
       action: () => navigate('/registro')
     }
@@ -128,7 +125,7 @@ const Home = () => {
                   alt={banner.title}
                   className="w-full h-full object-cover"
                 />
-                <div className={`absolute inset-0 bg-gradient-to-r ${banner.gradient}`}></div>
+                <div className="absolute inset-0 bg-black/30"></div>
                 
                 <div className="absolute inset-0 flex items-center justify-center lg:justify-start lg:pl-12">
                   <div className="text-center lg:text-left max-w-lg">

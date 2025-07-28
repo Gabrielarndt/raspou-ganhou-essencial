@@ -232,14 +232,6 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
         alert('Erro ao rejeitar saque: ' + error.message);
       }
     }
-      console.error('Error rejecting withdraw:', error);
-      if (error.message.includes('já foi processada')) {
-        alert('Esta transação já foi processada por outro administrador. A lista será atualizada.');
-        await loadTransactions(); // Refresh to show current state
-      } else {
-        alert('Erro ao rejeitar saque: ' + error.message);
-      }
-    }
   };
 
   const handleLogout = () => {

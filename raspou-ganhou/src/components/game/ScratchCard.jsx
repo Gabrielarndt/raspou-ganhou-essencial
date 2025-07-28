@@ -5,6 +5,7 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
   const backgroundCanvasRef = useRef(null);
   const containerRef = useRef(null);
   const [isScratching, setIsScratching] = useState(false);
+  const [isAutoScratching, setIsAutoScratching] = useState(false);
   const [scratchedPercentage, setScratchedPercentage] = useState(0);
   const [canvasSize, setCanvasSize] = useState({ width: 400, height: 300 });
 
@@ -260,9 +261,53 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     setIsScratching(false);
+    setIsAutoScratching(false);
     setScratchedPercentage(100);
   };
 
+  const autoScratch = () => {
+    if (isRevealed || isAutoScratching) return;
+    
+    setIsAutoScratching(true);
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    
+    // Configurar para "apagar" a camada de raspagem
+    ctx.globalCompositeOperation = 'destination-out';
+    
+    let progress = 0;
+    const totalSteps = 50;
+    const scratchRadius = Math.max(30, canvas.width / 15);
+    
+    const animateScratching = () => {
+      if (progress >= totalSteps) {
+        revealAll();
+        onReveal();
+        return;
+      }
+      
+      // Criar múltiplos pontos de raspagem por frame para efeito mais realista
+      for (let i = 0; i < 3; i++) {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        
+        ctx.beginPath();
+        ctx.arc(x, y, scratchRadius, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+      
+      // Atualizar porcentagem
+      const percentage = (progress / totalSteps) * 100;
+      setScratchedPercentage(percentage);
+      
+      progress++;
+      
+      // Continuar animação
+      setTimeout(animateScratching, 50);
+    };
+    
+    animateScratching();
+  };
   const getMouseCoordinates = (event) => {
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
@@ -285,7 +330,7 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
   };
 
   const handleMouseDown = (event) => {
-    if (isRevealed) return;
+    if (isRevealed || isAutoScratching) return;
     event.preventDefault();
     setIsScratching(true);
     const { x, y } = getMouseCoordinates(event);
@@ -293,7 +338,7 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
   };
 
   const handleMouseMove = (event) => {
-    if (isRevealed || !isScratching) return;
+    if (isRevealed || !isScratching || isAutoScratching) return;
     event.preventDefault();
     const { x, y } = getMouseCoordinates(event);
     scratch(x, y);
@@ -308,7 +353,7 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
   };
 
   const handleTouchStart = (event) => {
-    if (isRevealed) return;
+    if (isRevealed || isAutoScratching) return;
     event.preventDefault();
     setIsScratching(true);
     const { x, y } = getMouseCoordinates(event);
@@ -316,7 +361,7 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
   };
 
   const handleTouchMove = (event) => {
-    if (isRevealed || !isScratching) return;
+    if (isRevealed || !isScratching || isAutoScratching) return;
     event.preventDefault();
     const { x, y } = getMouseCoordinates(event);
     scratch(x, y);
@@ -371,13 +416,30 @@ const ScratchCard = ({ prizes, winningPrizes, onReveal, isRevealed }) => {
             🎉 GANHOU!
           </div>
         )}
+        
+        {isAutoScratching && (
+          <div className="absolute top-2 left-1/2 transform -translate-x-1/2 md:top-4 bg-blue-600/90 text-white px-2 py-1 md:px-3 md:py-2 rounded-lg text-sm md:text-base font-bold animate-bounce">
+            🤖 Raspando...
+          </div>
+        )}
       </div>
 
+      {/* Botão de Auto-Raspar */}
+      {!isRevealed && (
+        <button
+          onClick={autoScratch}
+          disabled={isAutoScratching}
+          className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-xl transition-all duration-200 flex items-center space-x-2 shadow-lg hover:shadow-purple-500/25"
+        >
+          <span className={isAutoScratching ? 'animate-spin' : ''}>🤖</span>
+          <span>{isAutoScratching ? 'Raspando...' : 'Raspar Automaticamente'}</span>
+        </button>
+      )}
       <div className="text-center px-4">
         {!isRevealed ? (
           <div className="space-y-2">
             <p className="text-gray-300 text-sm md:text-base">
-              {window.innerWidth < 768 ? 'Toque e arraste para raspar' : 'Use o mouse para raspar'}
+              {window.innerWidth < 768 ? 'Toque e arraste para raspar ou use o botão automático' : 'Use o mouse para raspar ou clique no botão automático'}
             </p>
             <p className="text-yellow-400 text-xs md:text-sm">
               Encontre 3 símbolos iguais para ganhar!

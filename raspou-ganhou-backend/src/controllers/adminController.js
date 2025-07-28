@@ -241,7 +241,7 @@ export const rejectWithdraw = async (req, res) => {
     const { error: updateError } = await supabaseAdmin
       .from('transactions')
       .update({
-        status: 'cancelled',
+        status: 'failed',
         processed_at: new Date().toISOString()
       })
       .eq('id', transaction_id);

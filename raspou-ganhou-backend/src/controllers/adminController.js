@@ -278,7 +278,7 @@ export const rejectWithdraw = async (req, res) => {
     }
 
     // Registrar movimentação de estorno
-    await supabaseAdmin
+    const { error: movementError } = await supabaseAdmin
       .from('balance_movements')
       .insert({
         user_id: transaction.user_id,
@@ -290,6 +290,11 @@ export const rejectWithdraw = async (req, res) => {
         new_balance: newBalance,
         description: 'Estorno de saque rejeitado'
       });
+
+    if (movementError) {
+      console.error('Movement error (non-critical):', movementError);
+      // Não interrompe a execução pois a transação principal já foi processada
+    }
 
     res.json({ success: true, message: 'Saque rejeitado e valor devolvido' });
 

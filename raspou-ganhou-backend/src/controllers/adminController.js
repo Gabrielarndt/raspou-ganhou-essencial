@@ -233,7 +233,7 @@ export const rejectWithdraw = async (req, res) => {
       return res.status(404).json({ error: 'Transação não encontrada' });
     }
 
-    if (transaction.status !== 'pending') {
+    if (transaction.status !== 'pending' && transaction.status !== 'processing') {
       return res.status(400).json({ error: 'Transação já foi processada' });
     }
 

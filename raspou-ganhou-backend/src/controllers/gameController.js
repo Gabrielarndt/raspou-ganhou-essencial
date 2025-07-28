@@ -1,8 +1,8 @@
 import { supabaseAdmin } from '../config/database.js';
 
-// Configurações das raspadinhas
+// Configurações das raspadinhas com lógica corrigida
 const SCRATCH_CARD_CONFIGS = {
-  1: {
+  '1': {
     name: 'Raspadinha Premium',
     price: 1,
     cycles: [
@@ -10,7 +10,7 @@ const SCRATCH_CARD_CONFIGS = {
       { gamesWithoutWin: 4, winChance: 0.30, minPrize: 2, maxPrize: 4 }
     ]
   },
-  2: {
+  '2': {
     name: 'Raspadinha Clássica',
     price: 2,
     cycles: [
@@ -18,7 +18,7 @@ const SCRATCH_CARD_CONFIGS = {
       { gamesWithoutWin: 4, winChance: 0.30, minPrize: 3, maxPrize: 5 }
     ]
   },
-  3: {
+  '3': {
     name: 'Raspadinha Especial',
     price: 5,
     cycles: [
@@ -26,7 +26,7 @@ const SCRATCH_CARD_CONFIGS = {
       { gamesWithoutWin: 4, winChance: 0.20, minPrize: 5, maxPrize: 15 }
     ]
   },
-  4: {
+  '4': {
     name: 'Raspadinha Exclusiva',
     price: 10,
     cycles: [
@@ -34,7 +34,7 @@ const SCRATCH_CARD_CONFIGS = {
       { gamesWithoutWin: 4, winChance: 0.20, minPrize: 10, maxPrize: 30 }
     ]
   },
-  5: {
+  '5': {
     name: 'Raspadinha Popular',
     price: 20,
     cycles: [
@@ -42,74 +42,6 @@ const SCRATCH_CARD_CONFIGS = {
       { gamesWithoutWin: 4, winChance: 0.20, minPrize: 20, maxPrize: 40 }
     ]
   }
-};
-
-// Função para obter histórico do localStorage
-const getUserGameHistory = (userId) => {
-  try {
-    const history = JSON.parse(localStorage.getItem(`game_history_${userId}`) || '{}');
-    return history;
-  } catch (error) {
-    console.error('Error loading game history:', error);
-    return {};
-  }
-};
-
-// Função para salvar histórico no localStorage
-const saveUserGameHistory = (userId, history) => {
-  try {
-    localStorage.setItem(`game_history_${userId}`, JSON.stringify(history));
-  } catch (error) {
-    console.error('Error saving game history:', error);
-  }
-};
-
-// Função para determinar se deve ganhar baseado na lógica
-const shouldWinGame = (gameId, userId) => {
-  const config = SCRATCH_CARD_CONFIGS[gameId];
-  if (!config) return { shouldWin: false, prize: 0 };
-
-  const history = getUserGameHistory(userId);
-  const gameHistory = history[gameId] || { 
-    gamesWithoutWin: 0, 
-    currentCycle: 0, 
-    totalGames: 0 
-  };
-
-  const currentCycleConfig = config.cycles[gameHistory.currentCycle] || config.cycles[config.cycles.length - 1];
-  
-  // Incrementar jogos sem ganhar
-  gameHistory.gamesWithoutWin++;
-  gameHistory.totalGames++;
-
-  let shouldWin = false;
-  let prize = 0;
-
-  // Verificar se deve ganhar baseado no ciclo atual
-  if (gameHistory.gamesWithoutWin >= currentCycleConfig.gamesWithoutWin) {
-    const random = Math.random();
-    if (random < currentCycleConfig.winChance) {
-      shouldWin = true;
-      // Calcular prêmio aleatório dentro da faixa
-      const minPrize = currentCycleConfig.minPrize;
-      const maxPrize = currentCycleConfig.maxPrize;
-      prize = Math.random() * (maxPrize - minPrize) + minPrize;
-      prize = Math.round(prize * 100) / 100; // Arredondar para 2 casas decimais
-
-      // Resetar contador e avançar ciclo se necessário
-      gameHistory.gamesWithoutWin = 0;
-      if (gameHistory.currentCycle === 0) {
-        gameHistory.currentCycle = 1; // Avança para o segundo ciclo
-      }
-      // Se já está no segundo ciclo, mantém no segundo ciclo
-    }
-  }
-
-  // Salvar histórico atualizado
-  history[gameId] = gameHistory;
-  saveUserGameHistory(userId, history);
-
-  return { shouldWin, prize };
 };
 
 // Função para gerar símbolos vencedores
@@ -186,6 +118,82 @@ const wouldCreateWinningPattern = (currentSymbols, newSymbol, position) => {
   return false;
 };
 
+// Função para determinar se deve ganhar baseado na lógica
+const shouldWinGame = (gameId, userId) => {
+  console.log('🎮 shouldWinGame called with gameId:', gameId, 'userId:', userId);
+  
+  const config = SCRATCH_CARD_CONFIGS[gameId.toString()];
+  if (!config) {
+    console.log('❌ No config found for gameId:', gameId);
+    return { shouldWin: false, prize: 0 };
+  }
+
+  // Simular localStorage no backend usando uma variável global
+  if (!global.gameHistories) {
+    global.gameHistories = {};
+  }
+
+  const userHistoryKey = `${userId}`;
+  if (!global.gameHistories[userHistoryKey]) {
+    global.gameHistories[userHistoryKey] = {};
+  }
+
+  const gameHistory = global.gameHistories[userHistoryKey][gameId] || { 
+    gamesWithoutWin: 0, 
+    currentCycle: 0, 
+    totalGames: 0 
+  };
+
+  console.log('📊 Current game history:', gameHistory);
+
+  const currentCycleConfig = config.cycles[gameHistory.currentCycle] || config.cycles[config.cycles.length - 1];
+  console.log('🔄 Current cycle config:', currentCycleConfig);
+  
+  // Incrementar jogos sem ganhar
+  gameHistory.gamesWithoutWin++;
+  gameHistory.totalGames++;
+
+  let shouldWin = false;
+  let prize = 0;
+
+  console.log(`🎯 Games without win: ${gameHistory.gamesWithoutWin}, Required: ${currentCycleConfig.gamesWithoutWin}`);
+
+  // Verificar se deve ganhar baseado no ciclo atual
+  if (gameHistory.gamesWithoutWin >= currentCycleConfig.gamesWithoutWin) {
+    const random = Math.random();
+    console.log(`🎲 Random: ${random}, Win chance: ${currentCycleConfig.winChance}`);
+    
+    if (random < currentCycleConfig.winChance) {
+      shouldWin = true;
+      // Calcular prêmio aleatório dentro da faixa
+      const minPrize = currentCycleConfig.minPrize;
+      const maxPrize = currentCycleConfig.maxPrize;
+      prize = Math.random() * (maxPrize - minPrize) + minPrize;
+      prize = Math.round(prize * 100) / 100; // Arredondar para 2 casas decimais
+
+      console.log(`🏆 WINNER! Prize: ${prize}`);
+
+      // Resetar contador e avançar ciclo se necessário
+      gameHistory.gamesWithoutWin = 0;
+      if (gameHistory.currentCycle === 0) {
+        gameHistory.currentCycle = 1; // Avança para o segundo ciclo
+        console.log('📈 Advanced to cycle 1');
+      }
+      // Se já está no segundo ciclo, mantém no segundo ciclo
+    } else {
+      console.log('💔 No win this time');
+    }
+  } else {
+    console.log(`⏳ Need ${currentCycleConfig.gamesWithoutWin - gameHistory.gamesWithoutWin} more games to be eligible for win`);
+  }
+
+  // Salvar histórico atualizado
+  global.gameHistories[userHistoryKey][gameId] = gameHistory;
+  console.log('💾 Updated game history:', gameHistory);
+
+  return { shouldWin, prize };
+};
+
 export const getGames = async (req, res) => {
   try {
     const { data: games, error } = await supabaseAdmin
@@ -259,6 +267,8 @@ export const playGame = async (req, res) => {
     // Determinar se ganhou usando a nova lógica
     const gameIndex = parseInt(game_id);
     const { shouldWin, prize } = shouldWinGame(gameIndex, userId);
+    
+    console.log(`🎮 Game result for user ${userId}, game ${gameIndex}: shouldWin=${shouldWin}, prize=${prize}`);
     
     let gameSymbols, winningPositions;
     

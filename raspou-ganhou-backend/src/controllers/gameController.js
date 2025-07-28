@@ -165,15 +165,27 @@ const shouldWinGame = (gameId, userId) => {
     
     if (random < currentCycleConfig.winChance) {
       shouldWin = true;
-      // Calcular prêmio aleatório dentro da faixa EXATA
-      const minPrize = Number(currentCycleConfig.minPrize);
-      const maxPrize = Number(currentCycleConfig.maxPrize);
       
-      // Gerar valor entre min e max (inclusive)
-      prize = Math.random() * (maxPrize - minPrize) + minPrize;
+      // Calcular prêmio dentro da faixa especificada
+      const minPrize = parseFloat(currentCycleConfig.minPrize);
+      const maxPrize = parseFloat(currentCycleConfig.maxPrize);
       
-      // Arredondar para 2 casas decimais e garantir que não exceda o máximo
-      prize = Math.min(maxPrize, Math.max(minPrize, Math.round(prize * 100) / 100));
+      console.log(`💰 Prize range: ${minPrize} - ${maxPrize}`);
+      
+      // Gerar valor aleatório entre min e max
+      const randomValue = Math.random();
+      prize = minPrize + (randomValue * (maxPrize - minPrize));
+      
+      console.log(`🎲 Random value: ${randomValue}`);
+      console.log(`🏆 Raw calculated prize: ${prize}`);
+      
+      // Arredondar para 2 casas decimais
+      prize = Math.round(prize * 100) / 100;
+      
+      // Garantir que está dentro dos limites (segurança extra)
+      prize = Math.max(minPrize, Math.min(maxPrize, prize));
+      
+      console.log(`🎯 Final prize after rounding and limits: ${prize}`);
 
       console.log(`🏆 WINNER! Prize: ${prize} (Range: ${minPrize} - ${maxPrize}) - Cycle: ${gameHistory.currentCycle}`);
 

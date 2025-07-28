@@ -223,6 +223,15 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
       await apiClient.rejectWithdraw(transactionId);
       alert('Saque rejeitado com sucesso! A lista será atualizada.');
       await loadTransactions(); // Refresh data
+    } catch (error) {
+      console.error('Error rejecting withdraw:', error);
+      if (error.message.includes('já foi processada')) {
+        alert('Esta transação já foi processada por outro administrador. A lista será atualizada.');
+        await loadTransactions();
+      } else {
+        alert('Erro ao rejeitar saque: ' + error.message);
+      }
+    }
       console.error('Error rejecting withdraw:', error);
       if (error.message.includes('já foi processada')) {
         alert('Esta transação já foi processada por outro administrador. A lista será atualizada.');

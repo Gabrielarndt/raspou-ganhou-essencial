@@ -205,21 +205,31 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
 
   const handleApproveWithdraw = async (transactionId) => {
     try {
-      await apiClient.approveWithdraw(transactionId);
-      loadData(); // Recarregar dados
+      alert('Saque aprovado com sucesso! A lista será atualizada.');
+      await loadTransactions(); // Refresh data
     } catch (error) {
       console.error('Error approving withdraw:', error);
-      alert('Erro ao aprovar saque: ' + error.message);
+      if (error.message.includes('já foi processada')) {
+        alert('Esta transação já foi processada por outro administrador. A lista será atualizada.');
+        await loadTransactions(); // Refresh to show current state
+      } else {
+        alert('Erro ao aprovar saque: ' + error.message);
+      }
     }
   };
 
   const handleRejectWithdraw = async (transactionId) => {
     try {
       await apiClient.rejectWithdraw(transactionId);
-      loadData(); // Recarregar dados
-    } catch (error) {
+      alert('Saque rejeitado com sucesso! A lista será atualizada.');
+      await loadTransactions(); // Refresh data
       console.error('Error rejecting withdraw:', error);
-      alert('Erro ao rejeitar saque: ' + error.message);
+      if (error.message.includes('já foi processada')) {
+        alert('Esta transação já foi processada por outro administrador. A lista será atualizada.');
+        await loadTransactions(); // Refresh to show current state
+      } else {
+        alert('Erro ao rejeitar saque: ' + error.message);
+      }
     }
   };
 

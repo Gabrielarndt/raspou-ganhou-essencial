@@ -236,6 +236,7 @@ export const playGame = async (req, res) => {
     const { game_id } = req.body;
     const userId = req.user.user_id;
     console.log('ID do usuário que está jogando:', userId);
+    console.log('🎮 Game ID recebido:', game_id);
 
     if (!game_id) {
       return res.status(400).json({ error: 'ID do jogo é obrigatório' });
@@ -252,6 +253,13 @@ export const playGame = async (req, res) => {
     if (gameError || !game) {
       return res.status(404).json({ error: 'Jogo não encontrado' });
     }
+
+    console.log('🎯 Game data from database:', {
+      id: game.id,
+      name: game.name,
+      price: game.price,
+      max_prize: game.max_prize
+    });
 
     // Buscar usuário atual
     const { data: user, error: userError } = await supabaseAdmin
@@ -280,11 +288,25 @@ export const playGame = async (req, res) => {
     const newRealBalance = userRealBalance - realUsed;
     const newBonusBalance = userBonusBalance - bonusUsed;
 
-    // Determinar se ganhou usando a nova lógica
-    const gameIndex = parseInt(game_id);
-    const { shouldWin, prize } = shouldWinGame(gameIndex, userId);
+    // Mapear o preço do jogo para o índice correto da configuração
+    let configIndex;
+    switch (gamePrice) {
+      case 1: configIndex = 1; break;
+      case 2: configIndex = 2; break;
+      case 5: configIndex = 3; break;
+      case 10: configIndex = 4; break;
+      case 20: configIndex = 5; break;
+      default: 
+        console.error('❌ Preço de jogo não mapeado:', gamePrice);
+        configIndex = 1; // fallback
+    }
     
-    console.log(`🎮 Game result for user ${userId}, game ${gameIndex}: shouldWin=${shouldWin}, prize=${prize}`);
+    console.log('🗺️ Price mapping:', gamePrice, '→ config index:', configIndex);
+    
+    // Determinar se ganhou usando a nova lógica
+    const { shouldWin, prize } = shouldWinGame(configIndex, userId);
+    
+    console.log(`🎮 Game result for user ${userId}, game ${game_id} (config ${configIndex}): shouldWin=${shouldWin}, prize=${prize}`);
     
     let gameSymbols, winningPositions;
     

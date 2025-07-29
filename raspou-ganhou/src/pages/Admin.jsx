@@ -179,6 +179,10 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
     try {
       const data = await apiClient.getAffiliates();
       setAffiliates(data.affiliates || []);
+    } catch (error) {
+      console.error('Erro ao carregar afiliados:', error);
+      setAffiliates([]);
+    }
       console.error('Erro ao carregar afiliados:', error);
       setAffiliates([]);
       setAffiliates([]);

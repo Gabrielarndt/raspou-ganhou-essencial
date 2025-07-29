@@ -33,7 +33,7 @@ const Home = () => {
       description: "Prêmios instantâneos todos os dias",
       image: "https://images.pexels.com/photos/3279691/pexels-photo-3279691.jpeg?auto=compress&cs=tinysrgb&w=1200&h=600&fit=crop",
       cta: "Jogar Agora",
-      action: () => navigate('/raspadinhas')
+      action: () => navigate('/numeros')
     },
     {
       id: 2,

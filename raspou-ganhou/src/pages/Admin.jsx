@@ -15,6 +15,7 @@ import {
   Download,
   Filter,
   Search,
+  CheckCircle,
   DollarSign,
   Trophy,
   AlertTriangle,

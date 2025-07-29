@@ -64,6 +64,15 @@ const Admin = () => {
   const [editingLottery, setEditingLottery] = useState(null);
   const [selectedAffiliate, setSelectedAffiliate] = useState(null);
   const [showCouponModal, setShowCouponModal] = useState(false);
+  const [couponForm, setCouponForm] = useState({
+    name: '',
+    code: '',
+    bonus_amount: '',
+    description: '',
+    usage_limit: '',
+    expires_at: '',
+    is_active: true
+  });
 
   // Estados para Admins
   const [admins, setAdmins] = useState([]);
@@ -605,6 +614,49 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
     }
   };
 
+  const handleCreateCoupon = async () => {
+    if (!selectedAffiliate || !couponForm.name || !couponForm.code || !couponForm.bonus_amount) {
+      alert('Por favor, preencha todos os campos obrigatórios');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/create-coupon`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify({
+          ...couponForm,
+          affiliate_id: selectedAffiliate.id
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert('Cupom criado com sucesso!');
+        setShowCouponModal(false);
+        setCouponForm({
+          name: '',
+          code: '',
+          bonus_amount: '',
+          description: '',
+          usage_limit: '',
+          expires_at: '',
+          is_active: true
+        });
+        setSelectedAffiliate(null);
+        // Recarregar dados se necessário
+      } else {
+        alert('Erro ao criar cupom: ' + data.error);
+      }
+    } catch (error) {
+      console.error('Erro ao criar cupom:', error);
+      alert('Erro ao criar cupom');
+    }
+  };
 
   // Funções para Afiliados
   const handleCreateAffiliate = () => {
@@ -2134,6 +2186,164 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
                 className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
               >
                 Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Criação de Cupom */}
+      {showCouponModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-white">Criar Cupom</h3>
+              <button
+                onClick={() => {
+                  setShowCouponModal(false);
+                  setSelectedAffiliate(null);
+                  setCouponForm({
+                    name: '',
+                    code: '',
+                    bonus_amount: '',
+                    description: '',
+                    usage_limit: '',
+                    expires_at: '',
+                    is_active: true
+                  });
+                }}
+                className="text-gray-400 hover:text-white"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {selectedAffiliate && (
+              <div className="mb-4 p-3 bg-gray-700 rounded-lg">
+                <p className="text-gray-300 text-sm">Criando cupom para:</p>
+                <p className="text-white font-bold">{selectedAffiliate.name}</p>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Nome do Cupom *
+                </label>
+                <input
+                  type="text"
+                  value={couponForm.name}
+                  onChange={(e) => setCouponForm({...couponForm, name: e.target.value})}
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  placeholder="Ex: Bônus de Boas-vindas"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Código do Cupom *
+                </label>
+                <input
+                  type="text"
+                  value={couponForm.code}
+                  onChange={(e) => setCouponForm({...couponForm, code: e.target.value.toUpperCase()})}
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  placeholder="Ex: BONUS20"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Valor do Bônus (R$) *
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={couponForm.bonus_amount}
+                  onChange={(e) => setCouponForm({...couponForm, bonus_amount: e.target.value})}
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  placeholder="20.00"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Descrição
+                </label>
+                <textarea
+                  value={couponForm.description}
+                  onChange={(e) => setCouponForm({...couponForm, description: e.target.value})}
+                  className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  placeholder="Descrição do cupom..."
+                  rows="3"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Limite de Uso
+                  </label>
+                  <input
+                    type="number"
+                    value={couponForm.usage_limit}
+                    onChange={(e) => setCouponForm({...couponForm, usage_limit: e.target.value})}
+                    className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    placeholder="Ilimitado"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Data de Expiração
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={couponForm.expires_at}
+                    onChange={(e) => setCouponForm({...couponForm, expires_at: e.target.value})}
+                    className="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="is_active"
+                  checked={couponForm.is_active}
+                  onChange={(e) => setCouponForm({...couponForm, is_active: e.target.checked})}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="is_active" className="text-sm text-gray-300">
+                  Cupom ativo
+                </label>
+              </div>
+            </div>
+
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowCouponModal(false);
+                  setSelectedAffiliate(null);
+                  setCouponForm({
+                    name: '',
+                    code: '',
+                    bonus_amount: '',
+                    description: '',
+                    usage_limit: '',
+                    expires_at: '',
+                    is_active: true
+                  });
+                }}
+                className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleCreateCoupon}
+                className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition-colors"
+              >
+                Criar Cupom
               </button>
             </div>
           </div>

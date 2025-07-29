@@ -934,3 +934,153 @@ export const deleteAffiliate = async (req, res) => {
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 };
+
+export const getAffiliateCoupons = async (req, res) => {
+  try {
+    const { affiliate_id } = req.params;
+
+    if (!affiliate_id) {
+      return res.status(400).json({ error: 'ID do afiliado é obrigatório' });
+    }
+
+    const { data: coupons, error } = await supabaseAdmin
+      .from('coupons')
+      .select('*')
+      .eq('affiliate_id', affiliate_id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Get affiliate coupons error:', error);
+      return res.status(500).json({ error: 'Erro ao carregar cupons do afiliado' });
+    }
+
+    res.json({ coupons });
+
+  } catch (error) {
+    console.error('Get affiliate coupons error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+};
+
+export const createCoupon = async (req, res) => {
+  try {
+    const { 
+      name, 
+      code, 
+      bonus_amount, 
+      description, 
+      affiliate_id, 
+      usage_limit, 
+      expires_at, 
+      is_active 
+    } = req.body;
+
+    if (!name || !code || !bonus_amount || !affiliate_id) {
+      return res.status(400).json({ error: 'Nome, código, valor do bônus e ID do afiliado são obrigatórios' });
+    }
+
+    // Verificar se o código já existe
+    const { data: existingCoupon } = await supabaseAdmin
+      .from('coupons')
+      .select('id')
+      .eq('code', code)
+      .single();
+
+    if (existingCoupon) {
+      return res.status(409).json({ error: 'Código de cupom já existe' });
+    }
+
+    const { data: coupon, error } = await supabaseAdmin
+      .from('coupons')
+      .insert({
+        name,
+        code: code.toUpperCase(),
+        bonus_amount: parseFloat(bonus_amount),
+        description,
+        affiliate_id,
+        created_by: req.user.user_id,
+        usage_limit: usage_limit ? parseInt(usage_limit) : null,
+        usage_count: 0,
+        is_active: is_active !== false,
+        expires_at: expires_at || null
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Create coupon error:', error);
+      return res.status(500).json({ error: 'Erro ao criar cupom: ' + error.message });
+    }
+
+    res.json({
+      success: true,
+      message: 'Cupom criado com sucesso',
+      coupon
+    });
+
+  } catch (error) {
+    console.error('Create coupon error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+};
+
+export const toggleCouponStatus = async (req, res) => {
+  try {
+    const { coupon_id, is_active } = req.body;
+
+    if (!coupon_id) {
+      return res.status(400).json({ error: 'ID do cupom é obrigatório' });
+    }
+
+    const { data: coupon, error } = await supabaseAdmin
+      .from('coupons')
+      .update({ is_active })
+      .eq('id', coupon_id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Toggle coupon status error:', error);
+      return res.status(500).json({ error: 'Erro ao alterar status do cupom: ' + error.message });
+    }
+
+    res.json({
+      success: true,
+      message: `Cupom ${is_active ? 'ativado' : 'desativado'} com sucesso`,
+      coupon
+    });
+
+  } catch (error) {
+    console.error('Toggle coupon status error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+};
+
+export const deleteCoupon = async (req, res) => {
+  try {
+    const { coupon_id } = req.body;
+
+    if (!coupon_id) {
+      return res.status(400).json({ error: 'ID do cupom é obrigatório' });
+    }
+
+    const { error } = await supabaseAdmin
+      .from('coupons')
+      .delete()
+      .eq('id', coupon_id);
+
+    if (error) {
+      console.error('Delete coupon error:', error);
+      return res.status(500).json({ error: 'Erro ao excluir cupom: ' + error.message });
+    }
+
+    res.json({
+      success: true,
+      message: 'Cupom excluído com sucesso'
+    });
+
+  } catch (error) {
+    console.error('Delete coupon error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+};

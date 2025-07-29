@@ -18,7 +18,8 @@ import {
   DollarSign,
   Trophy,
   AlertTriangle,
-  CheckCircle,
+  Crown,
+  Shuffle
   Clock,
   Menu,
   X,

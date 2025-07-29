@@ -100,6 +100,12 @@ app.post('/api/admin/create-affiliate', authenticateAdmin, adminController.creat
 app.put('/api/admin/update-affiliate', authenticateAdmin, adminController.updateAffiliate);
 app.delete('/api/admin/delete-affiliate', authenticateAdmin, adminController.deleteAffiliate);
 
+// Rotas de cupons (apenas admins)
+app.get('/api/admin/affiliate-coupons/:affiliate_id', authenticateAdmin, adminController.getAffiliateCoupons);
+app.post('/api/admin/create-coupon', authenticateAdmin, adminController.createCoupon);
+app.put('/api/admin/toggle-coupon-status', authenticateAdmin, adminController.toggleCouponStatus);
+app.delete('/api/admin/delete-coupon', authenticateAdmin, adminController.deleteCoupon);
+
 app.post('/api/admin/approve-withdraw', authenticateAdmin, adminController.approveWithdraw);
 app.post('/api/admin/reject-withdraw', authenticateAdmin, adminController.rejectWithdraw);
 

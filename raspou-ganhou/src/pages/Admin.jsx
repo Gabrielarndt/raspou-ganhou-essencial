@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { apiClient } from '../lib/api';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { apiClient } from '../lib/api';
@@ -621,23 +622,13 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/create-coupon`, {
+      const data = await apiClient.request('/admin/create-coupon', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        },
         body: JSON.stringify({
           ...couponForm,
           affiliate_id: selectedAffiliate.id
         })
       });
-
-      const data = await response.json();
-
-      if (data.success) {
-        alert('Cupom criado com sucesso!');
-        setShowCouponModal(false);
         setCouponForm({
           name: '',
           code: '',

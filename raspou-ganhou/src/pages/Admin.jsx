@@ -1,4 +1,3 @@
-import React, { useState, useEffect } from 'react';
 import { apiClient } from '../lib/api';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -653,6 +652,10 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
     setEditingAffiliate(null);
     setAffiliateForm({
       name: '',
+    } catch (error) {
+      console.error('Erro ao criar cupom:', error);
+      alert('Erro ao criar cupom: ' + error.message);
+    }
       email: '',
       password: '',
       affiliate_code: '',

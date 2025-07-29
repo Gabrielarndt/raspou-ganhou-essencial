@@ -1048,17 +1048,8 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
                             <Cell key={`cell-${index}`} fill={entry.color} />
                           ))}
                         </Pie>
-                        <button
-                          onClick={() => {
-                            setSelectedAffiliate(affiliate);
-                            setShowCouponModal(true);
-                          }}
-                          className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-3 rounded-lg transition-colors flex items-center space-x-1"
-                          title="Criar Cupom"
-                        >
-                          <Gift className="w-4 h-4" />
-                          <span>Novo Cupom</span>
-                        </button>
+                        <Tooltip 
+                          contentStyle={{ 
                             backgroundColor: '#1F2937', 
                             border: '1px solid #374151',
                             borderRadius: '8px',
@@ -1595,6 +1586,16 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
                                   title="Editar"
                                 >
                                   <Edit className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setSelectedAffiliate(affiliate);
+                                    setShowCouponModal(true);
+                                  }}
+                                  className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-1 px-3 rounded transition-colors"
+                                  title="Criar Cupom"
+                                >
+                                  <Gift className="w-4 h-4" />
                                 </button>
                                 <button
                                   onClick={() => handleDeleteAffiliate(affiliate.id)}

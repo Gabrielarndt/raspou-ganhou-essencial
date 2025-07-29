@@ -1,4 +1,7 @@
-import { useState, useEffect } from 'react';
+Looking at your script, I can see it's missing several `import` statements and has some syntax issues. Here's the corrected version:
+
+```javascript
+import React, { useState, useEffect } from 'react';
 import { apiClient } from '../lib/api';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -657,7 +660,7 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
       }
     } catch (error) {
       console.error('Erro ao criar cupom:', error);
-      alert('Erro ao criar cupom: ' + error.message);
+      alert('Erro ao criar cupom');
     }
   };
 
@@ -2356,3 +2359,4 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
 };
 
 export default Admin;
+```

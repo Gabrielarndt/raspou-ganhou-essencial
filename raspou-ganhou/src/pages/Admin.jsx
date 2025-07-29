@@ -1,3 +1,7 @@
+Looking at your script, I can see it's missing several `import` statements and has some syntax issues. Here's the corrected version:
+
+```javascript
+import React, { useState, useEffect } from 'react';
 import { apiClient } from '../lib/api';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -244,6 +248,15 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
       } else {
         alert('Erro ao rejeitar saque: ' + error.message);
       }
+    }
+  };
+
+  const loadTransactions = async () => {
+    try {
+      const transactionsData = await apiClient.getAdminTransactions();
+      setTransactions(transactionsData.transactions);
+    } catch (error) {
+      console.error('Error loading transactions:', error);
     }
   };
 
@@ -627,6 +640,10 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
           affiliate_id: selectedAffiliate.id
         })
       });
+      
+      if (data.success) {
+        alert('Cupom criado com sucesso!');
+        setShowCouponModal(false);
         setCouponForm({
           name: '',
           code: '',
@@ -652,10 +669,6 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
     setEditingAffiliate(null);
     setAffiliateForm({
       name: '',
-    } catch (error) {
-      console.error('Erro ao criar cupom:', error);
-      alert('Erro ao criar cupom: ' + error.message);
-    }
       email: '',
       password: '',
       affiliate_code: '',
@@ -745,10 +758,9 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
     }
 
     try {
-      const result = await apiClient.createAffiliate(affiliateForm);
-        // Recarregar lista de afiliados
-        await loadAffiliates();
+      const result = await apiClient.deleteAffiliate(affiliateId);
       if (result.success) {
+        // Recarregar lista de afiliados
         await loadAffiliates();
         alert('Afiliado excluído com sucesso!');
       }
@@ -2347,3 +2359,4 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
 };
 
 export default Admin;
+```

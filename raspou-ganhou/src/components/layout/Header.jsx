@@ -62,10 +62,6 @@ const Header = () => {
                 alt="RaspouGanhou Logo" 
                 className="w-10 h-10 rounded-lg object-contain"
               />
-              <div>
-                <h1 className="text-yellow-400 font-bold text-lg leading-none">RaspouGanhou</h1>
-                <p className="text-gray-400 text-xs">Raspe e Ganhe</p>
-              </div>
             </Link>
 
             {/* Desktop Navigation */}

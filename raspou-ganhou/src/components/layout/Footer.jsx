@@ -29,10 +29,6 @@ const Footer = () => {
                 alt="RaspouGanhou Logo" 
                 className="w-10 h-10 rounded-lg object-contain"
               />
-              <div>
-                <h3 className="text-yellow-400 font-bold text-lg">RaspouGanhou</h3>
-                <p className="text-gray-400 text-xs">Raspe e Ganhe</p>
-              </div>
             </div>
             <p className="text-gray-400 text-sm leading-relaxed">
               O melhor site de raspadinhas online do Brasil. Prêmios instantâneos, 
@@ -148,10 +144,6 @@ const Footer = () => {
                 alt="RaspouGanhou Logo" 
                 className="w-10 h-10 rounded-lg object-contain"
               />
-              <div>
-                <h3 className="text-yellow-400 font-bold text-lg">RaspouGanhou</h3>
-                <p className="text-gray-400 text-xs">Raspe e Ganhe</p>
-              </div>
             </div>
             <p className="text-gray-400 text-sm">
               O melhor site de raspadinhas online do Brasil.

@@ -77,7 +77,9 @@ const Affiliate = () => {
   const loadAffiliateData = (userData) => {
     console.log('📊 Affiliate: Loading affiliate data for:', userData?.email);
     
-    // Carregar dados do afiliado
+    // Carregar dados do afiliado e seus cupons
+    loadAffiliateCoupons(userData);
+    
     const affiliates = JSON.parse(localStorage.getItem('raspou_affiliates') || '[]');
     const currentAffiliate = affiliates.find(a => a.email === userData?.email);
     
@@ -131,6 +133,29 @@ const Affiliate = () => {
     }
     
     setLoading(false);
+  };
+
+  const loadAffiliateCoupons = async (userData) => {
+    try {
+      console.log('🎫 Loading coupons for affiliate:', userData?.email);
+      
+      // Buscar afiliado no banco para pegar o ID
+      const affiliates = JSON.parse(localStorage.getItem('raspou_affiliates') || '[]');
+      const currentAffiliate = affiliates.find(a => a.email === userData?.email);
+      
+      if (currentAffiliate && currentAffiliate.id) {
+        const coupons = await apiClient.request(`/admin/affiliate-coupons/${currentAffiliate.id}`);
+        console.log('🎫 Loaded coupons:', coupons);
+        
+        // Atualizar dados do afiliado com os cupons
+        setAffiliateData(prev => ({
+          ...prev,
+          coupons: coupons.coupons || []
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading affiliate coupons:', error);
+    }
   };
 
   const formatCurrency = (value) => {
@@ -638,8 +663,16 @@ const Affiliate = () => {
                     
                     <div className="space-y-2">
                       <p className="text-gray-400 text-sm">Código: <span className="text-white font-mono">{coupon.code}</span></p>
-                      <p className="text-gray-400 text-sm">Bônus: <span className="text-green-400 font-bold">{formatCurrency(coupon.bonus)}</span></p>
+                      <p className="text-gray-400 text-sm">Bônus: <span className="text-green-400 font-bold">{formatCurrency(coupon.bonus_amount)}</span></p>
                       <p className="text-gray-400 text-sm">{coupon.description}</p>
+                      <div className="flex items-center justify-between pt-2 border-t border-gray-700">
+                        <span className={`text-xs px-2 py-1 rounded ${coupon.is_active ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
+                          {coupon.is_active ? 'Ativo' : 'Inativo'}
+                        </span>
+                        <span className="text-gray-400 text-xs">
+                          Usado: {coupon.usage_count || 0}{coupon.usage_limit ? `/${coupon.usage_limit}` : ''}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -649,6 +682,12 @@ const Affiliate = () => {
                     <Gift className="w-16 h-16 text-gray-600 mx-auto mb-4" />
                     <p className="text-gray-400">Nenhum cupom atribuído</p>
                     <p className="text-gray-500 text-sm">Entre em contato com o administrador para solicitar cupons</p>
+                    <button
+                      onClick={() => loadAffiliateCoupons(storedUser)}
+                      className="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                    >
+                      Recarregar Cupons
+                    </button>
                   </div>
                 )}
               </div>

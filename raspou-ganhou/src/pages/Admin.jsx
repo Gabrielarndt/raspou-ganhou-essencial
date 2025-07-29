@@ -63,6 +63,7 @@ const Admin = () => {
   });
   const [editingLottery, setEditingLottery] = useState(null);
   const [selectedAffiliate, setSelectedAffiliate] = useState(null);
+  const [showCouponModal, setShowCouponModal] = useState(false);
 
   // Estados para Admins
   const [admins, setAdmins] = useState([]);

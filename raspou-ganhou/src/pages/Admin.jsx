@@ -1,6 +1,3 @@
-Looking at your script, I can see it's missing several `import` statements and has some syntax issues. Here's the corrected version:
-
-```javascript
 import React, { useState, useEffect } from 'react';
 import { apiClient } from '../lib/api';
 import { useNavigate } from 'react-router-dom';
@@ -2359,4 +2356,3 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
 };
 
 export default Admin;
-```

@@ -1212,6 +1212,17 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
                               >
                                 <Edit className="w-4 h-4" />
                               </button>
+                              
+                              <button
+                                onClick={() => {
+                                  setSelectedAffiliate(affiliate);
+                                  setShowCouponModal(true);
+                                }}
+                                className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-1 px-3 rounded text-sm transition-colors"
+                                title="Criar Cupom"
+                              >
+                                <Gift className="w-4 h-4" />
+                              </button>
                               <button 
                                 onClick={() => handleDeleteUser(user)}
                                 className="text-red-400 hover:text-red-300"

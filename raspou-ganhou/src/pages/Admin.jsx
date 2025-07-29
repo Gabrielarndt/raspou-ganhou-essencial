@@ -19,7 +19,7 @@ import {
   Trophy,
   AlertTriangle,
   Crown,
-  Shuffle
+  Shuffle,
   Clock,
   Menu,
   X,

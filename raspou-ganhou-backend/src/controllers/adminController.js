@@ -767,14 +767,17 @@ export const getAffiliates = async (req, res) => {
 
 export const createAffiliate = async (req, res) => {
   try {
+    console.log('🔵 createAffiliate: Recebendo dados:', req.body);
     const { name, email, password, cpa, commission_rate } = req.body;
 
     if (!name || !email || !password) {
+      console.log('❌ createAffiliate: Campos obrigatórios faltando');
       return res.status(400).json({ error: 'Nome, email e senha são obrigatórios' });
     }
 
     // Gerar código de afiliado único
     const generatedAffiliateCode = `AFF${Date.now()}${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+    console.log('🔑 createAffiliate: Código gerado:', generatedAffiliateCode);
 
     // Verificar se email ou código já existe
     const { data: existingAffiliate } = await supabaseAdmin
@@ -783,12 +786,15 @@ export const createAffiliate = async (req, res) => {
       .eq('email', email);
 
     if (existingAffiliate && existingAffiliate.length > 0) {
+      console.log('❌ createAffiliate: Email já existe');
       return res.status(409).json({ error: 'Email já está em uso' });
     }
 
     // Hash da senha
+    console.log('🔐 createAffiliate: Fazendo hash da senha...');
     const hashedPassword = await bcrypt.hash(password, 12);
 
+    console.log('💾 createAffiliate: Inserindo no banco de dados...');
     const { data: newAffiliate, error } = await supabaseAdmin
       .from('affiliates')
       .insert({
@@ -812,9 +818,11 @@ export const createAffiliate = async (req, res) => {
     }
 
     if (!newAffiliate) {
+      console.error('❌ createAffiliate: Dados não retornados do banco');
       return res.status(500).json({ error: 'Erro ao criar afiliado - dados não retornados' });
     }
 
+    console.log('✅ createAffiliate: Afiliado criado com sucesso:', newAffiliate.id);
     // Remover senha dos dados retornados
     const { password: _, ...affiliateWithoutPassword } = newAffiliate;
 

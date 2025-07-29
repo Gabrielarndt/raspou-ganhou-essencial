@@ -40,13 +40,15 @@ const Affiliate = () => {
 
   // Verificar se é afiliado - primeiro verifica localStorage, depois user do context
   const [storedUser, setStoredUser] = useState(null);
-  const [isAffiliate, setIsAffiliate] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [authChecked, setAuthChecked] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('🔍 Affiliate: Starting auth check...');
+    
     try {
       const stored = localStorage.getItem('user');
+      console.log('📦 Affiliate: Raw stored data:', stored);
+      
       if (stored) {
         const userData = JSON.parse(stored);
         console.log('📦 Affiliate: Stored user data:', userData);
@@ -54,49 +56,33 @@ const Affiliate = () => {
         if (userData.role === 'affiliate' || userData.affiliate_code) {
           console.log('✅ Affiliate: Found affiliate in localStorage');
           setStoredUser(userData);
-          setCurrentUser(userData);
-          setIsAffiliate(true);
+          loadAffiliateData(userData);
         } else {
           console.log('❌ Affiliate: User data found but not an affiliate:', userData);
-          setIsAffiliate(false);
-          setCurrentUser(null);
+          navigate('/affiliate-login');
+          return;
         }
       } else {
         console.log('❌ Affiliate: No user data in localStorage');
-        setIsAffiliate(false);
-        setCurrentUser(null);
+        navigate('/affiliate-login');
+        return;
       }
     } catch (error) {
       console.error('Error parsing stored user:', error);
-      setIsAffiliate(false);
-      setCurrentUser(null);
-    } finally {
-      setAuthChecked(true);
-    }
-  }, []);
-
-
-  useEffect(() => {
-    if (!authChecked) return;
-
-    console.log('🔍 Affiliate: Checking auth - isAffiliate:', isAffiliate, 'currentUser:', !!currentUser);
-
-    if (!isAffiliate || !currentUser) {
-      console.log('❌ Affiliate: Not an affiliate, redirecting to login');
       navigate('/affiliate-login');
       return;
     }
+  }, [navigate]);
 
-    loadAffiliateData();
-  }, [authChecked, isAffiliate, currentUser, navigate]);
-
-
-  const loadAffiliateData = () => {
+  const loadAffiliateData = (userData) => {
+    console.log('📊 Affiliate: Loading affiliate data for:', userData?.email);
+    
     // Carregar dados do afiliado
     const affiliates = JSON.parse(localStorage.getItem('raspou_affiliates') || '[]');
-    const currentAffiliate = affiliates.find(a => a.email === currentUser?.email);
+    const currentAffiliate = affiliates.find(a => a.email === userData?.email);
     
     if (currentAffiliate) {
+      console.log('✅ Affiliate: Found affiliate data:', currentAffiliate.name);
       setAffiliateData(currentAffiliate);
       setAccountForm({
         name: currentAffiliate.name,
@@ -114,7 +100,37 @@ const Affiliate = () => {
         twoFactor: false,
         lastAccess: new Date().toISOString()
       });
+    } else {
+      console.log('❌ Affiliate: No affiliate data found, creating default');
+      // Criar dados padrão se não existir
+      const defaultAffiliate = {
+        ...userData,
+        referrals: 0,
+        volume_generated: 0,
+        total_commission: 0,
+        conversion_rate: 0,
+        coupons: []
+      };
+      setAffiliateData(defaultAffiliate);
+      setAccountForm({
+        name: userData.name || '',
+        email: userData.email || '',
+        currentPassword: '',
+        newPassword: ''
+      });
+      setNotifications({
+        newConversions: true,
+        newDeposits: true,
+        commissionChanges: true,
+        frequency: 'realtime'
+      });
+      setSecurity({
+        twoFactor: false,
+        lastAccess: new Date().toISOString()
+      });
     }
+    
+    setLoading(false);
   };
 
   const formatCurrency = (value) => {
@@ -204,12 +220,28 @@ const Affiliate = () => {
     { id: 'settings', label: 'Configurações', icon: Settings }
   ];
 
-  if (!isAffiliate || !affiliateData) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <div className="text-blue-400 text-xl">Carregando painel...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!affiliateData) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-400 text-xl">Erro ao carregar dados do afiliado</div>
+          <button 
+            onClick={() => navigate('/affiliate-login')}
+            className="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg"
+          >
+            Voltar ao Login
+          </button>
         </div>
       </div>
     );

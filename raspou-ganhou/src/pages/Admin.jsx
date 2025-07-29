@@ -179,8 +179,8 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
     try {
       const data = await apiClient.getAffiliates();
       setAffiliates(data.affiliates || []);
-    } catch (error) {
       console.error('Erro ao carregar afiliados:', error);
+      setAffiliates([]);
       setAffiliates([]);
     }
   };
@@ -496,48 +496,38 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
               'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
             },
             body: JSON.stringify(adminData)
-          });
 
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Erro ao atualizar admin');
-          }
-        } else {
-          const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/admin/create-admin`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-            },
-            body: JSON.stringify(adminData)
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Erro ao criar admin');
-          }
-        }
-      };
-
-      await saveAdmin();
-      await loadAdmins();
-      
-      setShowAdminModal(false);
-      setEditingAdmin(null);
-      setAdminForm({
-        name: '',
-        email: '',
-        password: '',
-        is_super_admin: false
+      // Criar afiliado via API
+      const result = await apiClient.createAffiliate({
+        name: newAffiliateForm.name,
+        email: newAffiliateForm.email,
+        password: newAffiliateForm.password,
+        cpa: parseFloat(newAffiliateForm.cpa || 0),
+        commission_rate: parseFloat(newAffiliateForm.commission_rate || 0)
       });
-      
-      alert(editingAdmin ? 'Admin atualizado com sucesso!' : 'Admin criado com sucesso!');
-    } catch (error) {
-      console.error('Erro ao salvar admin:', error);
-      alert('Erro ao salvar admin: ' + error.message);
+
+      if (result.success) {
+        // Recarregar lista de afiliados
+        await loadAffiliates();
+        
+        // Resetar formulário
+        setNewAffiliateForm({
+          name: '',
+          email: '',
+          password: '',
+          cpa: '',
+          commission_rate: ''
+        });
+        
+        setShowCreateAffiliateModal(false);
+        alert('Afiliado criado com sucesso!');
+      } else {
+        alert('Erro ao criar afiliado: ' + (result.error || 'Erro desconhecido'));
+      }
+      setShowAdminModal(false);
     }
   };
-
+      alert('Erro ao criar afiliado: ' + error.message);
   const handleDeleteAdmin = async (adminId) => {
     console.log('handleDeleteAdmin called with adminId:', adminId);
     

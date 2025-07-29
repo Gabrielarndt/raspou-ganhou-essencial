@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import Header from './components/layout/Header';
 import BottomNav from './components/layout/BottomNav';
@@ -22,11 +22,23 @@ import HistoricoFinanceiro from './pages/HistoricoFinanceiro';
 import HistoricoJogos from './pages/HistoricoJogos';
 import './App.css';
 
+// Componente para scroll automático ao topo
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
+
 function App() {
 
   return (
     <Router>
       <AuthProvider>
+        <ScrollToTop />
         <Routes>
           {/* SISTEMA ADMINISTRATIVO - COMPLETAMENTE SEPARADO */}
           <Route path="/admin" element={<Admin />} />

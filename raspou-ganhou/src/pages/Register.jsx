@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { User, Mail, Phone, CreditCard, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { User, Mail, Phone, CreditCard, Lock, Eye, EyeOff, ArrowLeft, Gift } from 'lucide-react';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -11,6 +11,7 @@ const Register = () => {
     email: '',
     telefone: '',
     cpf: '',
+    cupom_afiliado: '',
     senha: '',
     confirmPassword: ''
   });
@@ -195,6 +196,27 @@ const Register = () => {
               </div>
             </div>
 
+            {/* Cupom de Afiliado */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Cupom de Afiliado (Opcional)
+              </label>
+              <div className="relative">
+                <Gift className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  name="cupom_afiliado"
+                  value={formData.cupom_afiliado}
+                  onChange={handleChange}
+                  className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                  placeholder="Digite o código do cupom"
+                  maxLength="20"
+                />
+              </div>
+              <p className="text-gray-500 text-xs mt-1">
+                Tem um cupom de afiliado? Digite aqui para ganhar bônus extras!
+              </p>
+            </div>
             {/* Senha */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">

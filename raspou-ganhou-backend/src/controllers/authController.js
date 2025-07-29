@@ -55,13 +55,43 @@ export const login = async (req, res) => {
 
 export const register = async (req, res) => {
   try {
-    const { nome, email, telefone, cpf, senha } = req.body;
+    const { nome, email, telefone, cpf, senha, cupom_afiliado } = req.body;
 
     // Validação básica
     if (!nome || !email || !telefone || !cpf || !senha) {
       return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
     }
 
+    // Verificar se o cupom de afiliado existe (se fornecido)
+    let affiliateId = null;
+    if (cupom_afiliado && cupom_afiliado.trim()) {
+      const { data: coupon, error: couponError } = await supabaseAdmin
+        .from('coupons')
+        .select('affiliate_id, is_active, expires_at, usage_limit, usage_count')
+        .eq('code', cupom_afiliado.trim())
+        .single();
+
+      if (couponError || !coupon) {
+        return res.status(400).json({ error: 'Cupom de afiliado inválido' });
+      }
+
+      // Verificar se o cupom está ativo
+      if (!coupon.is_active) {
+        return res.status(400).json({ error: 'Cupom de afiliado não está ativo' });
+      }
+
+      // Verificar se o cupom não expirou
+      if (coupon.expires_at && new Date(coupon.expires_at) < new Date()) {
+        return res.status(400).json({ error: 'Cupom de afiliado expirado' });
+      }
+
+      // Verificar limite de uso
+      if (coupon.usage_limit && coupon.usage_count >= coupon.usage_limit) {
+        return res.status(400).json({ error: 'Cupom de afiliado esgotado' });
+      }
+
+      affiliateId = coupon.affiliate_id;
+    }
     // Verificar se usuário já existe
     const { data: existingUser } = await supabaseAdmin
       .from('users')
@@ -76,6 +106,8 @@ export const register = async (req, res) => {
     // Hash da senha
     const hashedPassword = await bcrypt.hash(senha, 12);
 
+    // Determinar bônus de boas-vindas (maior se usar cupom de afiliado)
+    const bonusBoasVindas = cupom_afiliado && cupom_afiliado.trim() ? 20.00 : 10.00;
     // Inserir usuário
     const { data: newUser, error } = await supabaseAdmin
       .from('users')
@@ -84,9 +116,10 @@ export const register = async (req, res) => {
         email,
         telefone,
         cpf,
+        cupom_afiliado: cupom_afiliado && cupom_afiliado.trim() ? cupom_afiliado.trim() : null,
         senha: hashedPassword,
         saldo_real: 0.00,
-        saldo_bonus: 10.00, // Bônus de boas-vindas
+        saldo_bonus: bonusBoasVindas, // Bônus de boas-vindas (maior com cupom)
         pontos_sorteio: 0,
         jogos_realizados: 0,
         total_ganho: 0.00
@@ -99,9 +132,47 @@ export const register = async (req, res) => {
       return res.status(500).json({ error: error.message || 'Erro ao criar usuário' });
     }
 
+    // Se usou cupom de afiliado, registrar o uso e criar referral
+    if (affiliateId && cupom_afiliado) {
+      try {
+        // Incrementar uso do cupom
+        await supabaseAdmin
+          .from('coupons')
+          .update({ 
+            usage_count: supabaseAdmin.raw('usage_count + 1')
+          })
+          .eq('code', cupom_afiliado.trim());
+
+        // Registrar uso do cupom
+        await supabaseAdmin
+          .from('coupon_usage')
+          .insert({
+            coupon_id: (await supabaseAdmin.from('coupons').select('id').eq('code', cupom_afiliado.trim()).single()).data.id,
+            user_id: newUser.id,
+            bonus_received: bonusBoasVindas - 10.00 // Bônus extra do cupom
+          });
+
+        // Criar referral do afiliado
+        await supabaseAdmin
+          .from('affiliate_referrals')
+          .insert({
+            affiliate_id: affiliateId,
+            user_id: newUser.id,
+            referral_code: cupom_afiliado.trim(),
+            status: 'pending' // Será ativado no primeiro depósito
+          });
+
+        console.log(`Usuário ${newUser.id} registrado com cupom de afiliado ${cupom_afiliado}`);
+      } catch (affiliateError) {
+        console.error('Erro ao processar cupom de afiliado:', affiliateError);
+        // Não falha o registro, apenas loga o erro
+      }
+    }
     res.status(201).json({
       success: true,
-      message: 'Usuário criado com sucesso'
+      message: cupom_afiliado && cupom_afiliado.trim() 
+        ? `Usuário criado com sucesso! Bônus de R$ ${bonusBoasVindas.toFixed(2)} adicionado.`
+        : 'Usuário criado com sucesso'
     });
 
   } catch (error) {

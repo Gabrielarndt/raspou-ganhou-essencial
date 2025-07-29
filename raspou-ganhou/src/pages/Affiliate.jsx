@@ -45,44 +45,50 @@ const Affiliate = () => {
   const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
-  try {
-    const stored = localStorage.getItem('user');
-    if (stored) {
-      const userData = JSON.parse(stored);
-      console.log('📦 Affiliate: Stored user data:', userData);
-      
-      if (userData.role === 'affiliate' || userData.affiliate_code) {
-        console.log('✅ Affiliate: Found affiliate in localStorage');
-        setStoredUser(userData);
-        setCurrentUser(userData);
-        setIsAffiliate(true);
+    try {
+      const stored = localStorage.getItem('user');
+      if (stored) {
+        const userData = JSON.parse(stored);
+        console.log('📦 Affiliate: Stored user data:', userData);
+        
+        if (userData.role === 'affiliate' || userData.affiliate_code) {
+          console.log('✅ Affiliate: Found affiliate in localStorage');
+          setStoredUser(userData);
+          setCurrentUser(userData);
+          setIsAffiliate(true);
+        } else {
+          console.log('❌ Affiliate: User data found but not an affiliate:', userData);
+          setIsAffiliate(false);
+          setCurrentUser(null);
+        }
       } else {
-        console.log('❌ Affiliate: User data found but not an affiliate:', userData);
+        console.log('❌ Affiliate: No user data in localStorage');
         setIsAffiliate(false);
         setCurrentUser(null);
       }
+    } catch (error) {
+      console.error('Error parsing stored user:', error);
+      setIsAffiliate(false);
+      setCurrentUser(null);
+    } finally {
+      setAuthChecked(true);
     }
-  } catch (error) {
-    console.error('Error parsing stored user:', error);
-  } finally {
-    setAuthChecked(true); // <-- ✅ marca que a verificação foi feita
-  }
-}, []);
+  }, []);
 
 
   useEffect(() => {
-  if (!authChecked) return; // aguarda até verificar
+    if (!authChecked) return;
 
-  console.log('🔍 Affiliate: Checking auth - isAffiliate:', isAffiliate, 'currentUser:', !!currentUser);
+    console.log('🔍 Affiliate: Checking auth - isAffiliate:', isAffiliate, 'currentUser:', !!currentUser);
 
-  if (!isAffiliate || !currentUser) {
-    console.log('❌ Affiliate: Not an affiliate, redirecting to login');
-    navigate('/affiliate-login');
-    return;
-  }
+    if (!isAffiliate || !currentUser) {
+      console.log('❌ Affiliate: Not an affiliate, redirecting to login');
+      navigate('/affiliate-login');
+      return;
+    }
 
-  loadAffiliateData();
-}, [authChecked, isAffiliate, currentUser, navigate]);
+    loadAffiliateData();
+  }, [authChecked, isAffiliate, currentUser, navigate]);
 
 
   const loadAffiliateData = () => {
@@ -202,7 +208,8 @@ const Affiliate = () => {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
         <div className="text-center">
-          <div className="text-blue-400 text-xl">Carregando...</div>
+          <div className="w-8 h-8 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="text-blue-400 text-xl">Carregando painel...</div>
         </div>
       </div>
     );

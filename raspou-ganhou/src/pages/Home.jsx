@@ -150,13 +150,15 @@ const Home = () => {
                     <p className="text-white/90 text-sm lg:text-lg mb-6 lg:mb-8">
                       {banner.description}
                     </p>
-                    <button
-                      onClick={banner.action}
-                      className="bg-white text-black font-bold py-3 px-8 lg:py-4 lg:px-12 rounded-xl hover:bg-gray-100 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 mx-auto lg:mx-0"
-                    >
-                      <span>{banner.cta}</span>
-                      <ArrowRight className="w-5 h-5" />
-                    </button>
+                    {banner.id !== 2 && (
+                      <button
+                        onClick={banner.action}
+                        className="bg-white text-black font-bold py-3 px-8 lg:py-4 lg:px-12 rounded-xl hover:bg-gray-100 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 mx-auto lg:mx-0"
+                      >
+                        <span>{banner.cta}</span>
+                        <ArrowRight className="w-5 h-5" />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

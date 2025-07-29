@@ -10,6 +10,7 @@ import {
   Settings,
   Eye,
   Edit,
+  Gift,
   Trash2,
   Plus,
   Download,

@@ -57,9 +57,11 @@ const Header = () => {
           <div className="flex items-center justify-between">
             {/* Logo */}
             <Link to="/" className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-lg flex items-center justify-center">
-                <span className="text-black font-bold text-lg">R</span>
-              </div>
+              <img 
+                src="/logoGanhou.png" 
+                alt="RaspouGanhou Logo" 
+                className="w-10 h-10 rounded-lg object-contain"
+              />
               <div>
                 <h1 className="text-yellow-400 font-bold text-lg leading-none">RaspouGanhou</h1>
                 <p className="text-gray-400 text-xs">Raspe e Ganhe</p>

@@ -44,31 +44,43 @@ const Home = () => {
       cta: "Ver Sorteios",
       action: () => navigate('/numeros')
     },
-    {
-      id: 3,
-      title: "Bônus de Boas-vindas",
-      subtitle: "R$ 10 Grátis",
-      description: "Para novos jogadores",
-      image: "https://images.pexels.com/photos/1111318/pexels-photo-1111318.jpeg?auto=compress&cs=tinysrgb&w=1200&h=600&fit=crop",
-      cta: "Registrar",
-      action: () => navigate('/registro')
-    }
   ];
 
+  // Banner dinâmico baseado no status do usuário
+  const dynamicBanner = user ? {
+    id: 3,
+    title: "Suas Raspadinhas",
+    subtitle: "Continue Jogando",
+    description: "Escolha sua raspadinha favorita",
+    image: "https://images.pexels.com/photos/1111318/pexels-photo-1111318.jpeg?auto=compress&cs=tinysrgb&w=1200&h=600&fit=crop",
+    cta: "Jogar Agora",
+    action: () => navigate('/raspadinhas')
+  } : {
+    id: 3,
+    title: "Bônus de Boas-vindas",
+    subtitle: "R$ 10 Grátis",
+    description: "Para novos jogadores",
+    image: "https://images.pexels.com/photos/1111318/pexels-photo-1111318.jpeg?auto=compress&cs=tinysrgb&w=1200&h=600&fit=crop",
+    cta: "Registrar",
+    action: () => navigate('/registro')
+  };
+
+  // Array completo de banners
+  const allBanners = [...banners, dynamicBanner];
   // Auto-play do carousel
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % banners.length);
+      setCurrentSlide((prev) => (prev + 1) % allBanners.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, []);
+  }, [user]);
 
   const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % banners.length);
+    setCurrentSlide((prev) => (prev + 1) % allBanners.length);
   };
 
   const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + banners.length) % banners.length);
+    setCurrentSlide((prev) => (prev - 1 + allBanners.length) % allBanners.length);
   };
 
   const ganhadores = [
@@ -113,7 +125,7 @@ const Home = () => {
         {/* Carousel de Banners */}
         <section className="relative mb-12 lg:mb-16">
           <div className="relative h-64 lg:h-96 rounded-2xl overflow-hidden">
-            {banners.map((banner, index) => (
+            {allBanners.map((banner, index) => (
               <div
                 key={banner.id}
                 className={`absolute inset-0 transition-opacity duration-500 ${
@@ -167,7 +179,7 @@ const Home = () => {
             
             {/* Indicadores */}
             <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-              {banners.map((_, index) => (
+              {allBanners.map((_, index) => (
                 <button
                   key={index}
                   onClick={() => setCurrentSlide(index)}

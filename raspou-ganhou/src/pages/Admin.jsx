@@ -62,6 +62,7 @@ const Admin = () => {
     status: 'active'
   });
   const [editingLottery, setEditingLottery] = useState(null);
+  const [selectedAffiliate, setSelectedAffiliate] = useState(null);
 
   // Estados para Admins
   const [admins, setAdmins] = useState([]);

@@ -1047,14 +1047,13 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
                             <Cell key={`cell-${index}`} fill={entry.color} />
                           ))}
                         </Pie>
-                        <Tooltip 
-                          contentStyle={{ 
                         <button
                           onClick={() => {
                             setSelectedAffiliate(affiliate);
                             setShowCouponModal(true);
                           }}
                           className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-3 rounded-lg transition-colors flex items-center space-x-1"
+                          title="Criar Cupom"
                         >
                           <Gift className="w-4 h-4" />
                           <span>Novo Cupom</span>

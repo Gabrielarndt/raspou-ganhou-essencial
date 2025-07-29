@@ -499,12 +499,9 @@ console.log('Is Super Admin flag:', currentUser?.is_super_admin);
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
             },
-            body: JSON.stringify(adminData)
-
-      // Criar afiliado via API
-      const result = await apiClient.createAffiliate({
         name: newAffiliateForm.name,
         email: newAffiliateForm.email,
+        password: newAffiliateForm.password,
         password: newAffiliateForm.password,
         cpa: parseFloat(newAffiliateForm.cpa || 0),
         commission_rate: parseFloat(newAffiliateForm.commission_rate || 0)
